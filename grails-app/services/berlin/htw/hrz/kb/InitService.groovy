@@ -1,3 +1,8 @@
+/*
+  Created by IntelliJ IDEA.
+  User: didschu
+ */
+
 package berlin.htw.hrz.kb
 
 import grails.transaction.Transactional
@@ -12,7 +17,7 @@ class InitService {
         def doc4 = new Document(title: 'Cisco-Telefonie', content: 'Testcontent Cisco-Tele', hiddenTags: ['cisco', 'telefonie', 'telefon'] as String[])
 
 
-        println((doc1.validate() as String) + ' ' + (doc2.validate() as String) + ' ' + (doc3.validate() as String) + ' ' + (doc4.validate() as String))
+        //println((doc1.validate() as String) + ' ' + (doc2.validate() as String) + ' ' + (doc3.validate() as String) + ' ' + (doc4.validate() as String))
 
         new Maincategorie(name: 'group')
                 .addToSubCats(new Subcategorie(name: 'anonym').addToDocs(doc1).addToDocs(doc2).addToDocs(doc3))
@@ -40,7 +45,7 @@ class InitService {
                 .save()
 
         new Maincategorie(name: 'os')
-                .addToSubCats(new Subcategorie(name: 'windows').addToDocs(doc1).addToDocs(doc2))
+                .addToSubCats(new Subcategorie(name: 'windows').addToSubCats(new Subcategorie(name: 'win_7').addToDocs(doc1).addToDocs(doc2)))
                 .addToSubCats(new Subcategorie(name: 'linux').addToDocs(doc3))
                 .addToSubCats(new Subcategorie(name: 'android'))
                 .addToSubCats(new Subcategorie(name: 'ios'))

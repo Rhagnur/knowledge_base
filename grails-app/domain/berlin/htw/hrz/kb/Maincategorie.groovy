@@ -1,3 +1,8 @@
+/*
+  Created by IntelliJ IDEA.
+  User: didschu
+ */
+
 package berlin.htw.hrz.kb
 
 class Maincategorie {

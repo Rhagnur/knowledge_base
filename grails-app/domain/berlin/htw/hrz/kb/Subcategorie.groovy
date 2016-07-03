@@ -1,6 +1,12 @@
+/*
+  Created by IntelliJ IDEA.
+  User: didschu
+ */
+
 package berlin.htw.hrz.kb
 
-class Subcategorie {
+
+class Subcategorie{
 
     static constraints = {
         name nullable: false

@@ -1,33 +1,59 @@
+/*
+  Created by IntelliJ IDEA.
+  User: didschu
+ */
+
 package berlin.htw.hrz.kb
 
 import grails.transaction.Transactional
 
+
 @Transactional
 class DocumentService {
 
-    def createDocs() {
-        //Document.saveAll([
-        //        new Document(title: "Test1", content: "Testcontent1"),
-        //        new Document(title: "Test2", content: "Testcontent2")
-        //])
-        def p = new Document(title: "Test1", content: "Testcontent1", hiddenTags: "Test")
-        println('VALIDATEEEEEEEEE!"!!!!!!!!! ' + p.validate())
-        p.save(flush:true)
-    }
+    /**
+     * These methods helps to save a new document into the database.
+     * @param doctitle Title of the document
+     * @param docContent Content of the document (most likely in JSON Format but stored as String)
+     * @param docHiddenTags Hidden tags of the document for better searching and declaring synonymous meaning (e.g. WiFi, WLAN, Wireless Lan)
+     * @param subCats Subcategories which should be associated with the new document
+     * @return TRUE if no problems occurred while saving otherwise FALSE.
+     */
+    def addDoc(String docTitle, String docContent, String[] docHiddenTags, String[] subCats) {
 
-    def getAllDocs() {
-        [Document.findAll()]
-    }
-
-    def addDoc(String doctitle, String docContent, String[] docHiddenTags, String[] subCats) {
-
-        def doc = new Document(title: doctitle, content: docContent, hiddenTags: docHiddenTags)
-        for (def cat in subCats) {
-            println(cat)
-            Subcategorie subCat = Subcategorie.findByName(cat)
-            subCat.addToDocs(doc)
-            subCat.save()
+        println('title: ' + docTitle + ' class: ' + docTitle.getClass())
+        println('content: ' + docContent + ' class: ' + docContent.getClass())
+        println('tags: ' + docHiddenTags + ' class: ' + docHiddenTags.getClass())
+        println('cats: ' + subCats + ' class: ' + subCats.getClass())
+        try {
+            def doc = new Document(title: docTitle, content: docContent, hiddenTags: docHiddenTags)
+            for (def cat in subCats) {
+                Subcategorie subCat = Subcategorie.findByName(cat)
+                subCat.addToDocs(doc)
+                subCat.save()
+            }
+            doc.save()
+            true
+        } catch (Exception e) {
+            e.printStackTrace()
+            false
         }
-        doc.save()
+
+    }
+
+    /**
+     * These method finds all the associated documents for the given subcategorie[s]. Use only one Entity in the Array for getting all the documents of one subcategories.
+     * If you use more only common documents will be returned. Documents which are'nt associated with all given Subcategories will be ignored.
+     * @param subs subcategories for lookup as Array of String
+     * @return all found documents as array
+     */
+    def getAllDocsAssociatedToSubCategories(String[] subs) {
+        def docs = []
+        subs.each { cat ->
+            docs.addAll(Subcategorie.findByName(cat).docs?.findAll().toArray())
+        }
+        //find only non unique docs, so you get all docs which are associated with the given categories
+        def matchItems = docs.findAll{docs.count(it) > 1}.unique()
+        return matchItems
     }
 }
