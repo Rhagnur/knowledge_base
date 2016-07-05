@@ -25,5 +25,13 @@
         <g:submitButton name="create" value="Neues Doc erstellen"/>
     </g:form>
 
+    <g:form controller="KnowledgeBase" action="showDoc">
+        <g:submitButton name="show" value="Doc ansehen"/>
+    </g:form>
+
+    <g:form controller="KnowledgeBase" action="showCat">
+        <g:submitButton name="show" value="Cat ansehen"/>
+    </g:form>
+
 </body>
 </html>

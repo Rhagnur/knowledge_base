@@ -7,6 +7,8 @@ package berlin.htw.hrz.kb
 
 class Maincategorie {
 
+    static mapWith = "neo4j"
+
     static constraints = {
         name nullable: false
     }

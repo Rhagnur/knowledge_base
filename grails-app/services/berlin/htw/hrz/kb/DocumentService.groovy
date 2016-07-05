@@ -6,6 +6,10 @@
 package berlin.htw.hrz.kb
 
 import grails.transaction.Transactional
+import grails.web.JSONBuilder
+import groovy.json.JsonOutput
+
+import javax.print.Doc
 
 
 @Transactional
@@ -21,10 +25,10 @@ class DocumentService {
      */
     def addDoc(String docTitle, String docContent, String[] docHiddenTags, String[] subCats) {
 
-        println('title: ' + docTitle + ' class: ' + docTitle.getClass())
-        println('content: ' + docContent + ' class: ' + docContent.getClass())
-        println('tags: ' + docHiddenTags + ' class: ' + docHiddenTags.getClass())
-        println('cats: ' + subCats + ' class: ' + subCats.getClass())
+        //println('title: ' + docTitle + ' class: ' + docTitle.getClass())
+        //println('content: ' + docContent + ' class: ' + docContent.getClass())
+        //println('tags: ' + docHiddenTags + ' class: ' + docHiddenTags.getClass())
+        //println('cats: ' + subCats + ' class: ' + subCats.getClass())
         try {
             def doc = new Document(title: docTitle, content: docContent, hiddenTags: docHiddenTags)
             for (def cat in subCats) {
@@ -50,10 +54,24 @@ class DocumentService {
     def getAllDocsAssociatedToSubCategories(String[] subs) {
         def docs = []
         subs.each { cat ->
-            docs.addAll(Subcategorie.findByName(cat).docs?.findAll().toArray())
+            if (Subcategorie.findByName(cat) != null) {
+                docs.addAll(Subcategorie.findByName(cat).docs?.findAll().toArray())
+            }
         }
         //find only non unique docs, so you get all docs which are associated with the given categories
         def matchItems = docs.findAll{docs.count(it) > 1}.unique()
         return matchItems
+    }
+
+    def exportDoc(String docTitle) {
+        def myDoc = Document.findByTitle(docTitle)
+        if (myDoc) {
+            def slurper = new groovy.json.JsonSlurper()
+            def temp = slurper.parseText(myDoc.content)
+            temp << [lang: Maincategorie.findByName('lang').subCats.find{it.docs.contains(myDoc)}.name]
+            temp << [type: Maincategorie.findByName('doctype').subCats.find{it.docs.contains(myDoc)}.name]
+            temp << [title: myDoc.title]
+            return JsonOutput.prettyPrint(JsonOutput.toJson(temp))
+        }
     }
 }

@@ -11,13 +11,27 @@ import grails.transaction.Transactional
 class InitService {
 
     def initTestModell() {
-        def doc1 = new Document(title: 'WLAN für Windows 7', content: 'Testcontent WLAN Win7', hiddenTags: ['wifi', 'wlan', 'windows 7'] as String[])
-        def doc2 = new Document(title: 'WiFi for Windows 7', content: 'Testcontent WLAN Win7', hiddenTags: ['wifi', 'wlan', 'windows 7'] as String[])
-        def doc3 = new Document(title: 'LAN für Linux', content: 'Testcontent LAN Linux', hiddenTags: ['lan', 'linux'] as String[])
-        def doc4 = new Document(title: 'Cisco-Telefonie', content: 'Testcontent Cisco-Tele', hiddenTags: ['cisco', 'telefonie', 'telefon'] as String[])
+        def doc1 = new Document(title: 'WLAN für Windows 7', content: '{"steps":[{"id":1,"text":"Dies ist ein Absatz","link":"https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Image_manquante_2.svg/320px-Image_manquante_2.svg.png"},{"id":2,"text":"Dies ist ein Absatz","link":"https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Image_manquante_2.svg/320px-Image_manquante_2.svg.png"},{"id":3,"text":"Dies ist ein Absatz","link":"https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Image_manquante_2.svg/320px-Image_manquante_2.svg.png"}]}', hiddenTags: ['wifi', 'wlan', 'windows 7'] as String[])
+        def doc2 = new Document(title: 'WiFi for Windows 7', content: '{"steps":[{"id":1,"text":"Dies ist ein Absatz","link":"https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Image_manquante_2.svg/320px-Image_manquante_2.svg.png"},{"id":2,"text":"Dies ist ein Absatz","link":"https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Image_manquante_2.svg/320px-Image_manquante_2.svg.png"},{"id":3,"text":"Dies ist ein Absatz","link":"https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Image_manquante_2.svg/320px-Image_manquante_2.svg.png"}]}', hiddenTags: ['wifi', 'wlan', 'windows 7'] as String[])
+        def doc3 = new Document(title: 'LAN für Linux', content: '{"steps":[{"id":1,"text":"Dies ist ein Absatz","link":"https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Image_manquante_2.svg/320px-Image_manquante_2.svg.png"},{"id":2,"text":"Dies ist ein Absatz","link":"https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Image_manquante_2.svg/320px-Image_manquante_2.svg.png"},{"id":3,"text":"Dies ist ein Absatz","link":"https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Image_manquante_2.svg/320px-Image_manquante_2.svg.png"}]}', hiddenTags: ['lan', 'linux'] as String[])
+        def doc4 = new Document(title: 'Cisco-Telefonie', content: '{"steps":[{"id":1,"text":"Dies ist ein Absatz","link":"https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Image_manquante_2.svg/320px-Image_manquante_2.svg.png"},{"id":2,"text":"Dies ist ein Absatz","link":"https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Image_manquante_2.svg/320px-Image_manquante_2.svg.png"},{"id":3,"text":"Dies ist ein Absatz","link":"https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Image_manquante_2.svg/320px-Image_manquante_2.svg.png"}]}', hiddenTags: ['cisco', 'telefonie', 'telefon'] as String[])
 
 
         //println((doc1.validate() as String) + ' ' + (doc2.validate() as String) + ' ' + (doc3.validate() as String) + ' ' + (doc4.validate() as String))
+
+        /* Versuch Document mit hasMany und belongsTo zum Laufen zu kriegen, funzte nicht....
+        Maincategorie mainCat = new Maincategorie(name: 'os')
+        Subcategorie win = new Subcategorie(name: 'windows')
+        Subcategorie win7 = new Subcategorie(name: 'win_7')
+        Subcategorie linux = new Subcategorie(name: 'linux')
+        Subcategorie android = new Subcategorie(name: 'android')
+        Subcategorie ios = new Subcategorie(name: 'ios')
+
+        win7.addToDocs(doc1).addToDocs(doc2).save()
+        win.addToSubCats(win7).save()
+        mainCat.addToSubCats(win).addToSubCats(linux).addToSubCats(android).addToSubCats(ios).save()
+        */
+
 
         new Maincategorie(name: 'group')
                 .addToSubCats(new Subcategorie(name: 'anonym').addToDocs(doc1).addToDocs(doc2).addToDocs(doc3))
@@ -26,7 +40,7 @@ class InitService {
                 .addToSubCats(new Subcategorie(name: 'faculty').addToDocs(doc1).addToDocs(doc2).addToDocs(doc3).addToDocs(doc4))
                 .save()
 
-        new Maincategorie(name: 'doctyp')
+        new Maincategorie(name: 'doctype')
                 .addToSubCats(new Subcategorie(name: 'tutorial').addToDocs(doc1).addToDocs(doc2).addToDocs(doc3).addToDocs(doc4))
                 .addToSubCats(new Subcategorie(name: 'faq'))
                 .addToSubCats(new Subcategorie(name: 'article'))
@@ -45,7 +59,7 @@ class InitService {
                 .save()
 
         new Maincategorie(name: 'os')
-                .addToSubCats(new Subcategorie(name: 'windows').addToSubCats(new Subcategorie(name: 'win_7').addToDocs(doc1).addToDocs(doc2)))
+                .addToSubCats(new Subcategorie(name: 'windows').addToSubCats(new Subcategorie(name: 'win_7').addToDocs(doc1).addToDocs(doc2)).addToSubCats(new Subcategorie(name: 'win_8').addToSubCats(new Subcategorie(name: 'win_8.1'))))
                 .addToSubCats(new Subcategorie(name: 'linux').addToDocs(doc3))
                 .addToSubCats(new Subcategorie(name: 'android'))
                 .addToSubCats(new Subcategorie(name: 'ios'))

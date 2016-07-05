@@ -8,117 +8,50 @@ package berlin.htw.hrz.kb
 class KnowledgeBaseController {
 
     def documentService
+    def categorieService
     def initService
 
     def index() {
         if (Maincategorie.findAll().empty) {
             initService.initTestModell()
         }
-
-        //println('##### MainCats!!!!!!!! ' + Maincategorie.findAllBySubCats())
-
-
-        if (documentService.addDoc('LSF für Lehrende', 'Testcontent LSF Faculty', ['lsf', 'faculty'] as String[], ['faculty', 'lsf', 'tutorial', 'de'] as String[])) {
-            println('Alles gut')
-        }
-        else {
-            println('Bäh')
-        }
-
-        /*
-        def request
-        request = new Document(title: "Test", content: "Testcontent")
-        request.save(flush:true)
-        request = new Document(title: "Test2", content: "Testcontent")
-        request.save(flush:true)
-        request = Document.findAll()
-        println (request.errors)
-        println(request)
-        documentService.createDocs()
-        println('AUSGABE!!!!!!!!!!!!!!! ' + documentService.getAllDocs())
-        def p = Document.cypherStatic("MATCH (n:tutorial) return n.title as title, n.content as content")
-        while (p.hasNext()) {
-            myDocs << p.next()
-        }
-
-        //println(myDocs)
-        [myDocs]
-        */
+        null
     }
 
-    def getSubCats(def cat) {
-        def subs = []
-        if (cat) {
-            if (!(cat instanceof Maincategorie)) {
-                subs += cat
-            }
-            cat.subCats?.each { child ->
-                subs += getSubCats(child)
-            }
-            subs.unique()
+    def showDoc() {
+        def myDoc = Document.findByTitle('WLAN für Windows 7')
+        def slurper = new groovy.json.JsonSlurper()
+
+        //Falls ein anderes Dokument angezeigt werden soll, überschreibe das Default-Test-Dokument
+        if (params.docTitle) {
+            myDoc = Document.findByTitle(params.docTitle)
         }
+        [docTitle: myDoc.title, docContent: slurper.parseText(myDoc.content), docTags: myDoc.hiddenTags]
     }
 
-    def testingThings() {
-        println('\n\n####### Get all Subcats from one Maincategorie, not iterativ #######' )
-        //Get one main categorie and all subcategories
-        def catGroup = Maincategorie.findByName('os')
-        println('Main: ' + catGroup.name)
-        for (def sub in catGroup.subCats.findAll()) {
-            println('Subs: ' + sub.name)
-        }
-
-        println('\n\n####### Get all Subcats from one Maincategorie...iterativ #######' )
-        def all= getSubCats(Maincategorie.findByName('os'))
-        all.each {
-            println(it.name)
-        }
-
-        println('\n\n####### Get all docs from one Categorie #######' )
-        def docs = Subcategorie.findByName('win_7').docs.findAll()
-        for (def doc in docs) {
-            println(doc.title)
-        }
-
-        println('\n\n####### Get all docs from multiple Categories #######' )
-        docs = Subcategorie.findByName('win_7').docs.findAll().toArray()
-        println(docs)
-        docs += Subcategorie.findByName('de').docs.findAll().toArray()
-        println(docs)
-        println('Vor ...Filterung...')
-        for (def doc in docs) {
-            println(doc.id + ' # ' +doc.title)
-        }
-        println('\nNach ...Filterung...')
-        def matchItems = docs.findAll{docs.count(it) > 1}.unique()
-        for (def doc in matchItems) {
-            println(doc.id + ' # ' +doc.title)
-        }
-
-        println('\n\n####### Get all docs from multiple Categories via DocService method #######' )
-        documentService.getAllDocsAssociatedToSubCategories(['win_7', 'student'] as String[]).each { doc ->
-            println('Doc: ' + doc.title)
-        }
 
 
-        render(view: 'index')
+
+    def showCat() {
+        def myCats = Maincategorie.findAll()
+        //Default = hole alle Mainkategorien, ansonsten hole die Subkategorien der ausgewählten Kategorie
+        if (params.cat) {
+            myCats = categorieService.getAllSubCats(Subcategorie.findByName(params.cat)?Subcategorie.findByName(params.cat):Maincategorie.findByName(params.cat)?Maincategorie.findByName(params.cat):null)
+            if (!myCats) {flash.error = "No such categorie!!!"}
+        }
+        [cats: myCats]
     }
 
     def createDoc() {
         println(params)
         if (params.submit) {
-            println('Anlegen')
             if (!params.docTitle.empty && !params.docContent.empty && !params.docTags.empty) {
 
                 def liste = params.list('checkbox')
-                println(liste.size())
                 String[] cats = new String[liste.size()];
                 cats = liste.toArray(cats);
-                println(cats)
                 String tags = params.docTags
-                println('tags: ' + tags)
                 String[] split = tags.split(",")
-                println(split)
                 documentService.addDoc(params.docTitle, params.docContent, split, cats)
                 flash.info = "Doc angelegt"
                 render(view: 'index')
@@ -130,11 +63,88 @@ class KnowledgeBaseController {
 
         String[] all = []
         Maincategorie.findAll().each { mainCat ->
-            getSubCats(mainCat).each { cat ->
+            categorieService.getIterativeAllSubCats(mainCat).each { cat ->
                 all += cat.name as String
             }
         }
         println('all: ' + all)
         [cats: all]
+    }
+
+    def exportDoc() {
+        def docTitle = 'Cisco-Telefonie'
+        println(params)
+        if (params.docTitle) {
+            docTitle = params.docTitle
+        }
+        render (documentService.exportDoc(docTitle))
+    }
+
+    //Einfach nur zum Funktionalitäts testen
+    def testingThings() {
+        println('\n\n####### Get all Subcats from one Maincategorie, not iterativ #######' )
+        //Get one main categorie and all subcategories
+        def temp = Maincategorie.findByName('os')
+        println('Main: ' + temp.name)
+        for (def sub in temp.subCats.findAll()) {
+            println('Subs: ' + sub.name)
+        }
+
+        println('\n\n####### Get all Subcats from one Maincategorie...iterativ #######' )
+        temp= categorieService.getIterativeAllSubCats(Maincategorie.findByName('os'))
+        temp.each {
+            println('Cat: ' + it.name + ' belongsTo ' + (it.parentCat? it.parentCat.name : it.mainCat?.name))
+        }
+
+        println('\n\n####### Get all docs from one Categorie #######' )
+        temp = Subcategorie.findByName('win_7').docs.findAll()
+        for (def doc in temp) {
+            println(doc.title)
+        }
+
+        println('\n\n####### Get all docs from multiple Categories #######' )
+        temp = Subcategorie.findByName('win_7').docs.findAll().toArray()
+        println(temp)
+        temp += Subcategorie.findByName('de').docs.findAll().toArray()
+        println(temp)
+        println('Vor ...Filterung...')
+        for (def doc in temp) {
+            println(doc.id + ' # ' +doc.title)
+        }
+        println('\nNach ...Filterung...')
+        def matchItems = temp.findAll{temp.count(it) > 1}.unique()
+        for (def doc in matchItems) {
+            println(doc.id + ' # ' +doc.title)
+        }
+
+        println('\n\n####### Get all docs from multiple Categories via DocService method #######' )
+        documentService.getAllDocsAssociatedToSubCategories(['win_7', 'student', 'null', 'article'] as String[]).each { doc ->
+            println('Doc: ' + doc.title)
+        }
+
+        println('\n\n####### Get Subcategories from one specific document #######' )
+        Subcategorie.findAllByDocs(Document.findByTitle('WLAN für Windows 7')).each { sub ->
+            println('Sub: ' + sub.name)
+        }
+
+        println('\n\n####### Get Subcats (iterativ) + Maincats from one specific document #######' )
+        Subcategorie.findAllByDocs(Document.findByTitle('WLAN für Windows 7')).each { sub ->
+            println('Sub: ' + sub.name)
+            def tempMain = sub.mainCat
+            while (tempMain == null) {
+                sub = sub.parentCat
+                tempMain = sub.mainCat
+                println('Parent: ' + sub.name)
+            }
+            println('MainCat: ' +tempMain.name + '\n#########\n')
+        }
+
+        println('\n\n####### Get count of all docs from given subCat with CatServer method #######' )
+        println('Count: ' + categorieService.getDocCountOfSubCategorie('win_7'))
+
+        println('\n\n####### Export Doc as JSON #######' )
+        exportDoc()
+
+        render(view: 'index')
     }
 }

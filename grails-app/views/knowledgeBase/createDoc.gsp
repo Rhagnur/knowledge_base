@@ -38,6 +38,6 @@
     <br/><br/>
     <g:submitButton name="submit"/>
 </g:form>
-<g:link controller="KnowledgeBase" action="index">zurück</g:link>
+<g:link controller="KnowledgeBase" action="index">Zur Startseite</g:link>
 </body>
 </html>
