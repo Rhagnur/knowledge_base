@@ -6,11 +6,8 @@
 package berlin.htw.hrz.kb
 
 import grails.transaction.Transactional
-import grails.web.JSONBuilder
 import groovy.json.JsonOutput
-
-import javax.print.Doc
-
+import groovy.xml.MarkupBuilder
 
 @Transactional
 class DocumentService {
@@ -30,7 +27,7 @@ class DocumentService {
         //println('tags: ' + docHiddenTags + ' class: ' + docHiddenTags.getClass())
         //println('cats: ' + subCats + ' class: ' + subCats.getClass())
         try {
-            def doc = new Document(title: docTitle, content: docContent, hiddenTags: docHiddenTags)
+            def doc = new Document(docTitle: docTitle, docContent: docContent, hiddenTags: docHiddenTags)
             for (def cat in subCats) {
                 Subcategorie subCat = Subcategorie.findByName(cat)
                 subCat.addToDocs(doc)
@@ -63,15 +60,36 @@ class DocumentService {
         return matchItems
     }
 
-    def exportDoc(String docTitle) {
-        def myDoc = Document.findByTitle(docTitle)
+    def exportDoc(String docTitle, String exportAs) {
+        def myDoc = Document.findByDocTitle(docTitle)
         if (myDoc) {
             def slurper = new groovy.json.JsonSlurper()
-            def temp = slurper.parseText(myDoc.content)
+            def temp = [docContent: slurper.parseText(myDoc.docContent)]
+            def output
             temp << [lang: Maincategorie.findByName('lang').subCats.find{it.docs.contains(myDoc)}.name]
-            temp << [type: Maincategorie.findByName('doctype').subCats.find{it.docs.contains(myDoc)}.name]
-            temp << [title: myDoc.title]
-            return JsonOutput.prettyPrint(JsonOutput.toJson(temp))
+            temp << [docType: Maincategorie.findByName('doctype').subCats.find{it.docs.contains(myDoc)}.name]
+            temp << [docTitle: myDoc.docTitle]
+            if (exportAs == 'json') {
+                output = JsonOutput.toJson(temp)
+            }
+            else if(exportAs == 'xml') {
+                println(temp)
+                new StringWriter().with { sw ->
+                    new MarkupBuilder(sw).with {
+                        document {
+                            temp.collect { k, v ->
+                                "$k" { v instanceof Map ? v.collect(v) : mkp.yield(v) }
+                            }
+                        }
+                    }
+                    output = sw
+                    println(sw)
+                }
+            }
+            else if (exportAs == 'map') {
+                output = temp
+            }
+            return (output)
         }
     }
 }

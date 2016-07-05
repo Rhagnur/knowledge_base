@@ -25,8 +25,8 @@
                 <p>Ich habe keine Kinder</p>
                 ${it.docs?'Ich habe folgende Dokumente:':''}
                 <g:each in="${it.docs}">
-                    <g:link controller="KnowledgeBase" action="showDoc" params="[docTitle : it.title]">
-                        <p>${it.title}</p>
+                    <g:link controller="KnowledgeBase" action="showDoc" params="[docTitle : it.docTitle]">
+                        <p>${it.docTitle}</p>
                     </g:link>
                 </g:each>
             </div>
@@ -38,8 +38,8 @@
                     <p>Ich habe ${it.subCats.size()} Kinder</p>
                     ${it.docs?'Ich habe folgende Dokumente:':''}
                     <g:each in="${it.docs}">
-                        <g:link controller="KnowledgeBase" action="showDoc" params="[docTitle : it.title]">
-                            <p>${it.title}</p>
+                        <g:link controller="KnowledgeBase" action="showDoc" params="[docTitle : it.docTitle]">
+                            <p>${it.docTitle}</p>
                         </g:link>
                     </g:each>
                 </div>

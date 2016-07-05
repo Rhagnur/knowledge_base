@@ -18,15 +18,15 @@
 </g:if><br/><br/>
 
 
-<h1>${docTitle}</h1><br/>
-<g:link controller="KnowledgeBase" action="exportDoc" params="[docTitle: docTitle]">JSON 'Export'</g:link>
-<g:each in="${docContent.steps}">
+<h1>${document.docTitle}</h1><br/>
+<g:link controller="KnowledgeBase" action="exportDoc" params="[docTitle: document.docTitle, exportAs: 'json']">JSON 'Export'</g:link><br/>
+<g:link controller="KnowledgeBase" action="exportDoc" params="[docTitle: document.docTitle, exportAs: 'xml']">XML 'Export'</g:link>
+<g:each in="${document.docContent}">
     <h2>Schritt ${it.id}</h2>
     <p>${it.text}</p>
     <g:img uri="${it.link}"/>
     <br/><br/>
 </g:each>
-<p>${dochTags}</p>
 
 <g:link controller="KnowledgeBase" action="index">Zur Startseite</g:link>
 </body>

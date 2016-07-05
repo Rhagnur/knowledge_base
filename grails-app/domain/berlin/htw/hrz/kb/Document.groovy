@@ -17,6 +17,6 @@ class Document {
     //static hasMany = [parentCats: Subcategorie]
     //static belongsTo = [Subcategorie]
 
-    String title, content
+    String docTitle, docContent
     String[] hiddenTags
 }

@@ -4,6 +4,7 @@
  */
 package berlin.htw.hrz.kb
 
+import grails.converters.JSON
 
 class KnowledgeBaseController {
 
@@ -14,19 +15,20 @@ class KnowledgeBaseController {
     def index() {
         if (Maincategorie.findAll().empty) {
             initService.initTestModell()
+            flash.info = "Neo4j war leer, Test-Domainklassen, Dokumente und Beziehungen angelegt"
         }
         null
     }
 
     def showDoc() {
-        def myDoc = Document.findByTitle('WLAN für Windows 7')
-        def slurper = new groovy.json.JsonSlurper()
+        def myDoc = documentService.exportDoc('Test', 'map')
 
         //Falls ein anderes Dokument angezeigt werden soll, überschreibe das Default-Test-Dokument
         if (params.docTitle) {
-            myDoc = Document.findByTitle(params.docTitle)
+            myDoc = documentService.exportDoc('Cisco-Telefonie', 'map')
         }
-        [docTitle: myDoc.title, docContent: slurper.parseText(myDoc.content), docTags: myDoc.hiddenTags]
+        println('Doc: ' + myDoc)
+        [document: myDoc]
     }
 
 
@@ -73,11 +75,10 @@ class KnowledgeBaseController {
 
     def exportDoc() {
         def docTitle = 'Cisco-Telefonie'
-        println(params)
         if (params.docTitle) {
             docTitle = params.docTitle
         }
-        render (documentService.exportDoc(docTitle))
+        render (documentService.exportDoc(docTitle, params.exportAs?params.exportAs:'map'))
     }
 
     //Einfach nur zum Funktionalitäts testen
@@ -123,12 +124,12 @@ class KnowledgeBaseController {
         }
 
         println('\n\n####### Get Subcategories from one specific document #######' )
-        Subcategorie.findAllByDocs(Document.findByTitle('WLAN für Windows 7')).each { sub ->
+        Subcategorie.findAllByDocs(Document.findByDocTitle('WLAN für Windows 7')).each { sub ->
             println('Sub: ' + sub.name)
         }
 
         println('\n\n####### Get Subcats (iterativ) + Maincats from one specific document #######' )
-        Subcategorie.findAllByDocs(Document.findByTitle('WLAN für Windows 7')).each { sub ->
+        Subcategorie.findAllByDocs(Document.findByDocTitle('WLAN für Windows 7')).each { sub ->
             println('Sub: ' + sub.name)
             def tempMain = sub.mainCat
             while (tempMain == null) {
@@ -144,6 +145,12 @@ class KnowledgeBaseController {
 
         println('\n\n####### Export Doc as JSON #######' )
         exportDoc()
+
+        println('\n\n####### Render DOC as XML...First try #######' )
+        def tryFirst = Document.findByDocTitle('Cisco-Telefonie')
+        println(tryFirst.docContent)
+        println(JSON.parse(tryFirst.docContent))
+
 
         render(view: 'index')
     }
