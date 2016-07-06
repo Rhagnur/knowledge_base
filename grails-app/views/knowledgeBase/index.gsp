@@ -26,17 +26,20 @@
                 <g:submitButton name="show" value="Cat ansehen"/>
             </g:form>
         </div>
-        <div id="os">
+        <br/>
+        <h2>Test für weitere Dokumente</h2>
+        <p>Gefundene Dokumente in...</p>
 
-        </div>
-        <div id="theme">
+        <g:each in="${otherDocs}">
+            <div class="docDiv">
+                <p>...'${it.key}'</p>
+                <g:each in="${it.value}">
+                    <g:link controller="KnowledgeBase" action="showDoc" params="[docTitle: it.docTitle]">
+                        <p>${it.docTitle}</p>
+                    </g:link>
+                </g:each>
+            </div>
 
-        </div>
-        <div id="gruppe">
-
-        </div>
-        <div id="lang">
-
-        </div>
+        </g:each>
     </content>
 </g:applyLayout>

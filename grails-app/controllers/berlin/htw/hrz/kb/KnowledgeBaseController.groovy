@@ -17,7 +17,7 @@ class KnowledgeBaseController {
             initService.initTestModell()
             flash.info = "Neo4j war leer, Test-Domainklassen, Dokumente und Beziehungen angelegt"
         }
-        null
+        [otherDocs: [Linux: Subcategorie.findByName('linux').docs.findAll(), WLAN: Subcategorie.findByName('wlan').docs.findAll(), Student: Subcategorie.findByName('student').docs.findAll(), Deutsch: Subcategorie.findByName('de').docs.findAll()]]
     }
 
     def showDoc() {
@@ -45,7 +45,6 @@ class KnowledgeBaseController {
     }
 
     def createDoc() {
-        println(params)
         if (params.submit) {
             if (!params.docTitle.empty && !params.docContent.empty && !params.docTags.empty) {
 
