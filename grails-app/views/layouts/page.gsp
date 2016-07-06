@@ -16,7 +16,11 @@
 </head>
 
 <body>
-<div id="header">Platzhalter Header</div>
+<header class="header" role="banner">
+    <section id="menubar-secondary">Platzhalter Header</section>
+    <section id="menubar-primary">Platzhalter Title, Image and Navigation</section>
+</header>
+
 <article id="page">
     <nav id="nav-context" role="navigation">
         <section id="subnav">

@@ -13,7 +13,7 @@
 <g:link controller="KnowledgeBase" action="exportDoc" params="[docTitle: document.docTitle, exportAs: 'json']">JSON 'Export'</g:link><br/>
 <g:link controller="KnowledgeBase" action="exportDoc" params="[docTitle: document.docTitle, exportAs: 'xml']">XML 'Export'</g:link>
 <g:each in="${document.docContent}">
-    <h2>Schritt ${it.id}</h2>
+    <h2>Schritt ${it.id}: ${it.title}</h2>
     <p>${it.text}</p>
     <g:img uri="${it.link}"/>
     <br/><br/>
