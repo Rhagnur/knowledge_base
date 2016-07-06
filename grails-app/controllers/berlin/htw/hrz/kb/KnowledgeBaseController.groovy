@@ -12,20 +12,34 @@ class KnowledgeBaseController {
     def categorieService
     def initService
 
+    def testDocs = [Linux: Subcategorie.findByName('linux').docs.findAll(), WLAN: Subcategorie.findByName('wlan').docs.findAll(), Student: Subcategorie.findByName('student').docs.findAll(), Deutsch: Subcategorie.findByName('de').docs.findAll()]
+
     def index() {
         if (Maincategorie.findAll().empty) {
             initService.initTestModell()
             flash.info = "Neo4j war leer, Test-Domainklassen, Dokumente und Beziehungen angelegt"
         }
-        [otherDocs: [Linux: Subcategorie.findByName('linux').docs.findAll(), WLAN: Subcategorie.findByName('wlan').docs.findAll(), Student: Subcategorie.findByName('student').docs.findAll(), Deutsch: Subcategorie.findByName('de').docs.findAll()]]
+        [otherDocs: testDocs]
+    }
+
+    def search () {
+        println(params)
+        flash.info = "Suche noch nicht implementiert!"
+        render(view: 'index', model: [otherDocs: testDocs])
+
     }
 
     def showDoc() {
+        println('params: ' + params)
         def myDoc = documentService.exportDoc('Cisco-Telefonie', 'map')
 
         //Falls ein anderes Dokument angezeigt werden soll, überschreibe das Default-Test-Dokument
         if (params.docTitle) {
-            myDoc = documentService.exportDoc('Cisco-Telefonie', 'map')
+            myDoc = documentService.exportDoc(params.docTitle, 'map')
+        }
+        if (!myDoc) {
+            flash.error = "Kein Dokument gefunden"
+            render(view: 'index')
         }
         println('Doc: ' + myDoc)
         [document: myDoc]
@@ -45,21 +59,38 @@ class KnowledgeBaseController {
     }
 
     def createDoc() {
+        println(params)
+        def docType
         if (params.submit) {
+
             if (!params.docTitle.empty && !params.docContent.empty && !params.docTags.empty) {
 
                 def liste = params.list('checkbox')
+                def docTitle = params.docTitle
+                def docContent = params.docContent
+
                 String[] cats = new String[liste.size()];
                 cats = liste.toArray(cats);
                 String tags = params.docTags
                 String[] split = tags.split(",")
-                documentService.addDoc(params.docTitle, params.docContent, split, cats)
+
+                if (params.faq) {
+                    docContent = "{\"answer\":\"${docContent}\"}"
+                }
+
+                documentService.addDoc(docTitle, docContent, split, cats)
                 flash.info = "Doc angelegt"
                 render(view: 'index')
 
             } else {
                 flash.error = "Bitte alle Felder ausfüllen!"
             }
+        }
+        if (params.createFaq) {
+            docType = 'faq'
+        }
+        else if (params.createTut) {
+            docType = 'tutorial'
         }
 
         String[] all = []
@@ -69,7 +100,7 @@ class KnowledgeBaseController {
             }
         }
         println('all: ' + all)
-        [cats: all]
+        [cats: all, docType: docType]
     }
 
     def exportDoc() {

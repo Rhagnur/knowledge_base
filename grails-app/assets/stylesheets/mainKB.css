@@ -33,6 +33,9 @@ body {
     padding: 3em 2em 2em 2em;
     float: left;
 }
+#main section {
+    margin-bottom: 2em;
+}
 #nav-context {
     width: 20%;
     float: left;
@@ -98,4 +101,17 @@ h2 {
     padding-right: 1em;
     box-sizing: border-box;
 
+}
+#searchBar {
+    width: 75%;
+    height: 2.2em;
+}
+#searchButton {
+    width: 20%;
+    height: 3em;
+}
+#search form {
+    width: 85%;
+    margin-left: auto;
+    margin-right: auto;
 }
