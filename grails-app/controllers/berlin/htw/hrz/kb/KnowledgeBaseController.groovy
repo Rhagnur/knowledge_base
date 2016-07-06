@@ -21,7 +21,7 @@ class KnowledgeBaseController {
     }
 
     def showDoc() {
-        def myDoc = documentService.exportDoc('Test', 'map')
+        def myDoc = documentService.exportDoc('Cisco-Telefonie', 'map')
 
         //Falls ein anderes Dokument angezeigt werden soll, überschreibe das Default-Test-Dokument
         if (params.docTitle) {

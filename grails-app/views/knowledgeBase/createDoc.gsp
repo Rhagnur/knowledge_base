@@ -3,21 +3,12 @@
   User: didschu
 --%>
 
-<%@ page contentType="text/html;charset=UTF-8" %>
-<html>
+<g:applyLayout name="page">
 <head>
-    <title></title>
+    <title>Dokument erstellen</title>
 </head>
 
-<body>
-<g:if test="${flash.error}">
-    <div class="alert alert-error" style="display: block">${flash.error}</div>
-</g:if><br/><br/>
-<g:if test="${flash.info}">
-    <div class="alert alert-error" style="display: block">${flash.info}</div>
-</g:if><br/><br/>
-
-
+<content tag="main">
 <g:form controller="KnowledgeBase" action="createDoc">
     <label for="docTitle">Doc Title</label><br/>
     <g:textField name="docTitle"/>
@@ -39,5 +30,5 @@
     <g:submitButton name="submit"/>
 </g:form>
 <g:link controller="KnowledgeBase" action="index">Zur Startseite</g:link>
-</body>
-</html>
+</content>
+</g:applyLayout>

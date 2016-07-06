@@ -3,50 +3,41 @@
   User: didschu
 --%>
 
-<%@ page contentType="text/html;charset=UTF-8" %>
-<html>
-<head>
-    <title></title>
-</head>
+<g:applyLayout name="page">
+    <head>
+        <title>Kategorien anzeigen</title>
+    </head>
 
-<body>
-<g:if test="${flash.error}">
-    <div class="alert alert-error" style="display: block">${flash.error}</div>
-</g:if><br/><br/>
-<g:if test="${flash.info}">
-    <div class="alert alert-error" style="display: block">${flash.info}</div>
-</g:if><br/><br/>
-
-
-<g:each in="${cats}">
-        <g:if test="${it.subCats.size() == 0}">
-            <div id="${it.name}" style="border: 1px solid black;">
-                <h2>${it.name}</h2>
-                <p>Ich habe keine Kinder</p>
-                ${it.docs?'Ich habe folgende Dokumente:':''}
-                <g:each in="${it.docs}">
-                    <g:link controller="KnowledgeBase" action="showDoc" params="[docTitle : it.docTitle]">
-                        <p>${it.docTitle}</p>
-                    </g:link>
-                </g:each>
-            </div>
-        </g:if>
-        <g:else test="${it.subCats.size() > 0}">
-            <g:link controller="KnowledgeBase" action="showCat" params="[cat: it.name]">
-                <div id="${it.name}" style="border: 1px solid black;">
+    <content tag="main">
+        <g:each in="${cats}">
+            <g:if test="${it.subCats.size() == 0}">
+                <div id="${it.name}" class="catDiv">
                     <h2>${it.name}</h2>
-                    <p>Ich habe ${it.subCats.size()} Kinder</p>
-                    ${it.docs?'Ich habe folgende Dokumente:':''}
+                    ${it.docs ? 'Ich habe folgende Dokumente:' : ''}
                     <g:each in="${it.docs}">
-                        <g:link controller="KnowledgeBase" action="showDoc" params="[docTitle : it.docTitle]">
+                        <g:link controller="KnowledgeBase" action="showDoc" params="[docTitle: it.docTitle]">
                             <p>${it.docTitle}</p>
                         </g:link>
                     </g:each>
                 </div>
-            </g:link>
-        </g:else>
-</g:each>
+            </g:if>
+            <g:else test="${it.subCats.size() > 0}">
+                <g:link controller="KnowledgeBase" action="showCat" params="[cat: it.name]" class="catLink">
+                    <div id="${it.name}" class="catDiv">
+                        <h2>${it.name}</h2>
+                        <p>Ich habe ${it.subCats.size()} Kinder</p>
+                        ${it.docs ? 'Ich habe folgende Dokumente:' : ''}
+                        <g:each in="${it.docs}">
+                            <g:link controller="KnowledgeBase" action="showDoc" params="[docTitle: it.docTitle]">
+                                <p>${it.docTitle}</p>
+                            </g:link>
+                        </g:each>
+                    </div>
+                </g:link>
+            </g:else>
+        </g:each>
+        <div class="clear"></div>
 
-<g:link controller="KnowledgeBase" action="index">Zur Startseite</g:link>
-</body>
-</html>
+        <g:link controller="KnowledgeBase" action="index">Zur Startseite</g:link>
+    </content>
+</g:applyLayout>

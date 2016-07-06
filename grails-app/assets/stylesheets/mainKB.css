@@ -1,0 +1,56 @@
+#header {
+    height: 186px;
+    background-color: rgb(87,87,87);
+    color: white;
+}
+#footer {
+    height: 311px;
+    background-color: rgb(87,87,87);
+    color: white;
+}
+#footer, #header, #page {
+    max-width: 90em;
+    margin-right: auto;
+    margin-left: auto;
+}
+body {
+    background-color: rgb(175,175,175);
+    padding: 0;
+    margin: 0;
+}
+
+#page {
+    background-color: rgb(235,235,235);
+    padding: 2em 1em 2em 1em;
+    box-sizing: border-box;
+}
+#main {
+    width: 80%;
+    box-sizing: border-box;
+    box-shadow: 0px 0px 5px rgba(0,0,0, 0.15);
+    background-color: white;
+    padding: 2em 1em 2em 1em;
+    float: left;
+}
+#nav-context {
+    width: 20%;
+    float: left;
+}
+.catLink {
+    text-decoration: none;
+    color: black;
+}
+.catDiv {
+    width: 32%;
+    height: 10em;
+    border: 1px solid black;
+    border-radius: 0.2em;
+    float: left;
+    margin-bottom: 1em;
+    overflow-y: auto;
+    margin-right: 0.5em;
+    margin-left: 0.5em;
+}
+.clear {
+    clear: both;
+}
