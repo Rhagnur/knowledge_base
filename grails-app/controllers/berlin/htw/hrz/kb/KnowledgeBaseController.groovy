@@ -12,20 +12,22 @@ class KnowledgeBaseController {
     def categorieService
     def initService
 
-    def testDocs = [Linux: Subcategorie.findByName('linux').docs.findAll(), WLAN: Subcategorie.findByName('wlan').docs.findAll(), Student: Subcategorie.findByName('student').docs.findAll(), Deutsch: Subcategorie.findByName('de').docs.findAll()]
+    def loadTestDocs () {
+        return [Linux: Subcategorie.findByName('linux').docs.findAll(), WLAN: Subcategorie.findByName('wlan').docs.findAll(), Student: Subcategorie.findByName('student').docs.findAll(), Deutsch: Subcategorie.findByName('de').docs.findAll()]
+    }
 
     def index() {
         if (Maincategorie.findAll().empty) {
             initService.initTestModell()
             flash.info = "Neo4j war leer, Test-Domainklassen, Dokumente und Beziehungen angelegt"
         }
-        [otherDocs: testDocs]
+        [otherDocs: loadTestDocs()]
     }
 
     def search () {
         println(params)
         flash.info = "Suche noch nicht implementiert!"
-        render(view: 'index', model: [otherDocs: testDocs])
+        render(view: 'index', model: [otherDocs: loadTestDocs()])
 
     }
 
@@ -39,7 +41,7 @@ class KnowledgeBaseController {
         }
         if (!myDoc) {
             flash.error = "Kein Dokument gefunden"
-            render(view: 'index')
+            render(view: 'index', model: [otherDocs: loadTestDocs()])
         }
         println('Doc: ' + myDoc)
         [document: myDoc]
@@ -80,7 +82,7 @@ class KnowledgeBaseController {
 
                 documentService.addDoc(docTitle, docContent, split, cats)
                 flash.info = "Doc angelegt"
-                render(view: 'index')
+                render(view: 'index', model: [otherDocs: loadTestDocs()])
 
             } else {
                 flash.error = "Bitte alle Felder ausfüllen!"
@@ -182,6 +184,6 @@ class KnowledgeBaseController {
         println(JSON.parse(tryFirst.docContent))
 
 
-        render(view: 'index')
+        render(view: 'index', model: [otherDocs: loadTestDocs()])
     }
 }
