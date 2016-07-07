@@ -11,20 +11,37 @@
     <content tag="main">
         <g:form controller="KnowledgeBase" action="createDoc">
             <g:if test="${docType == 'tutorial'}">
-                <label for="docTitle">Doc Title</label><br/>
+                <g:hiddenField name="tutorial" value="create"/>
+                <label for="docTitle">Dokumenttitel</label><br/>
                 <g:textField name="docTitle"/>
+                <br/><br/><br/>
+
+                <label for="stepTitle_1">Schritt 1 Titel</label><br/>
+                <g:textField name="stepTitle_1"/>
+                <br/>
+                <label for="stepText_1">Schritt 1 Text</label><br/>
+                <g:textField name="stepText_1"/>
+                <br/>
+                <label for="stepLink_1">Schritt 1 Link</label><br/>
+                <g:textField name="stepLink_1"/>
                 <br/><br/>
-                <label for="docTitle">Doc Content</label><br/>
-                <g:textField name="docContent"/>
+                <label for="stepTitle_2">Schritt 2 Titel</label><br/>
+                <g:textField name="stepTitle_2"/>
+                <br/>
+                <label for="stepText_2">Schritt 2 Text</label><br/>
+                <g:textField name="stepText_2"/>
+                <br/>
+                <label for="stepLink_2">Schritt 2 Link</label><br/>
+                <g:textField name="stepLink_2"/>
                 <br/><br/>
             </g:if>
             <g:elseif test="${docType == 'faq'}">
                 <g:hiddenField name="faq" value="create"/>
-                <label for="docTitle">FAQ Frage</label><br/>
-                <g:textField name="docTitle"/>
+                <label for="question">FAQ Frage</label><br/>
+                <g:textField name="question"/>
                 <br/><br/>
-                <label for="docTitle">FAQ Antwort</label><br/>
-                <g:textField name="docContent"/>
+                <label for="answer">FAQ Antwort</label><br/>
+                <g:textField name="answer"/>
                 <br/><br/>
             </g:elseif>
 

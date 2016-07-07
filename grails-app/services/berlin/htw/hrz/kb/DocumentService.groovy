@@ -5,8 +5,11 @@
 
 package berlin.htw.hrz.kb
 
+import grails.converters.JSON
+import grails.converters.XML
 import grails.transaction.Transactional
 import groovy.json.JsonOutput
+import groovy.json.JsonSlurper
 import groovy.xml.MarkupBuilder
 
 @Transactional
@@ -20,14 +23,25 @@ class DocumentService {
      * @param subCats Subcategories which should be associated with the new document
      * @return TRUE if no problems occurred while saving otherwise FALSE.
      */
-    def addDoc(String docTitle, String docContent, String[] docHiddenTags, String[] subCats) {
-
-        //println('title: ' + docTitle + ' class: ' + docTitle.getClass())
-        //println('content: ' + docContent + ' class: ' + docContent.getClass())
-        //println('tags: ' + docHiddenTags + ' class: ' + docHiddenTags.getClass())
-        //println('cats: ' + subCats + ' class: ' + subCats.getClass())
+    def addDoc(String docTitle, def docContent, String[] docHiddenTags, String[] subCats, String docType) {
+        println('title: ' + docTitle)
+        println('content: ' + docContent)
+        println('tags: ' + docHiddenTags)
+        println('subCats: ' + subCats)
+        println('type: ' + docType)
         try {
-            def doc = new Document(docTitle: docTitle, docContent: docContent, hiddenTags: docHiddenTags)
+            def doc
+
+            if (docType == 'tutorial') {
+                doc = new Document(docTitle: docTitle, hiddenTags: docHiddenTags)
+                docContent.each { step ->
+                    println(step)
+                    new Step(number: step.number, stepTitle: step.title, stepText: step.text, mediaLink: step.link)
+                }
+            }
+            else if (docType == 'faq') {
+                doc = new Document(docTitle: docTitle, hiddenTags: docHiddenTags, faq: new Faq(question: docContent.question, answer: docContent.answer))
+            }
             for (def cat in subCats) {
                 Subcategorie subCat = Subcategorie.findByName(cat)
                 subCat.addToDocs(doc)
@@ -39,7 +53,6 @@ class DocumentService {
             e.printStackTrace()
             false
         }
-
     }
 
     /**
@@ -63,31 +76,17 @@ class DocumentService {
     def exportDoc(String docTitle, String exportAs) {
         def myDoc = Document.findByDocTitle(docTitle)
         if (myDoc) {
-            def slurper = new groovy.json.JsonSlurper()
-            def temp = [docContent: slurper.parseText(myDoc.docContent)]
             def output
-            temp << [lang: Maincategorie.findByName('lang').subCats.find{it.docs.contains(myDoc)}.name]
-            temp << [docType: Maincategorie.findByName('doctype').subCats.find{it.docs.contains(myDoc)}.name]
-            temp << [docTitle: myDoc.docTitle]
             if (exportAs == 'json') {
-                output = JsonOutput.toJson(temp)
-            }
-            else if(exportAs == 'xml') {
-                println(temp)
-                new StringWriter().with { sw ->
-                    new MarkupBuilder(sw).with {
-                        document {
-                            temp.collect { k, v ->
-                                "$k" { v instanceof Map ? v.collect(v) : mkp.yield(v) }
-                            }
-                        }
-                    }
-                    output = sw
-                    println(sw)
+                JSON.use('deep') {
+                    output = myDoc as JSON
+                    println(myDoc.faq as JSON)
                 }
             }
-            else if (exportAs == 'map') {
-                output = temp
+            else if(exportAs == 'xml') {
+                XML.use('deep') {
+                    output = myDoc as XML
+                }
             }
             return (output)
         }

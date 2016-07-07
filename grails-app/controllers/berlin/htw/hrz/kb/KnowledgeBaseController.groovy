@@ -5,6 +5,7 @@
 package berlin.htw.hrz.kb
 
 import grails.converters.JSON
+import grails.converters.XML
 
 class KnowledgeBaseController {
 
@@ -33,16 +34,22 @@ class KnowledgeBaseController {
 
     def showDoc() {
         println('params: ' + params)
-        def myDoc = documentService.exportDoc('Cisco-Telefonie', 'map')
+        def myDoc = Document.findByDocTitle('Cisco-Telefonie')
 
         //Falls ein anderes Dokument angezeigt werden soll, überschreibe das Default-Test-Dokument
         if (params.docTitle) {
-            myDoc = documentService.exportDoc(params.docTitle, 'map')
+            myDoc = Document.findByDocTitle(params.docTitle)
         }
         if (!myDoc) {
             flash.error = "Kein Dokument gefunden"
             render(view: 'index', model: [otherDocs: loadTestDocs()])
         }
+        myDoc.steps.each { step ->
+            println(step.stepTitle)
+
+        }
+        println(myDoc.faq?.answer)
+        println(myDoc.faq?.question)
         println('Doc: ' + myDoc)
         [document: myDoc]
     }
@@ -62,37 +69,69 @@ class KnowledgeBaseController {
 
     def createDoc() {
         println(params)
-        def docType
         if (params.submit) {
+            def docTitle, docContent, docSubs, docType
+            String[] docTags
 
-            if (!params.docTitle.empty && !params.docContent.empty && !params.docTags.empty) {
 
-                def liste = params.list('checkbox')
-                def docTitle = params.docTitle
-                def docContent = params.docContent
+            //Hole Subkategorien, repräsentiert durch Checkboxen und erzeuge eine Liste aus den ausgewählten
+            if (params.list('checkbox').empty) {
+                flash.error = "Bitte mindestens eine dazugehörige Kategorie auswählen ausfüllen!"
+            } else {
+                String[] cats = new String[params.list('checkbox').size()];
+                docSubs = params.list('checkbox').toArray(cats);
+            }
 
-                String[] cats = new String[liste.size()];
-                cats = liste.toArray(cats);
-                String tags = params.docTags
-                String[] split = tags.split(",")
+            //Verarbeite dokumentspezifische Daten (Tutorial: verarbeite einzelne Steps, FAQ: verarbeite Frage-Antwort)
+            if (params.tutorial == 'create') {
+                docType = 'tutorial'
 
-                if (params.faq) {
-                    docContent = "{\"answer\":\"${docContent}\"}"
+                def allAttrs = params.findAll{it.key =~ /step[A-Za-z]+_[1-9]/}
+
+                if (allAttrs.containsValue('') || allAttrs.containsValue(null) || !params.docTitle || params.docTitle.empty) {
+                    flash.error = "Bitte alle Felder ausfüllen!"
+                } else {
+                    docTitle = params.docTitle
+                    def allTitles = allAttrs.findAll{it.key =~ /stepTitle_[1-9]/}
+                    def allTexts = allAttrs.findAll{it.key =~ /stepText_[1-9]/}
+                    def allLinks = allAttrs.findAll{it.key =~ /stepLink_[1-9]/}
+
+                    //Verarbeite einzelne Steps
+                    if (allTitles.size() == allTexts.size() && allTitles.size() == allLinks.size()) {
+                        def contentTemp = []
+                        for (int i = 1; i <= allTitles.size(); i++) {
+                            println('title: ' + allTitles.get(/stepTitle_/+i))
+                            contentTemp += [number: i, title: allTitles.get(/stepTitle_/+i), text: allTexts.get(/stepText_/+i), link: allLinks.get(/stepLink_/+i)]
+                        }
+                        println (contentTemp)
+                        docContent = contentTemp
+                    } else {
+                        flash.error = "Fehler beim Verarbeiten!"
+                    }
+                }
+            }
+            else if (params.faq == 'create') {
+                docType = 'faq'
+
+                if (params.question && !params.question.empty || params.answer &&!params.answer.empty) {
+                    docTitle = params.question
+                    docContent = [question: params.question, answer: params.answer]
+
+                } else {
+                    flash.error = "Bitte alle Felder ausfüllen!"
                 }
 
-                documentService.addDoc(docTitle, docContent, split, cats)
-                flash.info = "Doc angelegt"
-                render(view: 'index', model: [otherDocs: loadTestDocs()])
-
-            } else {
-                flash.error = "Bitte alle Felder ausfüllen!"
             }
-        }
-        if (params.createFaq) {
-            docType = 'faq'
-        }
-        else if (params.createTut) {
-            docType = 'tutorial'
+
+            //Verarbeite Daten, welche alle Dokumente gemeinsam haben
+            String tags = params.docTags
+            docTags = tags.split(",")
+
+            if (!flash.error) {
+                documentService.addDoc(docTitle, docContent, docTags, docSubs, docType)
+                flash.info = 'Dokument erstellt'
+                render(view: 'index', model: [otherDocs: loadTestDocs()])
+            }
         }
 
         String[] all = []
@@ -101,8 +140,7 @@ class KnowledgeBaseController {
                 all += cat.name as String
             }
         }
-        println('all: ' + all)
-        [cats: all, docType: docType]
+        [cats: all, docType: params.createFaq?'faq':params.createTut?'tutorial':'']
     }
 
     def exportDoc() {
@@ -175,13 +213,11 @@ class KnowledgeBaseController {
         println('\n\n####### Get count of all docs from given subCat with CatServer method #######' )
         println('Count: ' + categorieService.getDocCountOfSubCategorie('win_7'))
 
-        println('\n\n####### Export Doc as JSON #######' )
-        exportDoc()
+        println('\n\n####### Render DOC as JSON...First try #######' )
+        println(documentService.exportDoc('Cisco-Telefonie', 'json'))
 
         println('\n\n####### Render DOC as XML...First try #######' )
-        def tryFirst = Document.findByDocTitle('Cisco-Telefonie')
-        println(tryFirst.docContent)
-        println(JSON.parse(tryFirst.docContent))
+        println(documentService.exportDoc('Cisco-Telefonie', 'xml'))
 
 
         render(view: 'index', model: [otherDocs: loadTestDocs()])
