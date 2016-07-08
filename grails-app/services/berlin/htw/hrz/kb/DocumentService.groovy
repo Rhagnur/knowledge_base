@@ -8,9 +8,7 @@ package berlin.htw.hrz.kb
 import grails.converters.JSON
 import grails.converters.XML
 import grails.transaction.Transactional
-import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
-import groovy.xml.MarkupBuilder
 
 @Transactional
 class DocumentService {
@@ -80,13 +78,44 @@ class DocumentService {
             if (exportAs == 'json') {
                 JSON.use('deep') {
                     output = myDoc as JSON
-                    println(myDoc.faq as JSON)
+                    if (myDoc.faq) {
+                        HashMap resultFaq = new JsonSlurper().parseText((myDoc.faq as JSON).toString())
+                        resultFaq.remove('doc')
+                        HashMap resultDoc = new JsonSlurper().parseText((myDoc as JSON).toString())
+                        resultDoc.remove('faq')
+                        resultDoc.remove('steps')
+                        resultDoc.put('faq', resultFaq)
+                        println(resultDoc as JSON)
+                        output = resultDoc as JSON
+                    }
+
                 }
             }
             else if(exportAs == 'xml') {
                 XML.use('deep') {
                     output = myDoc as XML
+
                 }
+                /*
+                if (myDoc.faq) {
+                    String faq = (myDoc.faq as XML).toString()
+                    String doc = (myDoc as XML).toString()
+                    NodeChild resultFaq = new XmlSlurper().parseText(faq)
+                    GPathResult resultDoc = new XmlSlurper().parseText(doc)
+                    resultFaq.childNodes().each {
+                        println(it.toString())
+                    }
+                    println(XmlUtil.serialize(resultFaq))
+
+                    HashMap resultFaq = new XmlSlurper().parseText(faq)
+                    resultFaq.remove('doc')
+                    HashMap resultDoc = new XmlSlurper().parseText(doc)
+                    resultDoc.remove('faq')
+                    resultDoc.remove('steps')
+                    resultDoc.put('faq', resultFaq)
+                    println(resultDoc as XML)
+                    output = resultDoc as XML
+                }*/
             }
             return (output)
         }
