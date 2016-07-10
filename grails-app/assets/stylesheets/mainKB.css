@@ -1,0 +1,117 @@
+#header {
+    height: 186px;
+    background-color: rgb(87,87,87);
+    color: white;
+}
+#footer {
+    height: 311px;
+    background-color: rgb(87,87,87);
+    color: white;
+}
+#footer, .header, #page {
+    max-width: 90em;
+    margin-right: auto;
+    margin-left: auto;
+}
+body {
+    background-color: rgb(175,175,175);
+    padding: 0;
+    margin: 0;
+}
+
+#page {
+    background-color: rgb(235,235,235);
+    padding: 2em 1em 2em 1em;
+    box-sizing: border-box;
+    border-top: 1px solid #e2e2e2;
+}
+#main {
+    width: 60%;
+    box-sizing: border-box;
+    box-shadow: 0 0 5px rgba(0,0,0, 0.15);
+    background-color: white;
+    padding: 3em 2em 2em 2em;
+    float: left;
+}
+#main section {
+    margin-bottom: 2em;
+}
+#nav-context {
+    width: 20%;
+    float: left;
+}
+.catLink {
+    text-decoration: none;
+    color: black;
+}
+.catDiv {
+    width: 31%;
+    height: 8em;
+    border: 1px solid black;
+    border-radius: 0.2em;
+    float: left;
+    margin-bottom: 1em;
+    overflow-y: auto;
+    margin-right: 0.5em;
+    margin-left: 0.5em;
+}
+.clear {
+    clear: both;
+}
+#menubar-secondary {
+    height: 50px;
+    background-color: black;
+    color: white;
+}
+#menubar-primary {
+    height: 130px;
+    background-color: white;
+    color: black;
+    border-bottom: 1px solid #e2e2e2;
+}
+h1 {
+    font-size: 1.8em;
+}
+h2 {
+    font-size: 1.4em;
+}
+.tutStep p {
+    float: left;
+}
+
+.tutStep img{
+    float: right;
+    width: 200px;
+}
+.tutStep p {
+    margin-right: 1em;
+}
+.tutStepHeadline:not(:first-child) {
+    margin-top: 2em;
+    margin-bottom: 1em;
+}
+.docDiv {
+    width: 31%;
+    border: 1px solid rgba(0,0,0,0.2);
+    float: left;
+    margin-left: 0.5em;
+    margin-right: 0.5em;
+    margin-bottom: 1em;
+    padding-left: 1em;
+    padding-right: 1em;
+    box-sizing: border-box;
+
+}
+#searchBar {
+    width: 75%;
+    height: 2.2em;
+}
+#searchButton {
+    width: 20%;
+    height: 3em;
+}
+#search form {
+    width: 85%;
+    margin-left: auto;
+    margin-right: auto;
+}
