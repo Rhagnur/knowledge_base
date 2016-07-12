@@ -4,14 +4,15 @@
  */
 package berlin.htw.hrz.kb
 
-import grails.converters.JSON
-import grails.converters.XML
+import grails.plugin.springsecurity.annotation.Secured
 
+@Secured("IS_AUTHENTICATED_ANONYMOUSLY")
 class KnowledgeBaseController {
 
     def documentService
     def categorieService
     def initService
+    def springSecurityService
 
     def loadTestDocs () {
         return [Linux: Subcategorie.findByName('linux').docs.findAll(), WLAN: Subcategorie.findByName('wlan').docs.findAll(), Student: Subcategorie.findByName('student').docs.findAll(), Deutsch: Subcategorie.findByName('de').docs.findAll()]
@@ -22,6 +23,7 @@ class KnowledgeBaseController {
             initService.initTestModell()
             flash.info = "Neo4j war leer, Test-Domainklassen, Dokumente und Beziehungen angelegt"
         }
+        println(springSecurityService.principal.authorities)
         [otherDocs: loadTestDocs()]
     }
 

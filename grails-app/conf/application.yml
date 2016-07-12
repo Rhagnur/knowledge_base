@@ -121,6 +121,28 @@ grails:
                 scriptlets: html
                 taglib: none
                 staticparts: none
+    plugin:
+            springsecurity:
+                ldap:
+                    auth:
+                        useAuthPassword: true
+                    authenticator:
+                        useBind: true
+                    context:
+                        #server: 'ldaps://ldap1.rz.fhtw-berlin.de:636'
+                        server: 'ldaps://login.htw-berlin.de:636'
+                        #anonymousReadOnly: true
+                        managerDn: 'cn=didprox,ou=idmusers,dc=login,dc=htw-berlin,dc=de'
+                        managerPassword: 'cq3A3xcQpub3'
+                    search:
+                        #base: 'ou=passwd,dc=rz,dc=fhtw-berlin,dc=de'
+                        base: 'ou=idmusers,dc=login,dc=htw-berlin,dc=de'
+                    authorities:
+                        #groupSearchBase: 'ou=group,dc=rz,dc=fhtw-berlin,dc=de'
+                        retrieveGroupRoles: true
+                        ignorePartialResultException: true
+                        groupSearchFilter: 'member={0}'
+                        groupSearchBase: 'ou=idmgroups,dc=login,dc=htw-berlin,dc=de'
 endpoints:
     jmx:
         unique-names: true

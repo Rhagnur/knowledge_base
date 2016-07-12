@@ -36,6 +36,22 @@
         </g:if>
         <g:pageProperty name="page.main"/>
     </div>
+    <div id="sidebar">
+        <sec:ifLoggedIn>
+            <form action="/logout">
+                <g:submitButton name="submit" value="Ausloggen"></g:submitButton>
+            </form>
+        </sec:ifLoggedIn>
+        <sec:ifNotLoggedIn>
+            <form action="/login/authenticate" method="POST" autocomplete="off" id="loginForm">
+                <label for="username">Benutzername</label><br/>
+                <g:textField name="username"></g:textField><br/><br/>
+                <label for="password">Passwort:</label><br/>
+                <g:passwordField name="password"></g:passwordField><br/><br/>
+                <g:submitButton name="submit" value="Einloggen"></g:submitButton>
+            </form>
+        </sec:ifNotLoggedIn>
+    </div>
     <div class="clear"></div>
 </article>
 

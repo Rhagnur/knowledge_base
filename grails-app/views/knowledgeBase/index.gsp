@@ -2,7 +2,7 @@
   Created by IntelliJ IDEA.
   User: didschu
 --%>
-<g:applyLayout name="page">
+<g:applyLayout name="subPage">
     <head>
         <title>Knowledge Base</title>
     </head>
@@ -22,12 +22,14 @@
                 <g:submitButton name="submit" value="call testingThings()"/>
             </g:form>
 
-            <g:form controller="KnowledgeBase" action="createDoc" method="POST">
-                <g:submitButton name="createTut" value="Neue Anleitung erstellen"/>
-            </g:form>
-            <g:form controller="KnowledgeBase" action="createDoc" method="POST">
-                <g:submitButton name="createFaq" value="Neues FAQ erstellen"/>
-            </g:form>
+            <sec:ifAllGranted roles="ROLE_GP-STAFF">
+                <g:form controller="KnowledgeBase" action="createDoc" method="POST">
+                    <g:submitButton name="createTut" value="Neue Anleitung erstellen"/>
+                </g:form>
+                <g:form controller="KnowledgeBase" action="createDoc" method="POST">
+                    <g:submitButton name="createFaq" value="Neues FAQ erstellen"/>
+                </g:form>
+            </sec:ifAllGranted>
 
             <g:form controller="KnowledgeBase" action="showDoc">
                 <g:submitButton name="show" value="Doc ansehen"/>

@@ -3,7 +3,7 @@
   User: didschu
 --%>
 
-<g:applyLayout name="page">
+<g:applyLayout name="subPage">
     <head>
         <title>Kategorien anzeigen</title>
     </head>
