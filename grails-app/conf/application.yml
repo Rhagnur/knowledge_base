@@ -137,6 +137,8 @@ grails:
                     search:
                         #base: 'ou=passwd,dc=rz,dc=fhtw-berlin,dc=de'
                         base: 'ou=idmusers,dc=login,dc=htw-berlin,dc=de'
+                        filter: "sAMAccountName={0}"
+                        attributesToReturn: ['mail', 'gecos']
                     authorities:
                         #groupSearchBase: 'ou=group,dc=rz,dc=fhtw-berlin,dc=de'
                         retrieveGroupRoles: true

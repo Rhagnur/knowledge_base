@@ -5,6 +5,8 @@
 package berlin.htw.hrz.kb
 
 import grails.plugin.springsecurity.annotation.Secured
+import org.springframework.security.core.context.SecurityContextHolder
+import org.springframework.security.core.userdetails.UserDetails
 
 @Secured("IS_AUTHENTICATED_ANONYMOUSLY")
 class KnowledgeBaseController {
@@ -23,14 +25,13 @@ class KnowledgeBaseController {
             initService.initTestModell()
             flash.info = "Neo4j war leer, Test-Domainklassen, Dokumente und Beziehungen angelegt"
         }
-        println(springSecurityService.principal.authorities)
-        [otherDocs: loadTestDocs()]
+        [otherDocs: loadTestDocs(), principal: springSecurityService.principal];
     }
 
     def search () {
         println(params)
         flash.info = "Suche noch nicht implementiert!"
-        render(view: 'index', model: [otherDocs: loadTestDocs()])
+        render(view: 'index', model: [otherDocs: loadTestDocs(), principal: springSecurityService.principal])
 
     }
 
@@ -44,7 +45,7 @@ class KnowledgeBaseController {
         }
         if (!myDoc) {
             flash.error = "Kein Dokument gefunden"
-            render(view: 'index', model: [otherDocs: loadTestDocs()])
+            render(view: 'index', model: [otherDocs: loadTestDocs(), principal: springSecurityService.principal])
         }
         myDoc.steps.each { step ->
             println(step.stepTitle)
@@ -69,6 +70,7 @@ class KnowledgeBaseController {
         [cats: myCats]
     }
 
+    @Secured("hasAuthority('ROLE_GP-STAFF')")
     def createDoc() {
         println(params)
         if (params.submit) {
@@ -132,7 +134,7 @@ class KnowledgeBaseController {
             if (!flash.error) {
                 documentService.addDoc(docTitle, docContent, docTags, docSubs, docType)
                 flash.info = 'Dokument erstellt'
-                render(view: 'index', model: [otherDocs: loadTestDocs()])
+                render(view: 'index', model: [otherDocs: loadTestDocs(), principal: springSecurityService.principal])
             }
         }
 
@@ -222,6 +224,6 @@ class KnowledgeBaseController {
         println(documentService.exportDoc('Cisco-Telefonie', 'xml'))
 
 
-        render(view: 'index', model: [otherDocs: loadTestDocs()])
+        render(view: 'index', model: [otherDocs: loadTestDocs(), principal: springSecurityService.principal])
     }
 }
