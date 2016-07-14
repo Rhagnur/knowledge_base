@@ -5,8 +5,6 @@
 package berlin.htw.hrz.kb
 
 import grails.plugin.springsecurity.annotation.Secured
-import org.springframework.security.core.context.SecurityContextHolder
-import org.springframework.security.core.userdetails.UserDetails
 
 @Secured("IS_AUTHENTICATED_ANONYMOUSLY")
 class KnowledgeBaseController {
