@@ -34,7 +34,7 @@ class DocumentService {
                 doc = new Document(docTitle: docTitle, hiddenTags: docHiddenTags)
                 docContent.each { step ->
                     println(step)
-                    new Step(number: step.number, stepTitle: step.title, stepText: step.text, mediaLink: step.link)
+                    doc.addToSteps(new Step(number: step.number, stepTitle: step.title, stepText: step.text, mediaLink: step.link))
                 }
             }
             else if (docType == 'faq') {

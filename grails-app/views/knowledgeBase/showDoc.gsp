@@ -17,20 +17,25 @@
         <g:link controller="KnowledgeBase" action="exportDoc"
                 params="[docTitle: document.docTitle, exportAs: 'xml']">XML 'Export'</g:link>
         <g:if test="${document.steps}">
-            <g:each in="${document.steps}">
-                <h2 class="tutStepHeadline">Schritt ${it.number}: ${it.stepTitle}</h2>
+            <g:each in="${document.steps.sort{it.number}}">
+                <div class="step-header">
+                    <h2>Schritt ${it.number}: ${it.stepTitle}</h2>
+                </div>
 
-                <div class="tutStep">
-                    <p>${it.stepText}</p>
-                    <a href="${it.mediaLink}"><g:img uri="${it.mediaLink}"/></a>
-
+                <div class="step-content">
+                    <div class="step-text">
+                        <p>${raw(it.stepText)}</p>
+                    </div>
+                    <div class="step-media">
+                        <a href="${it.mediaLink}"><g:img uri="${it.mediaLink}"/></a>
+                    </div>
                     <div class="clear"></div>
                 </div>
             </g:each>
         </g:if>
         <g:elseif test="${document.faq}">
             <h2>${document.faq?.question}</h2>
-            <p>${document.faq?.answer}</p>
+            <p>${raw(document.faq?.answer)}</p>
         </g:elseif>
 
 

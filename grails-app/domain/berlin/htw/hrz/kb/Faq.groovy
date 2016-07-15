@@ -4,6 +4,10 @@ class Faq {
 
     static mapWith = "neo4j"
 
+    static mapping = {
+        answer type: "text"
+    }
+
     static constraints = {
     }
     static belongsTo = [doc: Document]

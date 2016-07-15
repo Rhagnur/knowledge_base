@@ -52,7 +52,7 @@ class KnowledgeBaseController {
         println(myDoc.faq?.answer)
         println(myDoc.faq?.question)
         println('Doc: ' + myDoc)
-        [document: myDoc]
+        [document: myDoc, principal: springSecurityService.principal]
     }
 
 
@@ -65,7 +65,7 @@ class KnowledgeBaseController {
             myCats = categorieService.getAllSubCats(Subcategorie.findByName(params.cat)?Subcategorie.findByName(params.cat):Maincategorie.findByName(params.cat)?Maincategorie.findByName(params.cat):null)
             if (!myCats) {flash.error = "No such categorie!!!"}
         }
-        [cats: myCats]
+        [cats: myCats, principal: springSecurityService.principal]
     }
 
     @Secured("hasAuthority('ROLE_GP-STAFF')")
@@ -142,7 +142,7 @@ class KnowledgeBaseController {
                 all += cat.name as String
             }
         }
-        [cats: all, docType: params.createFaq?'faq':params.createTut?'tutorial':'']
+        [cats: all, docType: params.createFaq?'faq':params.createTut?'tutorial':'', principal: springSecurityService.principal]
     }
 
     def exportDoc() {

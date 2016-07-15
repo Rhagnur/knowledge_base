@@ -4,6 +4,10 @@ class Step {
 
     static mapWith = "neo4j"
 
+    static mapping = {
+        stepText type: "text"
+    }
+
     static constraints = {
         mediaLink nullable: true
     }
