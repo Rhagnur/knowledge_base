@@ -13,6 +13,8 @@ import groovy.json.JsonSlurper
 @Transactional
 class DocumentService {
 
+    def categorieService
+
     /**
      * These methods helps to save a new document into the database.
      * @param doctitle Title of the document
@@ -69,6 +71,42 @@ class DocumentService {
         //find only non unique docs, so you get all docs which are associated with the given categories
         def matchItems = docs.findAll{docs.count(it) > 1}.unique()
         return matchItems
+    }
+
+    //todo: vll einige Funktionen in eine extra Serviceklasse auslagern?
+    def getDocsOfInterest(def userPrincipals) {
+        def docMap = [:]
+
+        println(userPrincipals.authorities)
+        //1 Get the documents of the associated groups [ROLE_GP-STAFF, ROLE_GP-STUD]
+        if (userPrincipals.authorities.any { it.authority == "ROLE_ANONYMOUS" }) {
+            docMap.put('anonym', Subcategorie.findByName('anonym').docs.findAll())
+        }
+        if (userPrincipals.authorities.any { it.authority == "ROLE_GP-STUD" }) {
+            docMap.put('student', Subcategorie.findByName('student').docs.findAll())
+        }
+        if (userPrincipals.authorities.any { it.authority == "ROLE_GP-STAFF" }) {
+            docMap.put('stuff', Subcategorie.findByName('stuff').docs.findAll())
+        }
+
+        //2 Get docs from associated OS []
+        String osName = ''
+        if (System.properties['os.name'].toString().toLowerCase().contains('linux')) {
+            osName = 'linux'
+        }
+        else if (System.properties['os.name'].toString().toLowerCase().contains('windows')) {
+            osName = 'windows'
+        }
+        categorieService.getIterativeAllSubCats(Subcategorie.findByName(osName)).each {
+            docMap.put(it.name, it.docs.findAll())
+        }
+
+        //3 Get the popularest docs
+        //docMap.put('popular')
+
+
+        println(docMap)
+        return docMap
     }
 
     def exportDoc(String docTitle, String exportAs) {

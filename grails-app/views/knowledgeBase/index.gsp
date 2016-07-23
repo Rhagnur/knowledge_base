@@ -16,7 +16,34 @@
                 <g:submitButton name="search" id="searchButton" value="Suchen"></g:submitButton>
             </g:form>
         </section>
-        <section id="functions">
+        <section id="document-of-interest">
+            <h2>Dokumente von Interesse</h2>
+            <g:if test="${otherDocs && otherDocs.size() == 0}">
+                <p>Es wurden keine relevanten Dokumente gefunden!</p>
+            </g:if>
+            <g:elseif test="${otherDocs && otherDocs.size() == 1}">
+                <p>Es wurden Dokumente in der folgenden Rubrik gefunden...</p>
+            </g:elseif>
+            <g:elseif test="${otherDocs && otherDocs.size() > 1}">
+                <p>Es wurden Dokumente in den folgenden Rubriken gefunden...</p>
+            </g:elseif>
+            <g:else>
+                <p>Es ist ein unerwarteter Fehler aufgetreten!</p>
+            </g:else>
+
+            <g:each in="${otherDocs}">
+                <div class="docDiv">
+                    <p>...'${it.key}'</p>
+                    <g:each in="${it.value}">
+                        <g:link controller="KnowledgeBase" action="showDoc" params="[docTitle: it.docTitle]">
+                            <p>${it.docTitle}</p>
+                        </g:link>
+                    </g:each>
+                </div>
+            </g:each>
+            <div class="clear"></div>
+        </section>
+        <section id="debug">
             <h2>Debug-/Test-Funktionen</h2>
             <g:form controller="KnowledgeBase" action="testingThings">
                 <g:submitButton name="submit" value="call testingThings()"/>
@@ -38,23 +65,6 @@
             <g:form controller="KnowledgeBase" action="showCat">
                 <g:submitButton name="show" value="Cat ansehen"/>
             </g:form>
-            <br/>
-
-            <h2>Test für weitere Dokumente</h2>
-
-            <p>Gefundene Dokumente in...</p>
-
-            <g:each in="${otherDocs}">
-                <div class="docDiv">
-                    <p>...'${it.key}'</p>
-                    <g:each in="${it.value}">
-                        <g:link controller="KnowledgeBase" action="showDoc" params="[docTitle: it.docTitle]">
-                            <p>${it.docTitle}</p>
-                        </g:link>
-                    </g:each>
-                </div>
-
-            </g:each>
         </section>
     </content>
 </g:applyLayout>

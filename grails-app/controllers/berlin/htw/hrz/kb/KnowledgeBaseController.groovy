@@ -15,7 +15,8 @@ class KnowledgeBaseController {
     def springSecurityService
 
     def loadTestDocs () {
-        return [Linux: Subcategorie.findByName('linux').docs.findAll(), WLAN: Subcategorie.findByName('wlan').docs.findAll(), Student: Subcategorie.findByName('student').docs.findAll(), Deutsch: Subcategorie.findByName('de').docs.findAll()]
+        //return [Linux: Subcategorie.findByName('linux').docs.findAll(), WLAN: Subcategorie.findByName('wlan').docs.findAll(), Student: Subcategorie.findByName('student').docs.findAll(), Deutsch: Subcategorie.findByName('de').docs.findAll()]
+        return documentService.getDocsOfInterest(springSecurityService.principal)
     }
 
     def index() {
@@ -23,6 +24,8 @@ class KnowledgeBaseController {
             initService.initTestModell()
             flash.info = "Neo4j war leer, Test-Domainklassen, Dokumente und Beziehungen angelegt"
         }
+        println(System.properties['os.name'] + " # " + System.properties['os.arch'] + " # " + System.properties['os.version'])
+        println(loadTestDocs())
         [otherDocs: loadTestDocs(), principal: springSecurityService.principal];
     }
 
@@ -68,7 +71,7 @@ class KnowledgeBaseController {
         [cats: myCats, principal: springSecurityService.principal]
     }
 
-    @Secured("hasAuthority('ROLE_GP-STAFF')")
+    @Secured("hasAuthority('ROLE_GP-STAFF')") //Für optinale Erweiterung "Autoren" später Abfrage, ob User als Autor eingetragen ist
     def createDoc() {
         println(params)
         if (params.submit) {
