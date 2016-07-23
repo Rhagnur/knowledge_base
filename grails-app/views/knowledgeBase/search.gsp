@@ -9,26 +9,34 @@
     </head>
 
     <content tag="main">
+        <h2>Suche</h2>
+        <p>Die Suche nach '${searchTerm}' brachte folgende Ergebnisse:</p>
+        <p>Hinweis: Klicken Sie auf den Tabellenkopf um die Zeilen zu sortieren.</p>
         <g:if test="${foundDocs}">
-            <table id="search-results">
-                <tr><td>Titel</td><td>Typ</td><td>Views</td></tr>
-                <g:each in="${foundDocs}">
+            <table id="search-results-table">
+                <thead>
                     <tr>
-                        <td><g:link controller="KnowledgeBase" action="showDoc" params="[docTitle: it.docTitle]">${it.docTitle}</g:link></td>
-                        <td>
-                            <g:if test="${it.steps}">
-                                <p>Anleitung</p>
-                            </g:if>
-                            <g:else>
-                                <p>FAQ</p>
-                            </g:else>
-                        </td>
-                        <td>${it.viewCount}</td>
-
+                        <th data-sort="string">Titel</th>
+                        <th data-sort="string">Typ</th>
+                        <th data-sort="int">Views</th>
                     </tr>
-
-
-            </g:each>
+                </thead>
+                <tbody>
+                    <g:each in="${foundDocs}">
+                        <tr>
+                            <td><g:link controller="KnowledgeBase" action="showDoc" params="[docTitle: it.docTitle]">${it.docTitle}</g:link></td>
+                            <td>
+                                <g:if test="${it.steps}">
+                                    <p>Anleitung</p>
+                                </g:if>
+                                <g:else>
+                                    <p>FAQ</p>
+                                </g:else>
+                            </td>
+                            <td>${it.viewCount}</td>
+                        </tr>
+                    </g:each>
+                </tbody>
             </table>
 
 

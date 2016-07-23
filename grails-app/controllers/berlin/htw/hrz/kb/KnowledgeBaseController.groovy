@@ -56,7 +56,7 @@ class KnowledgeBaseController {
         }
 
         println(docsFound)
-        [foundDocs: docsFound ,principal: springSecurityService.principal]
+        [foundDocs: docsFound ,principal: springSecurityService.principal, searchTerm: params.searchBar]
     }
 
     def showDoc() {

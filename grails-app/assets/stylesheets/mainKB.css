@@ -126,11 +126,14 @@ h2 {
     margin-left: auto;
     margin-right: auto;
 }
-#search-results, #search-results td {
+#search-results-table, #search-results-table td, #search-results-table th {
     border:1px solid rgba(0,0,0,0.2);
 }
-#search-results {
+#search-results-table {
     width: 100%;
     margin-top: 1em;
     margin-bottom: 2em;
+}
+#search-results-table th[data-sort]{
+    cursor:pointer;
 }

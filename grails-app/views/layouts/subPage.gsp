@@ -58,5 +58,12 @@
 
 
 <div id="footer">Platzhalter Footer</div>
+<asset:javascript src="jquery-2.2.0.min.js"/>
+<asset:javascript src="stupidtable.min.js"/>
+<script>
+    $( document ).ready(function() {
+        $("#search-results-table").stupidtable();
+    });
+</script>
 </body>
 </html>
