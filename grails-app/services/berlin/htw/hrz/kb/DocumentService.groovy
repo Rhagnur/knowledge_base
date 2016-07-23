@@ -76,7 +76,7 @@ class DocumentService {
     }
 
     //todo: vll einige Funktionen in eine extra Serviceklasse auslagern?
-    def getDocsOfInterest(def userPrincipals) {
+    def getDocsOfInterest(def userPrincipals, def request) {
         def subCatNames = []
         def docMap = [:]
         def NumDocsToShow = 5
@@ -88,10 +88,10 @@ class DocumentService {
         start = new Date()
         //1 Get docs from associated OS []
         String osName = ''
-        if (System.properties['os.name'].toString().toLowerCase().contains('linux')) {
+        if (request.getHeader('User-Agent').toString().toLowerCase().contains('linux')) {
             osName = 'linux'
         }
-        else if (System.properties['os.name'].toString().toLowerCase().contains('windows')) {
+        else if (request.getHeader('User-Agent').toString().toLowerCase().contains('windows')) {
             osName = 'windows'
         }
         categorieService.getIterativeAllSubCats(Subcategorie.findByName(osName)).each {

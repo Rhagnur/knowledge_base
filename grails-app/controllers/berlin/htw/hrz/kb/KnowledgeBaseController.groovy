@@ -17,7 +17,7 @@ class KnowledgeBaseController {
 
     def loadTestDocs () {
         //return [Linux: Subcategorie.findByName('linux').docs.findAll(), WLAN: Subcategorie.findByName('wlan').docs.findAll(), Student: Subcategorie.findByName('student').docs.findAll(), Deutsch: Subcategorie.findByName('de').docs.findAll()]
-        return documentService.getDocsOfInterest(springSecurityService.principal)
+        return documentService.getDocsOfInterest(springSecurityService.principal, request)
     }
 
     def index() {
@@ -27,7 +27,7 @@ class KnowledgeBaseController {
             initService.initTestModell()
             flash.info = "Neo4j war leer, Test-Domainklassen, Dokumente und Beziehungen angelegt"
         }
-        println(System.properties['os.name'] + " # " + System.properties['os.arch'] + " # " + System.properties['os.version'])
+        println(request.getHeader('User-Agent'))
 
         otherDocs = loadTestDocs()
         stop = new Date()
