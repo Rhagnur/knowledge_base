@@ -80,9 +80,12 @@ class DocumentService {
         def subCatNames = []
         def docMap = [:]
         def NumDocsToShow = 5
+        def start, stop
 
         println(userPrincipals.authorities)
 
+        println('1')
+        start = new Date()
         //1 Get docs from associated OS []
         String osName = ''
         if (System.properties['os.name'].toString().toLowerCase().contains('linux')) {
@@ -95,7 +98,11 @@ class DocumentService {
             docMap.put(it.name, it.docs.findAll())
             subCatNames.add(it.name)
         }
+        stop = new Date()
+        println(TimeCategory.minus(stop, start))
 
+        println('2')
+        start = new Date()
         //2 Get the documents of the associated groups [ROLE_GP-STAFF, ROLE_GP-STUD]
         if (userPrincipals.authorities.any { it.authority == "ROLE_GP-STAFF" }) {
             docMap.put('stuff', Subcategorie.findByName('stuff').docs.findAll().sort{ -it.viewCount }.subList(0, NumDocsToShow))
@@ -109,11 +116,19 @@ class DocumentService {
             docMap.put('anonym', Subcategorie.findByName('anonym').docs.findAll().sort{ -it.viewCount }.subList(0, NumDocsToShow))
             subCatNames.add('anonym')
         }
+        stop = new Date()
+        println(TimeCategory.minus(stop, start))
 
+        println('3')
+        start = new Date()
         //3 Get the popularest docs
         def temp = Document.findAll(max : NumDocsToShow, sort: 'viewCount', order: 'desc')
         docMap.put('popular', temp)
+        stop = new Date()
+        println(TimeCategory.minus(stop, start))
 
+        println('4')
+        start = new Date()
         //4 Get suggestions, sugg are associated to OS and the user-groups
         while (subCatNames && !subCatNames.empty) {
             def docs = getAllDocsAssociatedToSubCategories(subCatNames as String[])
@@ -124,6 +139,8 @@ class DocumentService {
                 subCatNames.remove(subCatNames.last())
             }
         }
+        stop = new Date()
+        println(TimeCategory.minus(stop, start))
 
         docMap = docMap.sort { -(it.value.size()) }
         return docMap
@@ -136,7 +153,7 @@ class DocumentService {
         def temp
         def start, stop
 
-        println('1 subCat doctype')
+        println('\n1 subCat doctype')
         start = new Date()
         if (typeOf == 'tutorial') {
             catNames.add('tutorial')
@@ -147,7 +164,7 @@ class DocumentService {
         stop = new Date()
         println(TimeCategory.minus(stop, start))
 
-        println('2 subCats theme and lang')
+        println('\n2 subCats theme and lang')
         start = new Date()
         //1 add theme and lang subCatName
         temp = Subcategorie.findByMainCatAndDocs(Maincategorie.findByName('theme'), doc)
@@ -158,7 +175,7 @@ class DocumentService {
         println(TimeCategory.minus(stop, start))
 
 
-        println('3 subCat os')
+        println('\n3 subCat os')
         start = new Date()
         //2 add os subCatName
         temp = categorieService.getIterativeAllSubCats(Maincategorie.findByName('os'))
@@ -169,7 +186,7 @@ class DocumentService {
         stop = new Date()
         println(TimeCategory.minus(stop, start))
 
-        println('4 subcat group')
+        println('\n4 subcat group')
         start = new Date()
         //3 add groupSubCatName
         if (springSecurityService.principal.authorities.any { it.authority == "ROLE_ANONYMOUS" }) {

@@ -21,19 +21,42 @@ class KnowledgeBaseController {
     }
 
     def index() {
+        def start, stop, otherDocs
+        start = new Date()
         if (Maincategorie.findAll().empty) {
             initService.initTestModell()
             flash.info = "Neo4j war leer, Test-Domainklassen, Dokumente und Beziehungen angelegt"
         }
         println(System.properties['os.name'] + " # " + System.properties['os.arch'] + " # " + System.properties['os.version'])
-        [otherDocs: loadTestDocs(), principal: springSecurityService.principal];
+
+        otherDocs = loadTestDocs()
+        stop = new Date()
+        println('\nSeitenladezeit: '+TimeCategory.minus(stop, start))
+        [otherDocs: otherDocs, principal: springSecurityService.principal];
     }
 
     def search () {
+        def docsFound = []
         println(params)
-        flash.info = "Suche noch nicht implementiert!"
-        render(view: 'index', model: [otherDocs: loadTestDocs(), principal: springSecurityService.principal])
 
+        if (params.searchBar && params.searchBar.length() < 3) {
+            flash.error = "Suchbegriff zu kurz, mindestens 3 Zeichen!"
+            render(view: 'index', model: [otherDocs: loadTestDocs(), principal: springSecurityService.principal])
+        }
+        else if (params.searchBar && params.searchBar.length() >= 3) {
+            docsFound.addAll(Document.findAllByDocTitleIlike("%$params.searchBar%"))
+            docsFound.addAll(Step.findAllByStepTitleIlike("%$params.searchBar%").doc)
+            docsFound.addAll(Step.findAllByStepTextIlike("%$params.searchBar%").doc)
+            docsFound.addAll(Faq.findAllByQuestionIlike("%$params.searchBar%").doc)
+            docsFound.addAll(Faq.findAllByAnswerIlike("%$params.searchBar%").doc)
+            docsFound.sort { it.viewCount }.unique{ it.docTitle }
+
+        } else {
+            docsFound.addAll(Document.findAll().sort{it.steps})
+        }
+
+        println(docsFound)
+        [foundDocs: docsFound ,principal: springSecurityService.principal]
     }
 
     def showDoc() {
@@ -63,7 +86,7 @@ class KnowledgeBaseController {
         otherDocs.tutorials = myDoc.steps?documentService.getSimilarDocs(myDoc, 'tutorial'):null
         otherDocs.faq = myDoc.steps?documentService.getSimilarDocs(myDoc, 'faq'):null
         stop = new Date()
-        println('Seitenladezeit: '+TimeCategory.minus(stop, start))
+        println('\nSeitenladezeit: '+TimeCategory.minus(stop, start))
         [document: myDoc, similarDocs: otherDocs, principal: springSecurityService.principal]
     }
 

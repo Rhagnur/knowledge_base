@@ -11,8 +11,8 @@
         <section id="search">
             <h2>Knowledge Base durchsuchen</h2>
             <p>Bla bla bla, ich bin ein kleiner Begrüßgungs- und Hilfetext</p>
-            <g:form controller="knowledgeBase" action="search">
-                <g:textField name="searchBar" id="searchBar" placeholder="Suchbegriff eingeben"/>
+            <g:form controller="knowledgeBase" action="search" method="POST">
+                <g:textField name="searchBar" id="searchBar" placeholder="Suchbegriff eingeben, keine Eingabe um alle Dokumente aufzulisten"/>
                 <g:submitButton name="search" id="searchButton" value="Suchen"></g:submitButton>
             </g:form>
         </section>
@@ -33,10 +33,16 @@
 
             <g:each in="${otherDocs}">
                 <div class="docDiv">
+                    <g:if test="${it.key =='popular'}">
+                        <g:set var="popular" value="${true}"></g:set>
+                    </g:if>
+                    <g:else>
+                        <g:set var="popular" value="${false}"></g:set>
+                    </g:else>
                     <p>...'${it.key}'</p>
                     <g:each in="${it.value}">
                         <g:link controller="KnowledgeBase" action="showDoc" params="[docTitle: it.docTitle]">
-                            <p>${it.docTitle} (${it.viewCount})</p>
+                            <p>${it.docTitle} <g:if test="${popular}">(${it.viewCount})</g:if></p>
                         </g:link>
                     </g:each>
                 </div>

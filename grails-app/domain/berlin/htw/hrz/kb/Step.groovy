@@ -11,6 +11,7 @@ class Step {
     static constraints = {
         mediaLink nullable: true
     }
+    static belongsTo = [doc: Document]
 
     int number;
     String stepTitle, stepText, mediaLink;
