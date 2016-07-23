@@ -5,6 +5,7 @@
 package berlin.htw.hrz.kb
 
 import grails.plugin.springsecurity.annotation.Secured
+import groovy.time.TimeCategory
 
 @Secured("IS_AUTHENTICATED_ANONYMOUSLY")
 class KnowledgeBaseController {
@@ -36,7 +37,9 @@ class KnowledgeBaseController {
     }
 
     def showDoc() {
-        println('params: ' + params)
+        def start, stop
+        def otherDocs = [:]
+        start = new Date()
         Document myDoc
 
         //Falls ein anderes Dokument angezeigt werden soll, überschreibe das Default-Test-Dokument
@@ -57,7 +60,11 @@ class KnowledgeBaseController {
         myDoc.save()
         println('############################################### Ende '+myDoc.viewCount+ ' Ende ###############################################\n\n')
 
-        [document: myDoc, principal: springSecurityService.principal]
+        otherDocs.tutorials = myDoc.steps?documentService.getSimilarDocs(myDoc, 'tutorial'):null
+        otherDocs.faq = myDoc.steps?documentService.getSimilarDocs(myDoc, 'faq'):null
+        stop = new Date()
+        println('Seitenladezeit: '+TimeCategory.minus(stop, start))
+        [document: myDoc, similarDocs: otherDocs, principal: springSecurityService.principal]
     }
 
 

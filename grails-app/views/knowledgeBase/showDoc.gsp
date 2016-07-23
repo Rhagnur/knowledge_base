@@ -39,6 +39,28 @@
             <p>${raw(document.faq?.answer)}</p>
         </g:elseif>
 
+        <g:if test="${similarDocs.tutorials}">
+            <p>Anleitungen, die Sie auch interessieren könnten...</p>
+            <ul>
+                <g:each in="${similarDocs.tutorials}">
+                    <g:link controller="KnowledgeBase" action="showDoc" params="[docTitle: it.docTitle]">
+                        <li>${it.docTitle}</li>
+                    </g:link>
+                </g:each>
+            </ul>
+        </g:if>
+
+        <g:if test="${similarDocs.faq}">
+            <p>Nützliche Fragen und Antworten zum Thema...</p>
+            <ul>
+                <g:each in="${similarDocs.faq}">
+                    <g:link controller="KnowledgeBase" action="showDoc" params="[docTitle: it.docTitle]">
+                        <li>${it.docTitle}</li>
+                    </g:link>
+                </g:each>
+            </ul>
+        </g:if>
+
 
         <g:link controller="KnowledgeBase" action="index">Zur Startseite</g:link>
     </content>

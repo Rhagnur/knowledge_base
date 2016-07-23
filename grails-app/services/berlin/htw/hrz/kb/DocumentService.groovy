@@ -9,11 +9,13 @@ import grails.converters.JSON
 import grails.converters.XML
 import grails.transaction.Transactional
 import groovy.json.JsonSlurper
+import groovy.time.TimeCategory
 
 @Transactional
 class DocumentService {
 
     def categorieService
+    def springSecurityService
 
     /**
      * These methods helps to save a new document into the database.
@@ -69,27 +71,19 @@ class DocumentService {
             }
         }
         //find only non unique docs, so you get all docs which are associated with the given categories
-        def matchItems = docs.findAll{docs.count(it) > 1}.unique()
-        return matchItems
+        docs = docs.findAll{docs.count(it) == subs.size()}.unique()
+        return docs
     }
 
     //todo: vll einige Funktionen in eine extra Serviceklasse auslagern?
     def getDocsOfInterest(def userPrincipals) {
+        def subCatNames = []
         def docMap = [:]
+        def NumDocsToShow = 5
 
         println(userPrincipals.authorities)
-        //1 Get the documents of the associated groups [ROLE_GP-STAFF, ROLE_GP-STUD]
-        if (userPrincipals.authorities.any { it.authority == "ROLE_ANONYMOUS" }) {
-            docMap.put('anonym', Subcategorie.findByName('anonym').docs.findAll())
-        }
-        if (userPrincipals.authorities.any { it.authority == "ROLE_GP-STUD" }) {
-            docMap.put('student', Subcategorie.findByName('student').docs.findAll())
-        }
-        if (userPrincipals.authorities.any { it.authority == "ROLE_GP-STAFF" }) {
-            docMap.put('stuff', Subcategorie.findByName('stuff').docs.findAll())
-        }
 
-        //2 Get docs from associated OS []
+        //1 Get docs from associated OS []
         String osName = ''
         if (System.properties['os.name'].toString().toLowerCase().contains('linux')) {
             osName = 'linux'
@@ -99,16 +93,108 @@ class DocumentService {
         }
         categorieService.getIterativeAllSubCats(Subcategorie.findByName(osName)).each {
             docMap.put(it.name, it.docs.findAll())
+            subCatNames.add(it.name)
+        }
+
+        //2 Get the documents of the associated groups [ROLE_GP-STAFF, ROLE_GP-STUD]
+        if (userPrincipals.authorities.any { it.authority == "ROLE_GP-STAFF" }) {
+            docMap.put('stuff', Subcategorie.findByName('stuff').docs.findAll().sort{ -it.viewCount }.subList(0, NumDocsToShow))
+            subCatNames.add('stuff')
+        }
+        if (userPrincipals.authorities.any { it.authority == "ROLE_GP-STUD" }) {
+            docMap.put('student', Subcategorie.findByName('student').docs.findAll().sort{ -it.viewCount }.subList(0, NumDocsToShow))
+            subCatNames.add('student')
+        }
+        if (userPrincipals.authorities.any { it.authority == "ROLE_ANONYMOUS" }) {
+            docMap.put('anonym', Subcategorie.findByName('anonym').docs.findAll().sort{ -it.viewCount }.subList(0, NumDocsToShow))
+            subCatNames.add('anonym')
         }
 
         //3 Get the popularest docs
-        def temp = Document.findAll()
-        temp.sort { -it.viewCount }
+        def temp = Document.findAll(max : NumDocsToShow, sort: 'viewCount', order: 'desc')
         docMap.put('popular', temp)
 
+        //4 Get suggestions, sugg are associated to OS and the user-groups
+        while (subCatNames && !subCatNames.empty) {
+            def docs = getAllDocsAssociatedToSubCategories(subCatNames as String[])
+            if (docs && !docs.empty) {
+                docMap.put('suggestion', docs)
+                break
+            } else {
+                subCatNames.remove(subCatNames.last())
+            }
+        }
 
-        //println(docMap)
+        docMap = docMap.sort { -(it.value.size()) }
         return docMap
+    }
+
+    def getSimilarDocs(Document doc, String typeOf) {
+        def docs
+        //prio reihenfolge thema, sprache, betriebssystem, gruppe
+        def catNames = []
+        def temp
+        def start, stop
+
+        println('1 subCat doctype')
+        start = new Date()
+        if (typeOf == 'tutorial') {
+            catNames.add('tutorial')
+        }
+        else if (typeOf == 'faq') {
+            catNames.add('faq')
+        }
+        stop = new Date()
+        println(TimeCategory.minus(stop, start))
+
+        println('2 subCats theme and lang')
+        start = new Date()
+        //1 add theme and lang subCatName
+        temp = Subcategorie.findByMainCatAndDocs(Maincategorie.findByName('theme'), doc)
+        if (temp) { catNames.add(temp.name) }
+        temp = Subcategorie.findByMainCatAndDocs(Maincategorie.findByName('lang'), doc)
+        if (temp) { catNames.add(temp.name) }
+        stop = new Date()
+        println(TimeCategory.minus(stop, start))
+
+
+        println('3 subCat os')
+        start = new Date()
+        //2 add os subCatName
+        temp = categorieService.getIterativeAllSubCats(Maincategorie.findByName('os'))
+        temp = temp.find { it.docs.contains(doc)}
+        if (temp) {
+            catNames.add(temp.name)
+        }
+        stop = new Date()
+        println(TimeCategory.minus(stop, start))
+
+        println('4 subcat group')
+        start = new Date()
+        //3 add groupSubCatName
+        if (springSecurityService.principal.authorities.any { it.authority == "ROLE_ANONYMOUS" }) {
+            catNames.add('anonym')
+        }
+        else if (springSecurityService.principal.authorities.any { it.authority == "ROLE_GP-STAFF" }) {
+            catNames.add('stuff')
+        }
+        else if (springSecurityService.principal.authorities.any { it.authority == "ROLE_GP-STUD" }) {
+            catNames.add('student')
+        }
+
+        while (catNames && catNames.size() > 1) {
+            docs = getAllDocsAssociatedToSubCategories(catNames as String[])
+            docs.remove(doc)
+            if (docs && !docs.empty) {
+                stop = new Date()
+                println(TimeCategory.minus(stop, start))
+                return docs
+            } else {
+                catNames.remove(catNames.last())
+            }
+        }
+
+        return null
     }
 
     def exportDoc(String docTitle, String exportAs) {
@@ -131,6 +217,7 @@ class DocumentService {
 
                 }
             }
+            //todo: XML Export funktioniert bei FAQ noch nicht wirklich, vielleicht einfach Export für FAQ untersagen?
             else if(exportAs == 'xml') {
                 XML.use('deep') {
                     output = myDoc as XML

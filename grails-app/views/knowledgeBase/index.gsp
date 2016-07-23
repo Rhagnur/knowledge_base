@@ -36,7 +36,7 @@
                     <p>...'${it.key}'</p>
                     <g:each in="${it.value}">
                         <g:link controller="KnowledgeBase" action="showDoc" params="[docTitle: it.docTitle]">
-                            <p>${it.docTitle}</p>
+                            <p>${it.docTitle} (${it.viewCount})</p>
                         </g:link>
                     </g:each>
                 </div>

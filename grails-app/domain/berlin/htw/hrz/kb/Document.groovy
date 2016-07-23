@@ -10,6 +10,7 @@ class Document {
     static mapWith = "neo4j"
 
     static constraints = {
+        docContent nullable: true
         hiddenTags nullable: true
         faq nullable: true
         faq unique: true
@@ -19,7 +20,7 @@ class Document {
     static hasMany = [steps: Step]
     Faq faq
 
-    String docTitle
+    String docTitle, docContent
     String[] hiddenTags
     int viewCount
 }
