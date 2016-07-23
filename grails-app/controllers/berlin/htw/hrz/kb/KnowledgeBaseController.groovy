@@ -25,7 +25,6 @@ class KnowledgeBaseController {
             flash.info = "Neo4j war leer, Test-Domainklassen, Dokumente und Beziehungen angelegt"
         }
         println(System.properties['os.name'] + " # " + System.properties['os.arch'] + " # " + System.properties['os.version'])
-        println(loadTestDocs())
         [otherDocs: loadTestDocs(), principal: springSecurityService.principal];
     }
 
@@ -38,23 +37,26 @@ class KnowledgeBaseController {
 
     def showDoc() {
         println('params: ' + params)
-        def myDoc = Document.findByDocTitle('Cisco-Telefonie')
+        Document myDoc
 
         //Falls ein anderes Dokument angezeigt werden soll, überschreibe das Default-Test-Dokument
         if (params.docTitle) {
             myDoc = Document.findByDocTitle(params.docTitle)
+        } else {
+            myDoc = Document.findByDocTitle('Cisco-Telefonie')
         }
         if (!myDoc) {
             flash.error = "Kein Dokument gefunden"
             render(view: 'index', model: [otherDocs: loadTestDocs(), principal: springSecurityService.principal])
         }
-        myDoc.steps.each { step ->
-            println(step.stepTitle)
 
-        }
-        println(myDoc.faq?.answer)
-        println(myDoc.faq?.question)
-        println('Doc: ' + myDoc)
+        //Erhöhe den Viewcount um dadurch eine ungefähre Beliebtheit der Dokumente zu erzeugen
+        println('\n\n############################################### Start '+myDoc.viewCount+ ' Start ###############################################')
+        myDoc.viewCount = myDoc.viewCount + 1
+        //todo: Update funktioniert nicht, zeigt zwar in der GSP den ViewCount +1 an, im Document bleibt er aber unverändert
+        myDoc.save()
+        println('############################################### Ende '+myDoc.viewCount+ ' Ende ###############################################\n\n')
+
         [document: myDoc, principal: springSecurityService.principal]
     }
 

@@ -102,10 +102,12 @@ class DocumentService {
         }
 
         //3 Get the popularest docs
-        //docMap.put('popular')
+        def temp = Document.findAll()
+        temp.sort { -it.viewCount }
+        docMap.put('popular', temp)
 
 
-        println(docMap)
+        //println(docMap)
         return docMap
     }
 

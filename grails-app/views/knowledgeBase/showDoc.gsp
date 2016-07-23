@@ -9,6 +9,7 @@
     </head>
 
     <content tag="main">
+        <p>Das Dokumente wurde schon ${document.viewCount} mal angeklickt</p>
         <g:if test="${!document.faq}">
             <h1>${document.docTitle}</h1>
         </g:if>
