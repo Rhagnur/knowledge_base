@@ -49,8 +49,6 @@ class KnowledgeBaseController {
 
     def search () {
         def docsFound = []
-        println(params)
-        Document.findAllByDocTitle('Testing').delete()
 
         if (params.searchBar && params.searchBar.length() < 3) {
             flash.error = "Suchbegriff zu kurz, mindestens 3 Zeichen!"
@@ -85,11 +83,9 @@ class KnowledgeBaseController {
             myDoc = Document.findByDocTitle('Cisco-Telefonie')
         }
         if (!myDoc) {
-            println('FEEEEEEHLER!')
             flash.error = "Kein Dokument gefunden"
             forward(view: 'index', model: [otherDocs: loadTestDocs(), principal: springSecurityService.principal])
         }
-        println(myDoc)
 
         otherDocs.tutorials = myDoc.steps?documentService.getSimilarDocs(myDoc, 'tutorial'):null
         otherDocs.faq = myDoc.steps?documentService.getSimilarDocs(myDoc, 'faq'):null
@@ -119,7 +115,6 @@ class KnowledgeBaseController {
 
     @Secured("hasAuthority('ROLE_GP-STAFF')") //Für optinale Erweiterung "Autoren" später Abfrage, ob User als Autor eingetragen ist
     def createDoc() {
-        println(params)
         if (params.submit) {
             def docTitle, docContent, docSubs, docType
             String[] docTags

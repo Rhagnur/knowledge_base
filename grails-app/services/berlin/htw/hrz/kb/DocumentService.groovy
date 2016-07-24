@@ -72,9 +72,7 @@ class DocumentService {
             }
         }
         //find only non unique docs, so you get all docs which are associated with the given categories
-        println('before ' + docs)
         docs = docs.findAll{docs.count(it) == subs.size()}.unique()
-        println('after ' + docs)
         return docs
     }
 
@@ -230,14 +228,12 @@ class DocumentService {
         def myDoc = Document.findByDocTitle(docTitle)
         if (myDoc) {
             myDoc.viewCount = myDoc.viewCount + 1
-            println(myDoc)
             if (myDoc.validate()) {
                 return myDoc.save()
             } else {
                 myDoc.errors.allErrors.each {
                     println(it)
                 }
-                //todo: rausfinden warum FAQ so verdammte viele Fehler verursacht.
                 return myDoc
             }
 
