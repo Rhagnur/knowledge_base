@@ -226,6 +226,25 @@ class DocumentService {
         return null
     }
 
+    def getDoc(String docTitle) {
+        def myDoc = Document.findByDocTitle(docTitle)
+        if (myDoc) {
+            myDoc.viewCount = myDoc.viewCount + 1
+            println(myDoc)
+            if (myDoc.validate()) {
+                return myDoc.save()
+            } else {
+                myDoc.errors.allErrors.each {
+                    println(it)
+                }
+                //todo: rausfinden warum FAQ so verdammte viele Fehler verursacht.
+                return myDoc
+            }
+
+        }
+        return null
+    }
+
     def exportDoc(String docTitle, String exportAs) {
         def myDoc = Document.findByDocTitle(docTitle)
         if (myDoc) {

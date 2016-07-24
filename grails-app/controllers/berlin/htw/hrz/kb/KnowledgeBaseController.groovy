@@ -28,20 +28,33 @@ class KnowledgeBaseController {
             flash.info = "Neo4j war leer, Test-Domainklassen, Dokumente und Beziehungen angelegt"
         }
         println(request.getHeader('User-Agent'))
+        //def testDoc = new Document(docTitle: 'Testing', docContent: 'TestTestTest', viewCount: 666)
+        //def testDoc = Document.findByDocTitle('Testing')
+        //println(testDoc)
+        //if (testDoc) {
+        //    testDoc.viewCount = 6666
+        //    if (testDoc.validate()) {
+        //        println('saved')
+        //       testDoc.save()
+        //    }
+        //}
+
 
         otherDocs = loadTestDocs()
         stop = new Date()
         println('\nSeitenladezeit: '+TimeCategory.minus(stop, start))
+        println(Document)
         [otherDocs: otherDocs, principal: springSecurityService.principal];
     }
 
     def search () {
         def docsFound = []
         println(params)
+        Document.findAllByDocTitle('Testing').delete()
 
         if (params.searchBar && params.searchBar.length() < 3) {
             flash.error = "Suchbegriff zu kurz, mindestens 3 Zeichen!"
-            render(view: 'index', model: [otherDocs: loadTestDocs(), principal: springSecurityService.principal])
+            redirect(view: 'index', model: [otherDocs: loadTestDocs(), principal: springSecurityService.principal])
         }
         else if (params.searchBar && params.searchBar.length() >= 3) {
             docsFound.addAll(Document.findAllByDocTitleIlike("%$params.searchBar%"))
@@ -67,26 +80,21 @@ class KnowledgeBaseController {
 
         //Falls ein anderes Dokument angezeigt werden soll, überschreibe das Default-Test-Dokument
         if (params.docTitle) {
-            myDoc = Document.findByDocTitle(params.docTitle)
+            myDoc = documentService.getDoc(params.docTitle)
         } else {
             myDoc = Document.findByDocTitle('Cisco-Telefonie')
         }
         if (!myDoc) {
+            println('FEEEEEEHLER!')
             flash.error = "Kein Dokument gefunden"
-            render(view: 'index', model: [otherDocs: loadTestDocs(), principal: springSecurityService.principal])
+            forward(view: 'index', model: [otherDocs: loadTestDocs(), principal: springSecurityService.principal])
         }
-
-        //Erhöhe den Viewcount um dadurch eine ungefähre Beliebtheit der Dokumente zu erzeugen
-        println('\n\n############################################### Start '+myDoc.viewCount+ ' Start ###############################################')
-        myDoc.viewCount = myDoc.viewCount + 1
-        //todo: Update funktioniert nicht, zeigt zwar in der GSP den ViewCount +1 an, im Document bleibt er aber unverändert
-        myDoc.save()
-        println('############################################### Ende '+myDoc.viewCount+ ' Ende ###############################################\n\n')
+        println(myDoc)
 
         otherDocs.tutorials = myDoc.steps?documentService.getSimilarDocs(myDoc, 'tutorial'):null
         otherDocs.faq = myDoc.steps?documentService.getSimilarDocs(myDoc, 'faq'):null
 
-        author = Subcategorie.findAllByMainCat(Maincategorie.findByName('author')).find{it.docs.contains(myDoc)}.name
+        author = Subcategorie.findAllByMainCat(Maincategorie.findByName('author')).find{it.docs.contains(myDoc)}?.name
         if (!author) {
             author = 'Kein Autor gefunden'
         }
@@ -178,7 +186,7 @@ class KnowledgeBaseController {
             if (!flash.error) {
                 documentService.addDoc(docTitle, docContent, docTags, docSubs, docType, viewCount)
                 flash.info = 'Dokument erstellt'
-                render(view: 'index', model: [otherDocs: loadTestDocs(), principal: springSecurityService.principal])
+                redirect(view: 'index', model: [otherDocs: loadTestDocs(), principal: springSecurityService.principal])
             }
         }
 

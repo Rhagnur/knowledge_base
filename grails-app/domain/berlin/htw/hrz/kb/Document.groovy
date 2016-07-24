@@ -13,12 +13,11 @@ class Document {
         docContent nullable: true
         hiddenTags nullable: true
         faq nullable: true
-        faq unique: true
         steps nullable: true
     }
 
     static hasMany = [steps: Step]
-    Faq faq
+    static hasOne = [faq: Faq]
 
     String docTitle, docContent
     String[] hiddenTags

@@ -7,9 +7,6 @@ class Faq {
     static mapping = {
         answer type: "text"
     }
-
-    static constraints = {
-    }
-    static belongsTo = [doc: Document]
+    Document doc
     String question, answer
 }
