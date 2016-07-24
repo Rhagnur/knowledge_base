@@ -60,7 +60,7 @@ class KnowledgeBaseController {
     }
 
     def showDoc() {
-        def start, stop
+        def start, stop, author
         def otherDocs = [:]
         start = new Date()
         Document myDoc
@@ -85,9 +85,15 @@ class KnowledgeBaseController {
 
         otherDocs.tutorials = myDoc.steps?documentService.getSimilarDocs(myDoc, 'tutorial'):null
         otherDocs.faq = myDoc.steps?documentService.getSimilarDocs(myDoc, 'faq'):null
+
+        author = Subcategorie.findAllByMainCat(Maincategorie.findByName('author')).find{it.docs.contains(myDoc)}.name
+        if (!author) {
+            author = 'Kein Autor gefunden'
+        }
+
         stop = new Date()
         println('\nSeitenladezeit: '+TimeCategory.minus(stop, start))
-        [document: myDoc, similarDocs: otherDocs, principal: springSecurityService.principal]
+        [document: myDoc, author: author, similarDocs: otherDocs, principal: springSecurityService.principal]
     }
 
 
@@ -164,8 +170,13 @@ class KnowledgeBaseController {
             String tags = params.docTags
             docTags = tags.split(",")
 
+            int viewCount = 0
+            if (params.viewCount && params.viewCount =~/[0-9]/) {
+                viewCount = params.viewCount as int
+            }
+
             if (!flash.error) {
-                documentService.addDoc(docTitle, docContent, docTags, docSubs, docType)
+                documentService.addDoc(docTitle, docContent, docTags, docSubs, docType, viewCount)
                 flash.info = 'Dokument erstellt'
                 render(view: 'index', model: [otherDocs: loadTestDocs(), principal: springSecurityService.principal])
             }

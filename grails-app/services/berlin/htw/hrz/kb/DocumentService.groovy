@@ -25,24 +25,25 @@ class DocumentService {
      * @param subCats Subcategories which should be associated with the new document
      * @return TRUE if no problems occurred while saving otherwise FALSE.
      */
-    def addDoc(String docTitle, def docContent, String[] docHiddenTags, String[] subCats, String docType) {
+    def addDoc(String docTitle, def docContent, String[] docHiddenTags, String[] subCats, String docType, int viewCount) {
         println('title: ' + docTitle)
         println('content: ' + docContent)
         println('tags: ' + docHiddenTags)
         println('subCats: ' + subCats)
         println('type: ' + docType)
+        println('viewCount: ' + viewCount)
         try {
             def doc
 
             if (docType == 'tutorial') {
-                doc = new Document(docTitle: docTitle, hiddenTags: docHiddenTags)
+                doc = new Document(docTitle: docTitle, hiddenTags: docHiddenTags, viewCount: viewCount)
                 docContent.each { step ->
                     println(step)
                     doc.addToSteps(new Step(number: step.number, stepTitle: step.title, stepText: step.text, mediaLink: step.link))
                 }
             }
             else if (docType == 'faq') {
-                doc = new Document(docTitle: docTitle, hiddenTags: docHiddenTags, faq: new Faq(question: docContent.question, answer: docContent.answer))
+                doc = new Document(docTitle: docTitle, hiddenTags: docHiddenTags, viewCount: viewCount, faq: new Faq(question: docContent.question, answer: docContent.answer))
             }
             for (def cat in subCats) {
                 Subcategorie subCat = Subcategorie.findByName(cat)
@@ -71,7 +72,9 @@ class DocumentService {
             }
         }
         //find only non unique docs, so you get all docs which are associated with the given categories
+        println('before ' + docs)
         docs = docs.findAll{docs.count(it) == subs.size()}.unique()
+        println('after ' + docs)
         return docs
     }
 
@@ -148,7 +151,7 @@ class DocumentService {
 
     def getSimilarDocs(Document doc, String typeOf) {
         def docs
-        //prio reihenfolge thema, sprache, betriebssystem, gruppe
+        //prio reihenfolge thema, betriebssystem, sprache, gruppe
         def catNames = []
         def temp
         def start, stop
@@ -164,12 +167,9 @@ class DocumentService {
         stop = new Date()
         println(TimeCategory.minus(stop, start))
 
-        println('\n2 subCats theme and lang')
+        println('\n2 subCats theme')
         start = new Date()
-        //1 add theme and lang subCatName
         temp = Subcategorie.findByMainCatAndDocs(Maincategorie.findByName('theme'), doc)
-        if (temp) { catNames.add(temp.name) }
-        temp = Subcategorie.findByMainCatAndDocs(Maincategorie.findByName('lang'), doc)
         if (temp) { catNames.add(temp.name) }
         stop = new Date()
         println(TimeCategory.minus(stop, start))
@@ -177,18 +177,21 @@ class DocumentService {
 
         println('\n3 subCat os')
         start = new Date()
-        //2 add os subCatName
         temp = categorieService.getIterativeAllSubCats(Maincategorie.findByName('os'))
         temp = temp.find { it.docs.contains(doc)}
-        if (temp) {
-            catNames.add(temp.name)
-        }
+        if (temp) { catNames.add(temp.name) }
         stop = new Date()
         println(TimeCategory.minus(stop, start))
 
-        println('\n4 subcat group')
+        println('\n4 subCat lang')
         start = new Date()
-        //3 add groupSubCatName
+        temp = Subcategorie.findByMainCatAndDocs(Maincategorie.findByName('lang'), doc)
+        if (temp) { catNames.add(temp.name) }
+        stop = new Date()
+        println(TimeCategory.minus(stop, start))
+
+        println('\n5 subcat group')
+        start = new Date()
         if (springSecurityService.principal.authorities.any { it.authority == "ROLE_ANONYMOUS" }) {
             catNames.add('anonym')
         }
@@ -198,18 +201,27 @@ class DocumentService {
         else if (springSecurityService.principal.authorities.any { it.authority == "ROLE_GP-STUD" }) {
             catNames.add('student')
         }
+        stop = new Date()
+        println(TimeCategory.minus(stop, start))
 
+        println('\n5 search for docs')
+        start = new Date()
         while (catNames && catNames.size() > 1) {
+            println(catNames)
             docs = getAllDocsAssociatedToSubCategories(catNames as String[])
+            println(docs)
             docs.remove(doc)
             if (docs && !docs.empty) {
                 stop = new Date()
                 println(TimeCategory.minus(stop, start))
+
                 return docs
             } else {
                 catNames.remove(catNames.last())
             }
         }
+        stop = new Date()
+        println(TimeCategory.minus(stop, start))
 
         return null
     }

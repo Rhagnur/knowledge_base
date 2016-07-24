@@ -45,6 +45,9 @@
                 <br/><br/>
             </g:elseif>
 
+            <label for="viewCount">Wie oft angeschaut? (Zahl)</label><br/>
+            <g:textField name="viewCount"/><br/><br/>
+
             <label for="docTitle">Doc hiddenTags*</label><br/>
             <g:textArea name="docTags"/><br/>
 

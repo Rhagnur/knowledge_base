@@ -39,6 +39,8 @@
             <p>${raw(document.faq?.answer)}</p>
         </g:elseif>
 
+        <br/><p>Geschrieben von: ${author}</p><br/><br/>
+
         <g:if test="${similarDocs.tutorials}">
             <p>Anleitungen, die Sie auch interessieren könnten...</p>
             <ul>
@@ -60,7 +62,7 @@
                 </g:each>
             </ul>
         </g:if>
-
+        <br/><br/>
 
         <g:link controller="KnowledgeBase" action="index">Zur Startseite</g:link>
     </content>
