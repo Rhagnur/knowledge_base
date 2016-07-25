@@ -8,7 +8,6 @@ package berlin.htw.hrz.kb
 import grails.converters.JSON
 import grails.converters.XML
 import grails.transaction.Transactional
-import groovy.json.JsonSlurper
 import groovy.time.TimeCategory
 
 @Transactional
@@ -246,47 +245,10 @@ class DocumentService {
         if (myDoc) {
             def output
             if (exportAs == 'json') {
-                JSON.use('deep') {
-                    output = myDoc as JSON
-                    if (myDoc.faq) {
-                        HashMap resultFaq = new JsonSlurper().parseText((myDoc.faq as JSON).toString())
-                        resultFaq.remove('doc')
-                        HashMap resultDoc = new JsonSlurper().parseText((myDoc as JSON).toString())
-                        resultDoc.remove('faq')
-                        resultDoc.remove('steps')
-                        resultDoc.put('faq', resultFaq)
-                        println(resultDoc as JSON)
-                        output = resultDoc as JSON
-                    }
-
-                }
+                output = myDoc as JSON
             }
-            //todo: XML Export funktioniert bei FAQ noch nicht wirklich, vielleicht einfach Export für FAQ untersagen?
             else if(exportAs == 'xml') {
-                XML.use('deep') {
-                    output = myDoc as XML
-
-                }
-                /*
-                if (myDoc.faq) {
-                    String faq = (myDoc.faq as XML).toString()
-                    String doc = (myDoc as XML).toString()
-                    NodeChild resultFaq = new XmlSlurper().parseText(faq)
-                    GPathResult resultDoc = new XmlSlurper().parseText(doc)
-                    resultFaq.childNodes().each {
-                        println(it.toString())
-                    }
-                    println(XmlUtil.serialize(resultFaq))
-
-                    HashMap resultFaq = new XmlSlurper().parseText(faq)
-                    resultFaq.remove('doc')
-                    HashMap resultDoc = new XmlSlurper().parseText(doc)
-                    resultDoc.remove('faq')
-                    resultDoc.remove('steps')
-                    resultDoc.put('faq', resultFaq)
-                    println(resultDoc as XML)
-                    output = resultDoc as XML
-                }*/
+                output = myDoc as XML
             }
             return (output)
         }

@@ -8,6 +8,10 @@ package berlin.htw.hrz.kb
 class Document {
 
     static mapWith = "neo4j"
+    static mapping = {
+        faq lazy: false
+        faq fetch: true
+    }
 
     static constraints = {
         docContent nullable: true

@@ -16,7 +16,6 @@ class KnowledgeBaseController {
     def springSecurityService
 
     def loadTestDocs () {
-        //return [Linux: Subcategorie.findByName('linux').docs.findAll(), WLAN: Subcategorie.findByName('wlan').docs.findAll(), Student: Subcategorie.findByName('student').docs.findAll(), Deutsch: Subcategorie.findByName('de').docs.findAll()]
         return documentService.getDocsOfInterest(springSecurityService.principal, request)
     }
 
@@ -28,17 +27,6 @@ class KnowledgeBaseController {
             flash.info = "Neo4j war leer, Test-Domainklassen, Dokumente und Beziehungen angelegt"
         }
         println(request.getHeader('User-Agent'))
-        //def testDoc = new Document(docTitle: 'Testing', docContent: 'TestTestTest', viewCount: 666)
-        //def testDoc = Document.findByDocTitle('Testing')
-        //println(testDoc)
-        //if (testDoc) {
-        //    testDoc.viewCount = 6666
-        //    if (testDoc.validate()) {
-        //        println('saved')
-        //       testDoc.save()
-        //    }
-        //}
-
 
         otherDocs = loadTestDocs()
         stop = new Date()
