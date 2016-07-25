@@ -95,7 +95,7 @@ class KnowledgeBaseController {
         def myCats = Maincategorie.findAll()
         //Default = hole alle Mainkategorien, ansonsten hole die Subkategorien der ausgewählten Kategorie
         if (params.cat) {
-            myCats = categorieService.getAllSubCats(Subcategorie.findByName(params.cat)?Subcategorie.findByName(params.cat):Maincategorie.findByName(params.cat)?Maincategorie.findByName(params.cat):null)
+            myCats = Subcategorie.findByName(params.cat)?Subcategorie.findByName(params.cat).subCats:Maincategorie.findByName(params.cat)?Maincategorie.findByName(params.cat).subCats:null
             if (!myCats) {flash.error = "No such categorie!!!"}
         }
         [cats: myCats, principal: springSecurityService.principal]
@@ -175,7 +175,7 @@ class KnowledgeBaseController {
 
         String[] all = []
         Maincategorie.findAll().each { mainCat ->
-            categorieService.getIterativeAllSubCats(mainCat).each { cat ->
+            categorieService.getIterativeAllSubCats(mainCat.name).each { cat ->
                 all += cat.name as String
             }
         }
@@ -201,7 +201,7 @@ class KnowledgeBaseController {
         }
 
         println('\n\n####### Get all Subcats from one Maincategorie...iterativ #######' )
-        temp= categorieService.getIterativeAllSubCats(Maincategorie.findByName('os'))
+        temp= categorieService.getIterativeAllSubCats('os')
         temp.each {
             println('Cat: ' + it.name + ' belongsTo ' + (it.parentCat? it.parentCat.name : it.mainCat?.name))
         }
@@ -250,7 +250,7 @@ class KnowledgeBaseController {
         }
 
         println('\n\n####### Get count of all docs from given subCat with CatServer method #######' )
-        println('Count: ' + categorieService.getDocCountOfSubCategorie('win_7'))
+        println('Count: ' + Subcategorie.findByName('win_7').docs.size())
 
         println('\n\n####### Render DOC as JSON...First try #######' )
         println(documentService.exportDoc('Cisco-Telefonie', 'json'))
@@ -258,7 +258,24 @@ class KnowledgeBaseController {
         println('\n\n####### Render DOC as XML...First try #######' )
         println(documentService.exportDoc('Cisco-Telefonie', 'xml'))
 
+        println('\n\n####### Change Categorie name #######' )
+        def error = categorieService.changeCategorieName('rack', 'torsten')
+        println('Errorcode: ' + error + ' Name: ' + Subcategorie.findByName('torsten')?.name)
+        error = categorieService.changeCategorieName('torsten', 'rack')
+        println('Errorcode: ' + error + ' Name: ' + Subcategorie.findByName('rack')?.name)
 
-        render(view: 'index', model: [otherDocs: loadTestDocs(), principal: springSecurityService.principal])
+        println('\n\n####### Change Subcat of Categorie name #######' )
+        def oldSubs = ['TestOld1', 'TestOld2'] as String[]
+        def newSubs = ['TestNew1', 'TestNew2'] as String[]
+        error = categorieService.changeSubcatsRelation('Test', newSubs)
+        println('Error: ' + error)
+        println(error.subCats?.size())
+
+        println('\n\n####### Delete Categorie #######' )
+        println('Errorcode: '+categorieService.deleteCategorie('TestMain'))
+        println('Errorcode: '+categorieService.deleteCategorie('TestSubSub2'))
+
+
+        redirect(view: 'index', model: [otherDocs: loadTestDocs(), principal: springSecurityService.principal])
     }
 }

@@ -88,13 +88,40 @@ class DocumentService {
         start = new Date()
         //1 Get docs from associated OS []
         String osName = ''
+        //process the os information from the request header
+
+//        Windows 3.11 => Win16,
+//        Windows 95 => (Windows 95)|(Win95)|(Windows_95),
+//        Windows 98 => (Windows 98)|(Win98),
+//        Windows 2000 => (Windows NT 5.0)|(Windows 2000),
+//        Windows XP => (Windows NT 5.1)|(Windows XP),
+//        Windows Server 2003 => (Windows NT 5.2),
+//        Windows Vista => (Windows NT 6.0),
+//        Windows 7 => (Windows NT 6.1),
+//        Windows 8 => (Windows NT 6.2),
+//        Windows 10 => (Windows NT 10.0),
+//        Windows NT 4.0 => (Windows NT 4.0)|(WinNT4.0)|(WinNT)|(Windows NT),
+//        Windows ME => Windows ME,
+//                              Open BSD => OpenBSD,
+//        Sun OS => SunOS,
+//        Linux => (Linux)|(X11),
+//        Mac OS => (Mac_PowerPC)|(Macintosh),
+//        QNX => QNX,
+//        BeOS => BeOS,
+//        OS/2 => OS/2,
         if (request.getHeader('User-Agent').toString().toLowerCase().contains('linux')) {
             osName = 'linux'
         }
-        else if (request.getHeader('User-Agent').toString().toLowerCase().contains('windows')) {
-            osName = 'windows'
+        else if (request.getHeader('User-Agent').toString().toLowerCase().contains('windows nt 6.1')) {
+            osName = 'win_7'
         }
-        categorieService.getIterativeAllSubCats(Subcategorie.findByName(osName)).each {
+        else if (request.getHeader('User-Agent').toString().toLowerCase().contains('windows nt 6.2')) {
+            osName = 'win_8'
+        }
+        else if (request.getHeader('User-Agent').toString().toLowerCase().contains('mac_powerpc') || request.getHeader('User-Agent').toString().toLowerCase().contains('macintosh')) {
+            osName = 'mac'
+        }
+        categorieService.getIterativeAllSubCats(osName).each {
             docMap.put(it.name, it.docs.findAll())
             subCatNames.add(it.name)
         }
@@ -174,7 +201,7 @@ class DocumentService {
 
         println('\n3 subCat os')
         start = new Date()
-        temp = categorieService.getIterativeAllSubCats(Maincategorie.findByName('os'))
+        temp = categorieService.getIterativeAllSubCats('os')
         temp = temp.find { it.docs.contains(doc)}
         if (temp) { catNames.add(temp.name) }
         stop = new Date()
@@ -233,7 +260,7 @@ class DocumentService {
                 myDoc.errors.allErrors.each {
                     println(it)
                 }
-                return myDoc
+                return null
             }
 
         }

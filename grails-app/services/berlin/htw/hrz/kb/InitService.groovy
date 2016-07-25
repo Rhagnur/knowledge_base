@@ -69,5 +69,16 @@ class InitService {
                 .addToSubCats(new Subcategorie(name: 'didschu').addToDocs(doc1).addToDocs(doc2).addToDocs(doc3).addToDocs(doc4))
                 .addToSubCats(new Subcategorie(name: 'rack').addToDocs(doc5).addToDocs(doc6).addToDocs(doc7).addToDocs(doc8))
                 .save()
+
+
+        new Subcategorie(name: 'Test').addToSubCats(new Subcategorie(name: 'TestOld1')).addToSubCats(new Subcategorie(name: 'TestOld2')).save()
+        new Subcategorie(name: 'TestNew1').save()
+        new Subcategorie(name: 'TestNew2').save()
+
+
+        new Maincategorie(name: 'TestMain')
+                .addToSubCats(new Subcategorie(name: 'TestSub').addToSubCats(new Subcategorie(name: 'TestSubSub1').addToDocs(new Document(docTitle: 'TestDoc1'))).addToSubCats(new Subcategorie(name: 'TestSubSub2').addToDocs(new Document(docTitle: 'TestDoc2'))))
+                .save()
+
     }
 }
