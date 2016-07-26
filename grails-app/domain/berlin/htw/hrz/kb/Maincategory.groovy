@@ -5,24 +5,18 @@
 
 package berlin.htw.hrz.kb
 
-
-class Subcategorie{
+class Maincategory {
 
     static mapWith = "neo4j"
 
     static mapping = {
         subCats(cascade: 'save-update')
-        docs(cascade: 'save-update')
     }
 
     static constraints = {
         name nullable: false
-        parentCat nullable: true
-        mainCat nullable: true
     }
-    static hasMany = [subCats: Subcategorie, docs: Document]
-    Subcategorie parentCat
-    Maincategorie mainCat
+    static hasMany = [subCats: Subcategory]
 
     String name;
 }

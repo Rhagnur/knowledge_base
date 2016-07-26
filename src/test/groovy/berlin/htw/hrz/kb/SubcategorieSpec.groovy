@@ -6,7 +6,7 @@ import spock.lang.Specification
 /**
  * See the API for {@link grails.test.mixin.domain.DomainClassUnitTestMixin} for usage instructions
  */
-@TestFor(Subcategorie)
+@TestFor(Subcategory)
 class SubcategorieSpec extends Specification {
 
     def setup() {

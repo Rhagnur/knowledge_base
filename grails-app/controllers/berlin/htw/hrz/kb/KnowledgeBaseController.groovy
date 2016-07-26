@@ -11,18 +11,18 @@ import groovy.time.TimeCategory
 class KnowledgeBaseController {
 
     def documentService
-    def categorieService
+    def categoryService
     def initService
     def springSecurityService
 
     def loadTestDocs () {
-        return documentService.getDocsOfInterest(springSecurityService.principal, request)
+        return categoryService.getDocsOfInterest(springSecurityService.principal, request)
     }
 
     def index() {
-        def start, stop, otherDocs
+        def start, stop, otherDocs = null
         start = new Date()
-        if (Maincategorie.findAll().empty) {
+        if (Maincategory.findAll().empty) {
             initService.initTestModell()
             flash.info = "Neo4j war leer, Test-Domainklassen, Dokumente und Beziehungen angelegt"
         }
@@ -31,7 +31,7 @@ class KnowledgeBaseController {
         otherDocs = loadTestDocs()
         stop = new Date()
         println('\nSeitenladezeit: '+TimeCategory.minus(stop, start))
-        println(Document)
+
         [otherDocs: otherDocs, principal: springSecurityService.principal];
     }
 
@@ -75,10 +75,10 @@ class KnowledgeBaseController {
             forward(view: 'index', model: [otherDocs: loadTestDocs(), principal: springSecurityService.principal])
         }
 
-        otherDocs.tutorials = myDoc.steps?documentService.getSimilarDocs(myDoc, 'tutorial'):null
-        otherDocs.faq = myDoc.steps?documentService.getSimilarDocs(myDoc, 'faq'):null
+        otherDocs.tutorials = myDoc.steps?categoryService.getSimilarDocs(myDoc, 'tutorial'):null
+        otherDocs.faq = myDoc.steps?categoryService.getSimilarDocs(myDoc, 'faq'):null
 
-        author = Subcategorie.findAllByMainCat(Maincategorie.findByName('author')).find{it.docs.contains(myDoc)}?.name
+        author = Subcategory.findAllByMainCat(Maincategory.findByName('author')).find{it.docs.contains(myDoc)}?.name
         if (!author) {
             author = 'Kein Autor gefunden'
         }
@@ -92,16 +92,17 @@ class KnowledgeBaseController {
 
 
     def showCat() {
-        def myCats = Maincategorie.findAll()
+        def myCats = Maincategory.findAll()
         //Default = hole alle Mainkategorien, ansonsten hole die Subkategorien der ausgewählten Kategorie
         if (params.cat) {
-            myCats = Subcategorie.findByName(params.cat)?Subcategorie.findByName(params.cat).subCats:Maincategorie.findByName(params.cat)?Maincategorie.findByName(params.cat).subCats:null
+            myCats = Subcategory.findByName(params.cat)?Subcategory.findByName(params.cat).subCats:Maincategory.findByName(params.cat)?Maincategory.findByName(params.cat).subCats:null
             if (!myCats) {flash.error = "No such categorie!!!"}
         }
         [cats: myCats, principal: springSecurityService.principal]
     }
 
-    @Secured("hasAuthority('ROLE_GP-STAFF')") //Für optinale Erweiterung "Autoren" später Abfrage, ob User als Autor eingetragen ist
+    //todo: Secured wieder setzen, auch in index.gsp...zu Testzwecken erstmal deaktiviert
+    //@Secured("hasAuthority('ROLE_GP-STAFF')") //Für optinale Erweiterung "Autoren" später Abfrage, ob User als Autor eingetragen ist
     def createDoc() {
         if (params.submit) {
             def docTitle, docContent, docSubs, docType
@@ -167,18 +168,20 @@ class KnowledgeBaseController {
             }
 
             if (!flash.error) {
-                documentService.addDoc(docTitle, docContent, docTags, docSubs, docType, viewCount)
+                categoryService.addDoc(docTitle, docContent, docTags, docSubs, docType, viewCount)
                 flash.info = 'Dokument erstellt'
                 redirect(view: 'index', model: [otherDocs: loadTestDocs(), principal: springSecurityService.principal])
             }
         }
 
+        //todo: Anstatt eine gesamte 'Liste' lieber eine Hashmap mit Aufbaue [mainCatName1: [allSubcats], mainCatName2: [allSubcats],...]
         String[] all = []
-        Maincategorie.findAll().each { mainCat ->
-            categorieService.getIterativeAllSubCats(mainCat.name).each { cat ->
+        Maincategory.findAll().each { mainCat ->
+            categoryService.getIterativeAllSubCats(mainCat.name).each { cat ->
                 all += cat.name as String
             }
         }
+        println('all' + all)
         [cats: all, docType: params.createFaq?'faq':params.createTut?'tutorial':'', principal: springSecurityService.principal]
     }
 
@@ -192,53 +195,19 @@ class KnowledgeBaseController {
 
     //Einfach nur zum Funktionalitäts testen
     def testingThings() {
-        println('\n\n####### Get all Subcats from one Maincategorie, not iterativ #######' )
-        //Get one main categorie and all subcategories
-        def temp = Maincategorie.findByName('os')
-        println('Main: ' + temp.name)
-        for (def sub in temp.subCats.findAll()) {
-            println('Subs: ' + sub.name)
-        }
-
-        println('\n\n####### Get all Subcats from one Maincategorie...iterativ #######' )
-        temp= categorieService.getIterativeAllSubCats('os')
-        temp.each {
-            println('Cat: ' + it.name + ' belongsTo ' + (it.parentCat? it.parentCat.name : it.mainCat?.name))
-        }
-
-        println('\n\n####### Get all docs from one Categorie #######' )
-        temp = Subcategorie.findByName('win_7').docs.findAll()
-        for (def doc in temp) {
-            println(doc.title)
-        }
-
-        println('\n\n####### Get all docs from multiple Categories #######' )
-        temp = Subcategorie.findByName('win_7').docs.findAll().toArray()
-        println(temp)
-        temp += Subcategorie.findByName('de').docs.findAll().toArray()
-        println(temp)
-        println('Vor ...Filterung...')
-        for (def doc in temp) {
-            println(doc.id + ' # ' +doc.title)
-        }
-        println('\nNach ...Filterung...')
-        def matchItems = temp.findAll{temp.count(it) > 1}.unique()
-        for (def doc in matchItems) {
-            println(doc.id + ' # ' +doc.title)
-        }
-
-        println('\n\n####### Get all docs from multiple Categories via DocService method #######' )
-        documentService.getAllDocsAssociatedToSubCategories(['win_7', 'student', 'null', 'article'] as String[]).each { doc ->
+        //todo: eigentliche methode in categoryService
+        /*println('\n\n####### Get all docs from multiple Categories via DocService method #######' )
+        categoryService.getAllDocsAssociatedToSubCategories(['win_7', 'student', 'null', 'article'] as String[]).each { doc ->
             println('Doc: ' + doc.title)
         }
 
         println('\n\n####### Get Subcategories from one specific document #######' )
-        Subcategorie.findAllByDocs(Document.findByDocTitle('WLAN für Windows 7')).each { sub ->
+        Subcategory.findAllByDocs(Document.findByDocTitle('WLAN für Windows 7')).each { sub ->
             println('Sub: ' + sub.name)
         }
 
         println('\n\n####### Get Subcats (iterativ) + Maincats from one specific document #######' )
-        Subcategorie.findAllByDocs(Document.findByDocTitle('WLAN für Windows 7')).each { sub ->
+        Subcategory.findAllByDocs(Document.findByDocTitle('WLAN für Windows 7')).each { sub ->
             println('Sub: ' + sub.name)
             def tempMain = sub.mainCat
             while (tempMain == null) {
@@ -250,7 +219,7 @@ class KnowledgeBaseController {
         }
 
         println('\n\n####### Get count of all docs from given subCat with CatServer method #######' )
-        println('Count: ' + Subcategorie.findByName('win_7').docs.size())
+        println('Count: ' + Subcategory.findByName('win_7').docs.size())
 
         println('\n\n####### Render DOC as JSON...First try #######' )
         println(documentService.exportDoc('Cisco-Telefonie', 'json'))
@@ -259,21 +228,42 @@ class KnowledgeBaseController {
         println(documentService.exportDoc('Cisco-Telefonie', 'xml'))
 
         println('\n\n####### Change Categorie name #######' )
-        def error = categorieService.changeCategorieName('rack', 'torsten')
-        println('Errorcode: ' + error + ' Name: ' + Subcategorie.findByName('torsten')?.name)
-        error = categorieService.changeCategorieName('torsten', 'rack')
-        println('Errorcode: ' + error + ' Name: ' + Subcategorie.findByName('rack')?.name)
+        def error = categoryService.changeCategorieName('rack', 'torsten')
+        println('Errorcode: ' + error + ' Name: ' + Subcategory.findByName('torsten')?.name)
+        error = categoryService.changeCategorieName('torsten', 'rack')
+        println('Errorcode: ' + error + ' Name: ' + Subcategory.findByName('rack')?.name)
 
         println('\n\n####### Change Subcat of Categorie name #######' )
         def oldSubs = ['TestOld1', 'TestOld2'] as String[]
         def newSubs = ['TestNew1', 'TestNew2'] as String[]
-        error = categorieService.changeSubcatsRelation('Test', newSubs)
+        error = categoryService.changeSubCatRelations('Test', newSubs)
         println('Error: ' + error)
-        println(error.subCats?.size())
 
         println('\n\n####### Delete Categorie #######' )
-        println('Errorcode: '+categorieService.deleteCategorie('TestMain'))
-        println('Errorcode: '+categorieService.deleteCategorie('TestSubSub2'))
+        println('Errorcode: '+ categoryService.deleteCategorie('TestMain'))
+        println('Errorcode: '+ categoryService.deleteCategorie('TestSubSub2'))
+
+        println('\n\n####### get associated SubCats of... #######' )
+        println('null')
+        categoryService.getAllSubCats(null).each {
+            println((!(it instanceof Integer))?it.name:it)
+        }
+
+        println('\na')
+        categoryService.getAllSubCats('a').each {
+            println((!(it instanceof Integer))?it.name:it)
+        }
+
+        println('\nos')
+        categoryService.getAllSubCats('os').each {
+            println((!(it instanceof Integer))?it.name:it)
+        }
+
+        println('\nwindows')
+        categoryService.getAllSubCats('windows').each {
+            println((!(it instanceof Integer))?it.name:it)
+        }*/
+        flash.info = "Tests werden gerade in Testklassen ausgelagert, bitte haben Sie etwas Geduld!"
 
 
         redirect(view: 'index', model: [otherDocs: loadTestDocs(), principal: springSecurityService.principal])
