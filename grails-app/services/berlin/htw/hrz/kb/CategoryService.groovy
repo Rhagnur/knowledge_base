@@ -180,7 +180,7 @@ class CategoryService {
                 subCat.save(flush: true)
             }
 
-            doc.save(flush: true)
+            //doc.save(flush: true)
             true
         } catch (Exception e) {
             e.printStackTrace()

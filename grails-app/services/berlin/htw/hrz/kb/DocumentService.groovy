@@ -24,11 +24,11 @@ class DocumentService {
      */
     def newTutorial(String docTitle, String[] hiddenTags, Step[] steps) {
         def temp = new Document(docTitle: docTitle, hiddenTags: hiddenTags, viewCount: 0)
-        steps.each { step ->
+        steps?.each { step ->
             temp.addToSteps(step)
         }
         if (!temp.validate()) return -2
-        return temp
+        return temp.save(flush: true)
     }
 
     /**
@@ -42,7 +42,7 @@ class DocumentService {
     def newFaq(String docTitle, String[] hiddenTags, Faq faq) {
         def temp = new Document(docTitle: docTitle, hiddenTags: hiddenTags, viewCount: 0, faq: faq)
         if (!temp.validate()) return -2
-        return temp
+        return temp.save(flush: true)
     }
 
     /**
@@ -56,7 +56,7 @@ class DocumentService {
     def newArticle(String docTitle, String[] hiddenTags, String docContent) {
         def temp = new Document(docTitle: docTitle, hiddenTags: hiddenTags, viewCount: 0, docContent: docContent)
         if (!temp.validate()) return -2
-        return temp
+        return temp.save(flush: true)
     }
 
     /**
