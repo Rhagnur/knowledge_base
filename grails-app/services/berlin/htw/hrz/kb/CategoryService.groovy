@@ -2,15 +2,11 @@ package berlin.htw.hrz.kb
 
 import grails.transaction.Transactional
 import groovy.time.TimeCategory
+import org.neo4j.graphdb.NotFoundException
 
 @Transactional
 /**
  * Service which help you for managing all kind of categories (main/sub)
- * Following error-codes are provided
- * '0'  : No error
- * '-1' : No categorie with the given name found
- * '-2' : validation error
- * '-3' : At least one sub-categorie wasn't found
  */
 class CategoryService {
 
@@ -42,9 +38,7 @@ class CategoryService {
      * @return found main- or subcategorie, error-code if something went wrong
      */
     def getAllSubCats(String catName) {
-        def cat = getCategory(catName)
-        if (!cat) return -1
-        return cat.subCats
+        return getCategory(catName).subCats
     }
 
     /**
@@ -54,18 +48,13 @@ class CategoryService {
      */
     def getDocCount(String catName) {
         def cat = getCategory(catName)
-        if (!cat) return -1
-        if (cat instanceof Maincategory) return -2
+        if (cat instanceof Maincategory) throw new NoSuchMethodException('ERROR: Maincategory do not have any documents')
         cat.docs.size()
     }
 
     def deleteCategorie(String catName) {
-        println(catName)
         def cat = getCategory(catName)
-        if (!cat) return -1
-        println(cat)
         cat.delete()
-        return 0
     }
 
     /**
@@ -75,15 +64,16 @@ class CategoryService {
      * @return Errorcode as int, error-code if something went wrong
      */
     def changeCategorieName(String oldName, String newName) {
+        if (!newName || newName == '') throw new IllegalArgumentException()
+
         def cat = getCategory(oldName)
-        if (!cat) return -1
         cat.name = newName
+
         if (!cat.validate()) {
-            cat.errors?.allErrors?.each { println(it) }
-            return -2
+            cat.errors?.allErrors?.each { log.error(it) }
+            throw new Exception('ERROR: Validation of data wasn\'t successfull')
         }
-        cat.save()
-        return 0
+        return cat.save()
     }
 
     /**
@@ -92,12 +82,15 @@ class CategoryService {
      * @return found main- or subcategory
      */
     def getCategory(String catName) {
-        return (catName && catName != '')?(Maincategory.findByName(catName)?:Subcategory.findByName(catName)?:null):null
+        if (!catName || catName == '') throw new IllegalArgumentException()
+        def cat = Maincategory.findByName(catName) ?: Subcategory.findByName(catName) ?: null
+        if (!cat) throw new NotFoundException()
+        return cat
     }
 
-    //todo: Finde Kategorie durch gegebene Maincat und Doc
+    //todo: Finde Kategorie durch gegebene Maincat und Doc + changeParent
     //def getCategory
-
+    //def changeParent
 
     //todo: Rausfinden warum Änderung temporär funktioniert aber NIE in die Datenbank gelangt
     //Lösung 1: Zu ändernen Knoten löschen und mit neuen Beziehungn erstellen...meeeeh
@@ -111,12 +104,9 @@ class CategoryService {
     def changeSubCatRelations(String catName, String[] newCats) {
         def tempCat, cat = getCategory(catName)
         def parent = null
-        def error = false
-
-        if (!cat) return -1
 
         if (!(cat instanceof Maincategory)) {
-            parent = cat.mainCat?:cat.parentCat?:null
+            parent = cat.mainCat ?: cat.parentCat ?: null
 
             if (parent instanceof Maincategory) {
                 tempCat = new Subcategory(name: cat.name, mainCat: parent)
@@ -128,24 +118,11 @@ class CategoryService {
         }
 
         for (cn in newCats) {
-            def temp = Subcategory.findByName(cn)
-            if (temp) tempCat.addToSubCats(temp)
-            else error=true
+            def temp = getCategory(cn)
+            tempCat.addToSubCats(temp)
         }
-        tempCat.subCats.each {
-            println(it.name)
-            println(it.parentCat?.name)
-        }
-
-        if (!error) {
-            cat.delete()
-            tempCat.save(flush: true)
-            return 0
-        } else {
-            tempCat.delete()
-            return -3
-        }
-
+        cat.delete()
+        tempCat.save(flush: true)
     }
 
     //todo: Anstatt alle Attribute zu übergeben wäre es sinnvoller nur ein Document und die Liste der Kategorien zu übergeben, an welche es angeheftet werden soll
@@ -156,36 +133,26 @@ class CategoryService {
         println('subCats: ' + subCats)
         println('type: ' + docType)
         println('viewCount: ' + viewCount)
-        try {
-            def doc = null
+        def doc = null
 
-            if (docType == 'tutorial') {
-                def steps = []
-                docContent.each { step ->
-                    steps.add(new Step(number: step.number, stepTitle: step.title, stepText: step.text, mediaLink: step.link))
-                }
-                doc = documentService.newTutorial(docTitle, hiddenTags, steps as Step[])
+        if (docType == 'tutorial') {
+            def steps = []
+            docContent.each { step ->
+                steps.add(new Step(number: step.number, stepTitle: step.title, stepText: step.text, mediaLink: step.link))
             }
-            else if (docType == 'faq') {
-                doc =documentService.newFaq(docTitle, hiddenTags, new Faq(question: docContent.question, answer: docContent.answer))
-            } else {
-                return -4
-            }
-
-            if (!(doc instanceof Document)) return -2
-
-            for (def cat in subCats) {
-                Subcategory subCat = Subcategory.findByName(cat)
-                subCat.addToDocs(doc)
-                subCat.save(flush: true)
-            }
-
-            //doc.save(flush: true)
-            true
-        } catch (Exception e) {
-            e.printStackTrace()
-            false
+            doc = documentService.newTutorial(docTitle, hiddenTags, steps as Step[])
+        } else if (docType == 'faq') {
+            doc = documentService.newFaq(docTitle, hiddenTags, new Faq(question: docContent.question, answer: docContent.answer))
+        } else {
+            throw new IllegalArgumentException("ERROR: Doctype '${docType}' is not known")
         }
+
+        for (def cat in subCats) {
+            Subcategory subCat = Subcategory.findByName(cat)
+            subCat.addToDocs(doc)
+            subCat.save(flush: true)
+        }
+        return doc.save(flush:true)
     }
 
     def getAllDocsAssociatedToSubCategories(String[] subs) {
@@ -196,7 +163,7 @@ class CategoryService {
             }
         }
         //find only non unique docs, so you get all docs which are associated with the given categories
-        docs = docs.findAll{docs.count(it) == subs.size()}.unique()
+        docs = docs.findAll { docs.count(it) == subs.size() }.unique()
         return docs
     }
 
@@ -236,14 +203,11 @@ class CategoryService {
 //        OS/2 => OS/2,
         if (request.getHeader('User-Agent').toString().toLowerCase().contains('linux')) {
             osName = 'linux'
-        }
-        else if (request.getHeader('User-Agent').toString().toLowerCase().contains('windows nt 6.1')) {
+        } else if (request.getHeader('User-Agent').toString().toLowerCase().contains('windows nt 6.1')) {
             osName = 'win_7'
-        }
-        else if (request.getHeader('User-Agent').toString().toLowerCase().contains('windows nt 6.2')) {
+        } else if (request.getHeader('User-Agent').toString().toLowerCase().contains('windows nt 6.2')) {
             osName = 'win_8'
-        }
-        else if (request.getHeader('User-Agent').toString().toLowerCase().contains('mac_powerpc') || request.getHeader('User-Agent').toString().toLowerCase().contains('macintosh')) {
+        } else if (request.getHeader('User-Agent').toString().toLowerCase().contains('mac_powerpc') || request.getHeader('User-Agent').toString().toLowerCase().contains('macintosh')) {
             osName = 'mac'
         }
         getIterativeAllSubCats(osName).each {
@@ -257,15 +221,21 @@ class CategoryService {
         start = new Date()
         //2 Get the documents of the associated groups [ROLE_GP-STAFF, ROLE_GP-STUD]
         if (userPrincipals.authorities.any { it.authority == "ROLE_GP-STAFF" }) {
-            docMap.put('stuff', Subcategory.findByName('stuff').docs.findAll().sort{ -it.viewCount }.subList(0, NumDocsToShow))
+            docMap.put('stuff', Subcategory.findByName('stuff').docs.findAll().sort {
+                -it.viewCount
+            }.subList(0, NumDocsToShow))
             subCatNames.add('stuff')
         }
         if (userPrincipals.authorities.any { it.authority == "ROLE_GP-STUD" }) {
-            docMap.put('student', Subcategory.findByName('student').docs.findAll().sort{ -it.viewCount }.subList(0, NumDocsToShow))
+            docMap.put('student', Subcategory.findByName('student').docs.findAll().sort {
+                -it.viewCount
+            }.subList(0, NumDocsToShow))
             subCatNames.add('student')
         }
         if (userPrincipals.authorities.any { it.authority == "ROLE_ANONYMOUS" }) {
-            docMap.put('anonym', Subcategory.findByName('anonym').docs.findAll().sort{ -it.viewCount }.subList(0, NumDocsToShow))
+            docMap.put('anonym', Subcategory.findByName('anonym').docs.findAll().sort {
+                -it.viewCount
+            }.subList(0, NumDocsToShow))
             subCatNames.add('anonym')
         }
         stop = new Date()
@@ -274,7 +244,7 @@ class CategoryService {
         println('3')
         start = new Date()
         //3 Get the popularest docs
-        def temp = Document.findAll(max : NumDocsToShow, sort: 'viewCount', order: 'desc')
+        def temp = Document.findAll(max: NumDocsToShow, sort: 'viewCount', order: 'desc')
         docMap.put('popular', temp)
         stop = new Date()
         println(TimeCategory.minus(stop, start))
@@ -309,8 +279,7 @@ class CategoryService {
         start = new Date()
         if (typeOf == 'tutorial') {
             catNames.add('tutorial')
-        }
-        else if (typeOf == 'faq') {
+        } else if (typeOf == 'faq') {
             catNames.add('faq')
         }
         stop = new Date()
@@ -319,7 +288,9 @@ class CategoryService {
         println('\n2 subCats theme')
         start = new Date()
         temp = Subcategory.findByMainCatAndDocs(Maincategory.findByName('theme'), doc)
-        if (temp) { catNames.add(temp.name) }
+        if (temp) {
+            catNames.add(temp.name)
+        }
         stop = new Date()
         println(TimeCategory.minus(stop, start))
 
@@ -327,15 +298,19 @@ class CategoryService {
         println('\n3 subCat os')
         start = new Date()
         temp = getIterativeAllSubCats('os')
-        temp = temp.find { it.docs.contains(doc)}
-        if (temp) { catNames.add(temp.name) }
+        temp = temp.find { it.docs.contains(doc) }
+        if (temp) {
+            catNames.add(temp.name)
+        }
         stop = new Date()
         println(TimeCategory.minus(stop, start))
 
         println('\n4 subCat lang')
         start = new Date()
         temp = Subcategory.findByMainCatAndDocs(Maincategory.findByName('lang'), doc)
-        if (temp) { catNames.add(temp.name) }
+        if (temp) {
+            catNames.add(temp.name)
+        }
         stop = new Date()
         println(TimeCategory.minus(stop, start))
 
@@ -343,11 +318,9 @@ class CategoryService {
         start = new Date()
         if (springSecurityService.principal.authorities.any { it.authority == "ROLE_ANONYMOUS" }) {
             catNames.add('anonym')
-        }
-        else if (springSecurityService.principal.authorities.any { it.authority == "ROLE_GP-STAFF" }) {
+        } else if (springSecurityService.principal.authorities.any { it.authority == "ROLE_GP-STAFF" }) {
             catNames.add('stuff')
-        }
-        else if (springSecurityService.principal.authorities.any { it.authority == "ROLE_GP-STUD" }) {
+        } else if (springSecurityService.principal.authorities.any { it.authority == "ROLE_GP-STUD" }) {
             catNames.add('student')
         }
         stop = new Date()

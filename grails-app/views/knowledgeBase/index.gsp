@@ -51,10 +51,6 @@
         </section>
         <section id="debug">
             <h2>Debug-/Test-Funktionen</h2>
-            <g:form controller="KnowledgeBase" action="testingThings">
-                <g:submitButton name="submit" value="call testingThings()"/>
-            </g:form>
-
             <!--sec:ifAllGranted roles="ROLE_GP-STAFF"-->
                 <g:form controller="KnowledgeBase" action="createDoc" method="POST">
                     <g:submitButton name="createTut" value="Neue Anleitung erstellen"/>

@@ -70,15 +70,5 @@ class InitService {
                 .addToSubCats(new Subcategory(name: 'rack').addToDocs(doc5).addToDocs(doc6).addToDocs(doc7).addToDocs(doc8))
                 .save()
 
-
-        new Subcategory(name: 'Test').addToSubCats(new Subcategory(name: 'TestOld1')).addToSubCats(new Subcategory(name: 'TestOld2')).save()
-        new Subcategory(name: 'TestNew1').save()
-        new Subcategory(name: 'TestNew2').save()
-
-
-        new Maincategory(name: 'TestMain')
-                .addToSubCats(new Subcategory(name: 'TestSub').addToSubCats(new Subcategory(name: 'TestSubSub1').addToDocs(new Document(docTitle: 'TestDoc1'))).addToSubCats(new Subcategory(name: 'TestSubSub2').addToDocs(new Document(docTitle: 'TestDoc2'))))
-                .save()
-
     }
 }

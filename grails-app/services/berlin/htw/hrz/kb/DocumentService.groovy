@@ -8,6 +8,8 @@ package berlin.htw.hrz.kb
 import grails.converters.JSON
 import grails.converters.XML
 import grails.transaction.Transactional
+import javassist.bytecode.ExceptionsAttribute
+import org.neo4j.graphdb.NotFoundException
 
 @Transactional
 class DocumentService {
@@ -22,12 +24,12 @@ class DocumentService {
      * @param steps
      * @return new created document (tutorial)
      */
-    def newTutorial(String docTitle, String[] hiddenTags, Step[] steps) {
+    def newTutorial(String docTitle, String[] hiddenTags, Step[] steps) throws Exception {
         def temp = new Document(docTitle: docTitle, hiddenTags: hiddenTags, viewCount: 0)
         steps?.each { step ->
             temp.addToSteps(step)
         }
-        if (!temp.validate()) return -2
+        if (!temp.validate()) throw new Exception('ERROR: Validation of data wasn\'t successfull')
         return temp.save(flush: true)
     }
 
@@ -39,9 +41,9 @@ class DocumentService {
      * @param faq
      * @return new created document (faq)
      */
-    def newFaq(String docTitle, String[] hiddenTags, Faq faq) {
+    def newFaq(String docTitle, String[] hiddenTags, Faq faq) throws Exception {
         def temp = new Document(docTitle: docTitle, hiddenTags: hiddenTags, viewCount: 0, faq: faq)
-        if (!temp.validate()) return -2
+        if (!temp.validate()) throw new Exception('ERROR: Validation of data wasn\'t successfull')
         return temp.save(flush: true)
     }
 
@@ -53,9 +55,9 @@ class DocumentService {
      * @param docContent
      * @return new created document (article)
      */
-    def newArticle(String docTitle, String[] hiddenTags, String docContent) {
+    def newArticle(String docTitle, String[] hiddenTags, String docContent) throws Exception {
         def temp = new Document(docTitle: docTitle, hiddenTags: hiddenTags, viewCount: 0, docContent: docContent)
-        if (!temp.validate()) return -2
+        if (!temp.validate()) throw new Exception('ERROR: Validation of data wasn\'t successfull')
         return temp.save(flush: true)
     }
 
@@ -64,9 +66,8 @@ class DocumentService {
      * @param docTitle
      * @return
      */
-    def deleteDoc(String docTitle) {
+    def deleteDoc(String docTitle) throws Exception {
         Document doc = getDoc(docTitle)
-        if (!doc) return -1
         if (doc.faq) doc.faq.delete()
         if (doc.steps) {
             doc.steps.collect().each { step ->
@@ -74,7 +75,12 @@ class DocumentService {
             }
         }
         doc.delete()
-        return 0
+    }
+
+    def increaseCounter(Document doc) {
+        doc.viewCount = doc.viewCount + 1
+        if (!doc.validate()) throw new Exception('ERROR: Validation of data wasn\'t successfull')
+        return doc.save(flush:true)
     }
 
     /**
@@ -82,21 +88,11 @@ class DocumentService {
      * @param docTitle
      * @return
      */
-    def getDoc(String docTitle) {
+    def getDoc(String docTitle) throws Exception {
+        if (!docTitle || docTitle == '') throw new IllegalArgumentException()
         def myDoc = Document.findByDocTitle(docTitle)
-        if (myDoc) {
-            myDoc.viewCount = myDoc.viewCount + 1
-            if (myDoc.validate()) {
-                return myDoc.save()
-            } else {
-                myDoc.errors.allErrors.each {
-                    println(it)
-                }
-                return null
-            }
-
-        }
-        return null
+        if (myDoc) return myDoc
+        throw new NotFoundException()
     }
 
     /**
@@ -105,17 +101,16 @@ class DocumentService {
      * @param exportAs Decides which format will be returned, use 'json' or 'xml' for either format
      * @return
      */
-    def exportDoc(String docTitle, String exportAs) {
-        def myDoc = Document.findByDocTitle(docTitle)
-        if (myDoc) {
-            def output
-            if (exportAs == 'json') {
-                output = myDoc as JSON
-            }
-            else if(exportAs == 'xml') {
-                output = myDoc as XML
-            }
-            return (output)
+    def exportDoc(String docTitle, String exportAs) throws Exception {
+        def myDoc = getDoc(docTitle)
+        def output = null
+        if (exportAs == 'json') {
+            output = myDoc as JSON
+        } else if (exportAs == 'xml') {
+            output = myDoc as XML
+        } else {
+            throw new IllegalArgumentException()
         }
+        return output
     }
 }

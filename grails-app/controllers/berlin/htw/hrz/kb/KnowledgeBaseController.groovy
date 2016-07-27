@@ -15,6 +15,16 @@ class KnowledgeBaseController {
     def initService
     def springSecurityService
 
+    // Start global exception handling
+    def Exception(final Exception ex) {
+        logException(ex)
+        render (view: 'error', model: [exception : ex])
+    }
+    private void logException(final Exception ex) {
+        log.error("Exception thrown: ${ex?.message}")
+    }
+    //End global exception handling
+
     def loadTestDocs () {
         return categoryService.getDocsOfInterest(springSecurityService.principal, request)
     }
@@ -83,6 +93,7 @@ class KnowledgeBaseController {
             author = 'Kein Autor gefunden'
         }
 
+        myDoc = documentService.increaseCounter(myDoc)
         stop = new Date()
         println('\nSeitenladezeit: '+TimeCategory.minus(stop, start))
         [document: myDoc, author: author, similarDocs: otherDocs, principal: springSecurityService.principal]
@@ -95,8 +106,7 @@ class KnowledgeBaseController {
         def myCats = Maincategory.findAll()
         //Default = hole alle Mainkategorien, ansonsten hole die Subkategorien der ausgewählten Kategorie
         if (params.cat) {
-            myCats = Subcategory.findByName(params.cat)?Subcategory.findByName(params.cat).subCats:Maincategory.findByName(params.cat)?Maincategory.findByName(params.cat).subCats:null
-            if (!myCats) {flash.error = "No such categorie!!!"}
+            myCats = categoryService.getCategory(params.cat)
         }
         [cats: myCats, principal: springSecurityService.principal]
     }
@@ -191,81 +201,5 @@ class KnowledgeBaseController {
             docTitle = params.docTitle
         }
         render (documentService.exportDoc(docTitle, params.exportAs?params.exportAs:'map'))
-    }
-
-    //Einfach nur zum Funktionalitäts testen
-    def testingThings() {
-        //todo: eigentliche methode in categoryService
-        /*println('\n\n####### Get all docs from multiple Categories via DocService method #######' )
-        categoryService.getAllDocsAssociatedToSubCategories(['win_7', 'student', 'null', 'article'] as String[]).each { doc ->
-            println('Doc: ' + doc.title)
-        }
-
-        println('\n\n####### Get Subcategories from one specific document #######' )
-        Subcategory.findAllByDocs(Document.findByDocTitle('WLAN für Windows 7')).each { sub ->
-            println('Sub: ' + sub.name)
-        }
-
-        println('\n\n####### Get Subcats (iterativ) + Maincats from one specific document #######' )
-        Subcategory.findAllByDocs(Document.findByDocTitle('WLAN für Windows 7')).each { sub ->
-            println('Sub: ' + sub.name)
-            def tempMain = sub.mainCat
-            while (tempMain == null) {
-                sub = sub.parentCat
-                tempMain = sub.mainCat
-                println('Parent: ' + sub.name)
-            }
-            println('MainCat: ' +tempMain.name + '\n#########\n')
-        }
-
-        println('\n\n####### Get count of all docs from given subCat with CatServer method #######' )
-        println('Count: ' + Subcategory.findByName('win_7').docs.size())
-
-        println('\n\n####### Render DOC as JSON...First try #######' )
-        println(documentService.exportDoc('Cisco-Telefonie', 'json'))
-
-        println('\n\n####### Render DOC as XML...First try #######' )
-        println(documentService.exportDoc('Cisco-Telefonie', 'xml'))
-
-        println('\n\n####### Change Categorie name #######' )
-        def error = categoryService.changeCategorieName('rack', 'torsten')
-        println('Errorcode: ' + error + ' Name: ' + Subcategory.findByName('torsten')?.name)
-        error = categoryService.changeCategorieName('torsten', 'rack')
-        println('Errorcode: ' + error + ' Name: ' + Subcategory.findByName('rack')?.name)
-
-        println('\n\n####### Change Subcat of Categorie name #######' )
-        def oldSubs = ['TestOld1', 'TestOld2'] as String[]
-        def newSubs = ['TestNew1', 'TestNew2'] as String[]
-        error = categoryService.changeSubCatRelations('Test', newSubs)
-        println('Error: ' + error)
-
-        println('\n\n####### Delete Categorie #######' )
-        println('Errorcode: '+ categoryService.deleteCategorie('TestMain'))
-        println('Errorcode: '+ categoryService.deleteCategorie('TestSubSub2'))
-
-        println('\n\n####### get associated SubCats of... #######' )
-        println('null')
-        categoryService.getAllSubCats(null).each {
-            println((!(it instanceof Integer))?it.name:it)
-        }
-
-        println('\na')
-        categoryService.getAllSubCats('a').each {
-            println((!(it instanceof Integer))?it.name:it)
-        }
-
-        println('\nos')
-        categoryService.getAllSubCats('os').each {
-            println((!(it instanceof Integer))?it.name:it)
-        }
-
-        println('\nwindows')
-        categoryService.getAllSubCats('windows').each {
-            println((!(it instanceof Integer))?it.name:it)
-        }*/
-        flash.info = "Tests werden gerade in Testklassen ausgelagert, bitte haben Sie etwas Geduld!"
-
-
-        redirect(view: 'index', model: [otherDocs: loadTestDocs(), principal: springSecurityService.principal])
     }
 }
