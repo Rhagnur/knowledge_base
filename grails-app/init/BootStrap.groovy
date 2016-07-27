@@ -19,13 +19,13 @@ class BootStrap {
             output.hiddenTags = doc.hiddenTags
             if (doc.docContent) output.docContent = doc.docContent
             if (doc.faq) {
-                output.faq = [question: doc.faq.question, answer: doc.faq.answer]
+                output.faq = [question: doc.faq.question.encodeAsHTML(), answer: doc.faq.answer.encodeAsHTML()]
             }
             if (doc.steps) {
 
                 def temp = []
                 for (s in doc.steps.sort{ it.number }) {
-                    temp.add([number: s.number, stepTitle: s.stepTitle, stepText: s.stepText, mediaLink: s.mediaLink])
+                    temp.add([number: s.number, stepTitle: s.stepTitle.encodeAsHTML(), stepText: s.stepText.encodeAsHTML(), mediaLink: s.mediaLink.encodeAsHTML()])
                 }
                 output.steps = temp
             }
@@ -46,8 +46,8 @@ class BootStrap {
                 hiddenTags(doc.hiddenTags)
                 if (doc.faq) {
                     faq([]) {
-                        question(doc.faq.question)
-                        answer(doc.faq.answer)
+                        question(doc.faq.question.encodeAsHTML())
+                        answer(doc.faq.answer.encodeAsHTML())
                     }
                 }
                 if (doc.steps) {
@@ -55,9 +55,9 @@ class BootStrap {
                         for (s in doc.steps.sort{ it.number }) {
                             step([]) {
                                 number(s.number)
-                                stepTitle(s.stepTitle)
-                                stepText(s.stepText)
-                                if (s.mediaLink) mediaLink(s.mediaLink)
+                                stepTitle(s.stepTitle.encodeAsHTML())
+                                stepText(s.stepText.encodeAsHTML())
+                                if (s.mediaLink) mediaLink(s.mediaLink.encodeAsHTML())
                             }
                         }
                     }

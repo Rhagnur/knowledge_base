@@ -18,7 +18,7 @@ class KnowledgeBaseController {
     // Start global exception handling
     def Exception(final Exception ex) {
         logException(ex)
-        render (view: 'error', model: [exception : ex])
+        render (view: '/error', model: [exception : ex])
     }
     private void logException(final Exception ex) {
         log.error("Exception thrown: ${ex?.message}")
