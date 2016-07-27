@@ -10,7 +10,7 @@ import org.neo4j.graphdb.NotFoundException
  */
 class CategoryService {
 
-    def documentService
+    DocumentService documentService
     def springSecurityService
 
     /**

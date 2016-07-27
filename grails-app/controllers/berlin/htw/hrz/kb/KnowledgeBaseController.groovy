@@ -10,9 +10,9 @@ import groovy.time.TimeCategory
 @Secured("IS_AUTHENTICATED_ANONYMOUSLY")
 class KnowledgeBaseController {
 
-    def documentService
-    def categoryService
-    def initService
+    DocumentService documentService
+    CategoryService categoryService
+    InitService initService
     def springSecurityService
 
     // Start global exception handling
