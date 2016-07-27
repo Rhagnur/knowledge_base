@@ -233,7 +233,7 @@ class CategoryService {
         println('2')
         start = new Date()
         //2 Get the documents of the associated groups [ROLE_GP-STAFF, ROLE_GP-STUD]
-        if (userPrincipals.authorities.any { it.authority == "ROLE_GP-PROF" }) {
+        if (userPrincipals.authorities.any { it.authority == ("ROLE_GP-PROF"||"ROLE_GP-LBA") }) {
             docMap.put('faculty', getAllDocs('faculty').sort {
                 -it.viewCount
             }.subList(0, NumDocsToShow))
@@ -341,7 +341,7 @@ class CategoryService {
             catNames.add('staff')
         } else if (springSecurityService.principal.authorities.any { it.authority == "ROLE_GP-STUD" }) {
             catNames.add('student')
-        } else if (springSecurityService.principal.authorities.any { it.authority == "ROLE_GP-PROF" }) {
+        } else if (springSecurityService.principal.authorities.any { it.authority == ("ROLE_GP-PROF"||"ROLE_GP-LBA") }) {
             catNames.add('faculty')
         }
 
