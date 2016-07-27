@@ -19,13 +19,13 @@ class BootStrap {
             output.hiddenTags = doc.hiddenTags
             if (doc.docContent) output.docContent = doc.docContent
             if (doc.faq) {
-                output.faq = [question: doc.faq.question.encodeAsHTML(), answer: doc.faq.answer.encodeAsHTML()]
+                output.faq = [question: doc.faq.question, answer: doc.faq.answer]
             }
             if (doc.steps) {
 
                 def temp = []
                 for (s in doc.steps.sort{ it.number }) {
-                    temp.add([number: s.number, stepTitle: s.stepTitle.encodeAsHTML(), stepText: s.stepText.encodeAsHTML(), mediaLink: s.mediaLink.encodeAsHTML()])
+                    temp.add([number: s.number, stepTitle: s.stepTitle, stepText: s.stepText, mediaLink: s.mediaLink])
                 }
                 output.steps = temp
             }
@@ -33,6 +33,8 @@ class BootStrap {
             return output
 
         }
+
+
 
         XML.registerObjectMarshaller(Document) { doc, xml ->
             xml.build{
@@ -46,8 +48,8 @@ class BootStrap {
                 hiddenTags(doc.hiddenTags)
                 if (doc.faq) {
                     faq([]) {
-                        question(doc.faq.question.encodeAsHTML())
-                        answer(doc.faq.answer.encodeAsHTML())
+                        question(doc.faq.question)
+                        answer(doc.faq.answer)
                     }
                 }
                 if (doc.steps) {
@@ -55,9 +57,9 @@ class BootStrap {
                         for (s in doc.steps.sort{ it.number }) {
                             step([]) {
                                 number(s.number)
-                                stepTitle(s.stepTitle.encodeAsHTML())
-                                stepText(s.stepText.encodeAsHTML())
-                                if (s.mediaLink) mediaLink(s.mediaLink.encodeAsHTML())
+                                stepTitle(s.stepTitle)
+                                stepText(s.stepText)
+                                if (s.mediaLink) mediaLink(s.mediaLink)
                             }
                         }
                     }

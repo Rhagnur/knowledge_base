@@ -36,7 +36,7 @@ class InitService {
         new Maincategory(name: 'group')
                 .addToSubCats(new Subcategory(name: 'anonym').addToDocs(doc1).addToDocs(doc2).addToDocs(doc3).addToDocs(doc5).addToDocs(doc6))
                 .addToSubCats(new Subcategory(name: 'student').addToDocs(doc1).addToDocs(doc2).addToDocs(doc3).addToDocs(doc5).addToDocs(doc6).addToDocs(doc7))
-                .addToSubCats(new Subcategory(name: 'stuff').addToDocs(doc1).addToDocs(doc2).addToDocs(doc3).addToDocs(doc4).addToDocs(doc7).addToDocs(doc8))
+                .addToSubCats(new Subcategory(name: 'staff').addToDocs(doc1).addToDocs(doc2).addToDocs(doc3).addToDocs(doc4).addToDocs(doc7).addToDocs(doc8))
                 .addToSubCats(new Subcategory(name: 'faculty').addToDocs(doc1).addToDocs(doc2).addToDocs(doc3).addToDocs(doc4).addToDocs(doc7).addToDocs(doc8))
                 .save()
 

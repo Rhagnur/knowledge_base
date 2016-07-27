@@ -105,7 +105,6 @@ class DocumentServiceSpec extends Specification {
 
     void "test export doc as JSON"() {
         given:
-            service.newTutorial('TestingServiceExportDocJson', null, null)
             def doc = new Document(docTitle: 'TestingServiceExportDocJson', viewCount: 0).save()
         expect:
             doc instanceof Document
@@ -113,6 +112,9 @@ class DocumentServiceSpec extends Specification {
             def myJson = service.exportDoc('TestingServiceExportDocJson', 'json')
         then:
             myJson instanceof JSON
+            //todo 1 * service.exportDoc('TestingServiceExportDocJson', 'json')
+            //1 * service.getDoc('TestingServiceExportDocJson')
+            //0 * service._
     }
 
     void "test export doc as XML"() {

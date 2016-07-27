@@ -88,6 +88,12 @@ class CategoryService {
         return cat
     }
 
+    def getAllDocs(String catName) {
+        def cat = getCategory(catName)
+        if (cat instanceof Maincategory) throw new NoSuchMethodException('ERROR: Maincategory do not have any documents')
+        return cat.docs?.findAll()
+    }
+
     //todo: Finde Kategorie durch gegebene Maincat und Doc + changeParent
     //def getCategory
     //def changeParent
@@ -101,7 +107,7 @@ class CategoryService {
      * @param newCats
      * @return error-code as int, please have a look at the description of the class
      */
-    def changeSubCatRelations(String catName, String[] newCats) {
+    def changeSubCats(String catName, String[] newCats) {
         def tempCat, cat = getCategory(catName)
         def parent = null
 
@@ -172,7 +178,7 @@ class CategoryService {
         def subCatNames = []
         def docMap = [:]
         def NumDocsToShow = 5
-        def start, stop
+        def start, stop, temp
 
         println(userPrincipals.authorities)
 
@@ -210,30 +216,43 @@ class CategoryService {
         } else if (request.getHeader('User-Agent').toString().toLowerCase().contains('mac_powerpc') || request.getHeader('User-Agent').toString().toLowerCase().contains('macintosh')) {
             osName = 'mac'
         }
-        getIterativeAllSubCats(osName).each {
-            docMap.put(it.name, it.docs.findAll())
-            subCatNames.add(it.name)
+
+        temp = getAllDocs(osName)
+        if (temp.size() > NumDocsToShow){
+            temp = temp.sort {
+                -it.viewCount
+            }.subList(0, NumDocsToShow)
         }
+
+        docMap.put(osName, temp)
+        subCatNames.add(osName)
+
         stop = new Date()
         println(TimeCategory.minus(stop, start))
 
         println('2')
         start = new Date()
         //2 Get the documents of the associated groups [ROLE_GP-STAFF, ROLE_GP-STUD]
-        if (userPrincipals.authorities.any { it.authority == "ROLE_GP-STAFF" }) {
-            docMap.put('stuff', Subcategory.findByName('stuff').docs.findAll().sort {
+        if (userPrincipals.authorities.any { it.authority == "ROLE_GP-PROF" }) {
+            docMap.put('faculty', getAllDocs('faculty').sort {
                 -it.viewCount
             }.subList(0, NumDocsToShow))
-            subCatNames.add('stuff')
+            subCatNames.add('anonym')
+        }
+        if (userPrincipals.authorities.any { it.authority == "ROLE_GP-STAFF" }) {
+            docMap.put('staff', getAllDocs('staff').sort {
+                -it.viewCount
+            }.subList(0, NumDocsToShow))
+            subCatNames.add('staff')
         }
         if (userPrincipals.authorities.any { it.authority == "ROLE_GP-STUD" }) {
-            docMap.put('student', Subcategory.findByName('student').docs.findAll().sort {
+            docMap.put('student', getAllDocs('student').sort {
                 -it.viewCount
             }.subList(0, NumDocsToShow))
             subCatNames.add('student')
         }
         if (userPrincipals.authorities.any { it.authority == "ROLE_ANONYMOUS" }) {
-            docMap.put('anonym', Subcategory.findByName('anonym').docs.findAll().sort {
+            docMap.put('anonym', getAllDocs('anonym').sort {
                 -it.viewCount
             }.subList(0, NumDocsToShow))
             subCatNames.add('anonym')
@@ -244,7 +263,7 @@ class CategoryService {
         println('3')
         start = new Date()
         //3 Get the popularest docs
-        def temp = Document.findAll(max: NumDocsToShow, sort: 'viewCount', order: 'desc')
+        temp = Document.findAll(max: NumDocsToShow, sort: 'viewCount', order: 'desc')
         docMap.put('popular', temp)
         stop = new Date()
         println(TimeCategory.minus(stop, start))
@@ -319,16 +338,20 @@ class CategoryService {
         if (springSecurityService.principal.authorities.any { it.authority == "ROLE_ANONYMOUS" }) {
             catNames.add('anonym')
         } else if (springSecurityService.principal.authorities.any { it.authority == "ROLE_GP-STAFF" }) {
-            catNames.add('stuff')
+            catNames.add('staff')
         } else if (springSecurityService.principal.authorities.any { it.authority == "ROLE_GP-STUD" }) {
             catNames.add('student')
+        } else if (springSecurityService.principal.authorities.any { it.authority == "ROLE_GP-PROF" }) {
+            catNames.add('faculty')
         }
+
+
         stop = new Date()
         println(TimeCategory.minus(stop, start))
 
         println('\n5 search for docs')
         start = new Date()
-        while (catNames && catNames.size() > 1) {
+        while (catNames && catNames.size() > 1 ) {
             println(catNames)
             docs = getAllDocsAssociatedToSubCategories(catNames as String[])
             println(docs)
