@@ -59,7 +59,7 @@ class CategoryServiceSpec extends Specification {
             mainCat instanceof Maincategory
             mainCat != null
         when:
-            service.deleteCategorie(mainCat.name)
+            service.deleteCategory(mainCat.name)
             def temp = Maincategory.findByName('TestingDeleteCat')
         then:
             notThrown Exception
@@ -68,7 +68,7 @@ class CategoryServiceSpec extends Specification {
 
     void "test deleteNonExistingCategory"() {
         when:
-            service.deleteCategorie('Nonsense')
+            service.deleteCategory('Nonsense')
         then:
             thrown NotFoundException
     }

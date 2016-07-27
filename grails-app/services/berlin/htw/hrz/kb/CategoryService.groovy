@@ -14,8 +14,8 @@ class CategoryService {
     def springSecurityService
 
     /**
-     * This method will return iterative all associated subcategories to the given categorie (either Maincategory or Subcategory)
-     * @param cat Categorie you want to search through
+     * This method will return iterative all associated subcategories to the given category (either Maincategory or Subcategory)
+     * @param cat Category you want to search through
      * @return Array of all found categories
      */
     def getIterativeAllSubCats(String catName) {
@@ -35,7 +35,7 @@ class CategoryService {
     /**
      *
      * @param catName
-     * @return found main- or subcategorie, error-code if something went wrong
+     * @return found main- or subcategory
      */
     def getAllSubCats(String catName) {
         return getCategory(catName).subCats
@@ -52,7 +52,7 @@ class CategoryService {
         cat.docs.size()
     }
 
-    def deleteCategorie(String catName) {
+    def deleteCategory(String catName) {
         def cat = getCategory(catName)
         cat.delete()
     }
@@ -63,7 +63,7 @@ class CategoryService {
      * @param newName
      * @return Errorcode as int, error-code if something went wrong
      */
-    def changeCategorieName(String oldName, String newName) {
+    def changeCategoryName(String oldName, String newName) {
         if (!newName || newName == '') throw new IllegalArgumentException()
 
         def cat = getCategory(oldName)
