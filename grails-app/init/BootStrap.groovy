@@ -10,8 +10,9 @@ class BootStrap {
         JSON.registerObjectMarshaller(Document) { doc ->
             def output = [:]
             output.docTitle = doc.docTitle
-            def type = Subcategory.findAllByMainCat(Maincategory.findByName('doctype')).find{it.docs.contains(doc)}
-            if (type) output.docType = type.name
+            //def type = Subcategory.findAllByMainCat(Maincategory.findByName('doctype')).find{it.docs.contains(doc)}
+            //if (type) output.docType = type.name
+            output.docType=doc.class.simpleName
             def author = Subcategory.findAllByMainCat(Maincategory.findByName('author')).find{it.docs.contains(doc)}
             if (author) output.author = author.name
             def lang = Subcategory.findAllByMainCat(Maincategory.findByName('lang')).find{it.docs.contains(doc)}
@@ -40,14 +41,14 @@ class BootStrap {
             xml.build{
                 docTitle(doc.docTitle)
                 def temp = Subcategory.findAllByMainCat(Maincategory.findByName('doctype')).find{it.docs.contains(doc)}
-                if (temp) docType(temp.name)
-                temp = Subcategory.findAllByMainCat(Maincategory.findByName('author')).find{it.docs.contains(doc)}
                 if (temp) author(temp.name)
                 temp = Subcategory.findAllByMainCat(Maincategory.findByName('lang')).find{it.docs.contains(doc)}
                 if (temp) lang(temp.name)
                 hiddenTags(doc.hiddenTags)
-                question(doc.question)
-                answer(doc.answer)
+                if (doc.question && doc.answer) {
+                    question(doc.question)
+                    answer(doc.answer)
+                }
 
                 if (doc.steps) {
                     steps([]) {
