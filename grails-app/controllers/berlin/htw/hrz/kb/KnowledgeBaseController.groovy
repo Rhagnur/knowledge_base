@@ -36,6 +36,7 @@ class KnowledgeBaseController {
             initService.initTestModell()
             flash.info = "Neo4j war leer, Test-Domainklassen, Dokumente und Beziehungen angelegt"
         }
+
         println(request.getHeader('User-Agent'))
 
         otherDocs = loadTestDocs()

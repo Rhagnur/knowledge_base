@@ -16,7 +16,7 @@ import javax.print.Doc
  * See the API for {@link grails.test.mixin.services.ServiceUnitTestMixin} for usage instructions
  */
 @TestFor(DocumentService)
-@Mock([Document, Step])
+@Mock([Document, Tutorial, Step])
 class DocumentServiceSpec extends Specification {
 
     def setup() {
@@ -53,8 +53,7 @@ class DocumentServiceSpec extends Specification {
         when:
             def doc = service.newTutorial(null, null, null)
         then:
-            Exception ex = thrown()
-            ex.message == 'ERROR: Validation of data wasn\'t successfull'
+            thrown Exception
     }
 
     void "test getDoc"() {
@@ -71,7 +70,7 @@ class DocumentServiceSpec extends Specification {
         when:
             def doc = service.getDoc('Nonsens')
         then:
-            thrown NotFoundException
+            thrown Exception
     }
 
     void "test getDoc null"() {
@@ -103,7 +102,7 @@ class DocumentServiceSpec extends Specification {
         expect:
             doc instanceof Document
         when:
-            service.deleteDoc(doc.docTitle)
+            service.deleteDoc('TestingServiceDeleteDoc')
         then:
             notThrown Exception
     }
@@ -125,9 +124,9 @@ class DocumentServiceSpec extends Specification {
             def doc = new Document(docTitle: 'TestingServiceExportDocJson', viewCount: 0).save()
             DocumentService myMock = Mock(DocumentService)
         when:
-            myMock.exportDoc(doc.docTitle, 'json')
+            myMock.exportDoc('TestingServiceExportDocJson', 'json')
         then:
-            1 * myMock.exportDoc(doc.docTitle, 'json')
+            1 * myMock.exportDoc('TestingServiceExportDocJson', 'json')
             0 * myMock._
     }
 

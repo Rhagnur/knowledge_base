@@ -1,12 +1,12 @@
 package berlin.htw.hrz.kb
 
-class Faq {
+class Faq extends Document {
 
     static mapWith = "neo4j"
 
     static mapping = {
         answer type: "text"
     }
-    Document doc
+
     String question, answer
 }

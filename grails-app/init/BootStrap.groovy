@@ -18,9 +18,9 @@ class BootStrap {
             if (lang) output.lang = lang.name
             output.hiddenTags = doc.hiddenTags
             if (doc.docContent) output.docContent = doc.docContent
-            if (doc.faq) {
-                output.faq = [question: doc.faq.question, answer: doc.faq.answer]
-            }
+            if (doc.question) output.question = doc.question
+            if (doc.answer) output.answer =  doc.answer
+
             if (doc.steps) {
 
                 def temp = []
@@ -46,12 +46,9 @@ class BootStrap {
                 temp = Subcategory.findAllByMainCat(Maincategory.findByName('lang')).find{it.docs.contains(doc)}
                 if (temp) lang(temp.name)
                 hiddenTags(doc.hiddenTags)
-                if (doc.faq) {
-                    faq([]) {
-                        question(doc.faq.question)
-                        answer(doc.faq.answer)
-                    }
-                }
+                question(doc.question)
+                answer(doc.answer)
+
                 if (doc.steps) {
                     steps([]) {
                         for (s in doc.steps.sort{ it.number }) {

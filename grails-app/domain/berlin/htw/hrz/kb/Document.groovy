@@ -12,14 +12,20 @@ class Document {
     static constraints = {
         docContent nullable: true
         hiddenTags nullable: true
-        faq nullable: true
-        steps nullable: true
+        changedBy nullable: true
+        createDate nullable: true
+        changeDate nullable: true
+        locked nullable: true
+        //faq nullable: true
+        //steps nullable: true
     }
 
-    static hasMany = [steps: Step]
-    static hasOne = [faq: Faq]
+    //static hasMany = [steps: Step]
+    //static hasOne = [faq: Faq]
 
     String docTitle, docContent
-    String[] hiddenTags
+    String[] hiddenTags, changedBy
+    Date createDate, changeDate
+    Boolean locked
     int viewCount
 }

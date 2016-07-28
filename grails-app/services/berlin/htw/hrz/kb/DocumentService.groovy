@@ -24,7 +24,7 @@ class DocumentService {
      * @return new created document (tutorial)
      */
     def newTutorial(String docTitle, String[] hiddenTags, Step[] steps) throws Exception {
-        def temp = new Document(docTitle: docTitle, hiddenTags: hiddenTags, viewCount: 0)
+        def temp = new Tutorial(docTitle: docTitle, hiddenTags: hiddenTags, viewCount: 0)
         steps?.each { step ->
             temp.addToSteps(step)
         }
@@ -40,8 +40,8 @@ class DocumentService {
      * @param faq
      * @return new created document (faq)
      */
-    def newFaq(String docTitle, String[] hiddenTags, Faq faq) throws Exception {
-        def temp = new Document(docTitle: docTitle, hiddenTags: hiddenTags, viewCount: 0, faq: faq)
+    def newFaq(String docTitle, String[] hiddenTags, String question, String answer) throws Exception {
+        def temp = new Faq(docTitle: docTitle, hiddenTags: hiddenTags, viewCount: 0, question: question, answer: answer)
         if (!temp.validate()) throw new Exception('ERROR: Validation of data wasn\'t successfull')
         return temp.save(flush: true)
     }
@@ -55,7 +55,7 @@ class DocumentService {
      * @return new created document (article)
      */
     def newArticle(String docTitle, String[] hiddenTags, String docContent) throws Exception {
-        def temp = new Document(docTitle: docTitle, hiddenTags: hiddenTags, viewCount: 0, docContent: docContent)
+        def temp = new Article(docTitle: docTitle, hiddenTags: hiddenTags, viewCount: 0, docContent: docContent)
         if (!temp.validate()) throw new Exception('ERROR: Validation of data wasn\'t successfull')
         return temp.save(flush: true)
     }
@@ -66,9 +66,8 @@ class DocumentService {
      * @return
      */
     def deleteDoc(String docTitle) throws Exception {
-        Document doc = getDoc(docTitle)
-        if (doc.faq) doc.faq.delete()
-        if (doc.steps) {
+        def doc = getDoc(docTitle)
+        if (doc instanceof Tutorial) {
             doc.steps.collect().each { step ->
                 step.delete()
             }
@@ -92,7 +91,7 @@ class DocumentService {
         if (!docTitle || docTitle == '') throw new IllegalArgumentException()
         def myDoc = Document.findByDocTitle(docTitle)
         if (myDoc) return myDoc
-        throw new NotFoundException()
+        throw new Exception('No such document found')
     }
 
     /**

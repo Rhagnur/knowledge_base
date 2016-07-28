@@ -34,9 +34,9 @@
                 </div>
             </g:each>
         </g:if>
-        <g:elseif test="${document.faq}">
-            <h2>${document.faq?.question}</h2>
-            <p>${raw(document.faq?.answer)}</p>
+        <g:elseif test="${document.question && document.answer}">
+            <h2>${document.question}</h2>
+            <p>${raw(document.answer)}</p>
         </g:elseif>
 
         <br/><p>Geschrieben von: ${author}</p><br/><br/>

@@ -148,7 +148,7 @@ class CategoryService {
             }
             doc = documentService.newTutorial(docTitle, hiddenTags, steps as Step[])
         } else if (docType == 'faq') {
-            doc = documentService.newFaq(docTitle, hiddenTags, new Faq(question: docContent.question, answer: docContent.answer))
+            doc = documentService.newFaq(docTitle, hiddenTags, docContent.question, docContent.answer)
         } else {
             throw new IllegalArgumentException("ERROR: Doctype '${docType}' is not known")
         }
