@@ -130,8 +130,8 @@ grails:
                         useBind: true
                     context:
                         server: 'ldaps://login.htw-berlin.de:636'
-                        managerDn: 'cn=didprox,ou=idmusers,dc=login,dc=htw-berlin,dc=de'
-                        managerPassword: 'cq3A3xcQpub3'
+                        managerDn: 'cn=xUserx,ou=idmusers,dc=login,dc=htw-berlin,dc=de'
+                        managerPassword: 'xPasswortx'
                     search:
                         base: 'ou=idmusers,dc=login,dc=htw-berlin,dc=de'
                         filter: "sAMAccountName={0}"

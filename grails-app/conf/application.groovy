@@ -29,7 +29,7 @@ grails {
         type = "rest"
         //location = "http://kbjan.rz.htw-berlin.de:7474/db/data"
         location = "http://localhost:7474/db/data"
-        username = "neo4j"
-        password = "UWjbvcerayXt"
+        username = "xxx"
+        password = "xxx"
     }
 }
