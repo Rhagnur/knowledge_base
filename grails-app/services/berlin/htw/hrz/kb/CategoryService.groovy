@@ -174,6 +174,7 @@ class CategoryService {
     }
 
     //todo: vll einige Funktionen in eine extra Serviceklasse auslagern?
+    //todo: optimieren match (main)<-[*]-(n:Subcategory)-[:DOCS]->(m:Document) where m.docTitle="Lan für Linux" and main.name is not null return main.name, n order by main.name
     def getDocsOfInterest(def userPrincipals, def request) {
         def subCatNames = []
         def docMap = [:]
