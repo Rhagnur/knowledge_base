@@ -17,7 +17,7 @@ class Application extends GrailsAutoConfiguration implements EnvironmentAware {
 
     @Override
     void setEnvironment(Environment environment) {
-        def configBase = System.getenv('GRAILS_CONFIG_LOCATION') ?: System.getProperty('user.home') + '/.kbjan' ?: "/www/tomcat/webapps"
+        def configBase = System.getenv('GRAILS_CONFIG_LOCATION') ?: System.getProperty('user.home') + '/.kbjan' ?: "/etc/kbjan/config"
         boolean configLoaded = false
 
         def ymlConfig = new File(configBase + '.yml')
