@@ -8,7 +8,6 @@ package berlin.htw.hrz.kb
 import grails.converters.JSON
 import grails.converters.XML
 import grails.transaction.Transactional
-import javassist.bytecode.ExceptionsAttribute
 import org.neo4j.graphdb.NotFoundException
 
 @Transactional

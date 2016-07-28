@@ -4,8 +4,13 @@ import grails.converters.JSON
 import grails.converters.XML
 import grails.test.mixin.Mock
 import grails.test.mixin.TestFor
+import grails.test.mixin.integration.Integration
+import grails.transaction.Rollback
+import groovy.mock.interceptor.MockFor
 import org.neo4j.graphdb.NotFoundException
 import spock.lang.Specification
+
+import javax.print.Doc
 
 /**
  * See the API for {@link grails.test.mixin.services.ServiceUnitTestMixin} for usage instructions
@@ -108,13 +113,22 @@ class DocumentServiceSpec extends Specification {
             def doc = new Document(docTitle: 'TestingServiceExportDocJson', viewCount: 0).save()
         expect:
             doc instanceof Document
+            doc.docTitle == 'TestingServiceExportDocJson'
         when:
             def myJson = service.exportDoc('TestingServiceExportDocJson', 'json')
         then:
             myJson instanceof JSON
-            //todo 1 * service.exportDoc('TestingServiceExportDocJson', 'json')
-            //1 * service.getDoc('TestingServiceExportDocJson')
-            //0 * service._
+    }
+
+    void "test exportDoc as JSON functionCalls"() {
+        setup:
+            def doc = new Document(docTitle: 'TestingServiceExportDocJson', viewCount: 0).save()
+            DocumentService myMock = Mock(DocumentService)
+        when:
+            myMock.exportDoc(doc.docTitle, 'json')
+        then:
+            1 * myMock.exportDoc(doc.docTitle, 'json')
+            0 * myMock._
     }
 
     void "test export doc as XML"() {
