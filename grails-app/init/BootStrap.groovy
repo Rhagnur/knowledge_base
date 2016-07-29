@@ -9,15 +9,13 @@ class BootStrap {
     def init = { servletContext ->
         JSON.registerObjectMarshaller(Document) { doc ->
             def output = [:]
-            output.docTitle = doc.docTitle
-            //def type = Subcategory.findAllByMainCat(Maincategory.findByName('doctype')).find{it.docs.contains(doc)}
-            //if (type) output.docType = type.name
+            output.title = doc.docTitle
             output.docType=doc.class.simpleName
             def author = Subcategory.findAllByMainCat(Maincategory.findByName('author')).find{it.docs.contains(doc)}
             if (author) output.author = author.name
             def lang = Subcategory.findAllByMainCat(Maincategory.findByName('lang')).find{it.docs.contains(doc)}
             if (lang) output.lang = lang.name
-            output.hiddenTags = doc.hiddenTags
+            output.tags = doc.hiddenTags
             if (doc.docContent) output.docContent = doc.docContent
             if (doc.question) output.question = doc.question
             if (doc.answer) output.answer =  doc.answer
@@ -39,12 +37,12 @@ class BootStrap {
 
         XML.registerObjectMarshaller(Document) { doc, xml ->
             xml.build{
-                docTitle(doc.docTitle)
-                def temp = Subcategory.findAllByMainCat(Maincategory.findByName('doctype')).find{it.docs.contains(doc)}
+                title(doc.docTitle)
+                def temp = Subcategory.findAllByMainCat(Maincategory.findByName('author')).find{it.docs.contains(doc)}
                 if (temp) author(temp.name)
                 temp = Subcategory.findAllByMainCat(Maincategory.findByName('lang')).find{it.docs.contains(doc)}
                 if (temp) lang(temp.name)
-                hiddenTags(doc.hiddenTags)
+                tags(doc.hiddenTags)
                 if (doc.question && doc.answer) {
                     question(doc.question)
                     answer(doc.answer)

@@ -12,6 +12,12 @@ class InitService {
 
     def initTestModell() {
 
+
+        //init docs
+        for (int i = 0; i < 50; i++) {
+
+        }
+
         def doc1 = new Tutorial(docTitle: 'WLAN für Windows 7', hiddenTags: ['wifi', 'wlan', 'windows 7'] as String[], viewCount: 42)
                 .addToSteps(new Step(number: 1, stepTitle: 'Dies ist ein Titel', stepText: 'Dies ist ein Absatz', mediaLink: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Image_manquante_2.svg/320px-Image_manquante_2.svg.png'))
                 .addToSteps(new Step(number: 2, stepTitle: 'Dies ist ein Titel', stepText: 'Dies ist ein Absatz', mediaLink: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Image_manquante_2.svg/320px-Image_manquante_2.svg.png'))

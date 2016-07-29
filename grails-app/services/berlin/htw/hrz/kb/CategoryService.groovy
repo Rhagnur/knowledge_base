@@ -163,36 +163,62 @@ class CategoryService {
     }
 
     def getAllDocsAssociatedToSubCategories(String[] subs) {
-        def docs = []
-        subs.each { cat ->
-            if (Subcategory.findByName(cat) != null) {
-                docs.addAll(Subcategory.findByName(cat).docs?.findAll().toArray())
-            }
+        //def docs = []
+        //subs.each { cat ->
+        //    if (Subcategory.findByName(cat) != null) {
+        //        docs.addAll(Subcategory.findByName(cat).docs?.findAll().toArray())
+        //    }
+        //}
+        def query = "MATCH (main:Maincategory)<-[*]-(sub:Subcategory)-[:DOCS]->(doc:Document) WHERE main.name IS NOT NULL "
+        query += "AND (sub.name='${subs[0]}'"
+        subs = subs.drop(1)
+        subs.each {
+            query += "OR sub.name='${it}'"
         }
+        query += ") RETURN sub.name AS subName, doc"
+        Result result = Subcategory.cypherStatic(query)
+        def myDocs = []
+        result.each {
+            myDocs.add(it.doc as Document)
+        }
+        //myDocs.each {
+        //    println('Davor: ' + it.docTitle)
+        //}
+        myDocs = myDocs.findAll { myDocs.count(it) == (subs.size()+1) }.unique().sort { it.viewCount }
+        //myDocs.each {
+        //    println('Danach: ' + it.docTitle)
+        //}
+
         //find only non unique docs, so you get all docs which are associated with the given categories
-        docs = docs.findAll { docs.count(it) == subs.size() }.unique()
-        return docs
+        //docs = docs.findAll { docs.count(it) == (subs.size()+1) }.unique()
+        return myDocs
     }
 
     def getAdditionalDocs(Document doc, Boolean forFaqs = false) {
         def excludedMainCats = []
         excludedMainCats.add('group')
         excludedMainCats.add('author')
-        println(forFaqs)
+        def start, stop
 
         if (forFaqs) {
+            start = new Date()
             println('FAQ')
             def relatedFaqs = getSameAssociatedDocs(doc, excludedMainCats as String[], true)
             if (!relatedFaqs) {
                 excludedMainCats.add('lang')
                 relatedFaqs = getSameAssociatedDocs(doc, excludedMainCats as String[], true)
             }
+            stop = new Date()
+            println('Benötigte Zeit: ' + TimeCategory.minus(stop, start))
             return relatedFaqs
         }
 
         println('DOCS')
+        start = new Date()
         excludedMainCats.add('theme')
         def similarDocs = getSameAssociatedDocs(doc, excludedMainCats as String[])
+        stop = new Date()
+        println('Benötigte Zeit: ' + TimeCategory.minus(stop, start))
         return similarDocs
     }
 
@@ -208,20 +234,17 @@ class CategoryService {
         query = query + "RETURN main.name AS mainName, sub.name as subName, otherDoc ORDER BY otherDoc.viewCount"
 
         //fire query
-        //println(query)
         Result myResult = Subcategory.cypherStatic(query)
 
         //process query
         def cats = []
         def docs = []
-        def docsMap = [:]
         myResult.each {
                 cats.add(it.subName)
                 docs.add(it.otherDoc as Document)
         }
 
         cats = cats.unique()
-        println(cats)
 
         //find only docs which are associated to all found subcats
         docs.each {
@@ -229,11 +252,10 @@ class CategoryService {
         }
         docs = docs.findAll { docs.count(it) == cats.size() }.unique()
         docs.each { doc ->
-            println 'Gefunden: '+doc.docTitle
+            println 'Gefunden: ' + doc.docTitle
         }
 
         if (forFaqs) {
-            println(query)
             return docs.findAll{ it instanceof Faq }
         }
         else {
@@ -251,7 +273,7 @@ class CategoryService {
 
         println(userPrincipals.authorities)
 
-        println('1')
+        println('1 Os')
         start = new Date()
         //1 Get docs from associated OS []
         String osName = ''
@@ -297,9 +319,9 @@ class CategoryService {
         subCatNames.add(osName)
 
         stop = new Date()
-        println(TimeCategory.minus(stop, start))
+        println('Benötigte Zeit: ' + TimeCategory.minus(stop, start))
 
-        println('2')
+        println('2 Group')
         start = new Date()
         //2 Get the documents of the associated groups [ROLE_GP-STAFF, ROLE_GP-STUD]
         if (userPrincipals.authorities.any { it.authority == ("ROLE_GP-PROF"||"ROLE_GP-LBA") }) {
@@ -327,17 +349,17 @@ class CategoryService {
             subCatNames.add('anonym')
         }
         stop = new Date()
-        println(TimeCategory.minus(stop, start))
+        println('Benötigte Zeit: ' + TimeCategory.minus(stop, start))
 
-        println('3')
+        println('3 Popular')
         start = new Date()
         //3 Get the popularest docs
         temp = Document.findAll(max: NumDocsToShow, sort: 'viewCount', order: 'desc')
         docMap.put('popular', temp)
         stop = new Date()
-        println(TimeCategory.minus(stop, start))
+        println('Benötigte Zeit: ' + TimeCategory.minus(stop, start))
 
-        println('4')
+        println('4 Suggestion')
         start = new Date()
         //4 Get suggestions, sugg are associated to OS and the user-groups
         while (subCatNames && !subCatNames.empty) {
@@ -350,7 +372,7 @@ class CategoryService {
             }
         }
         stop = new Date()
-        println(TimeCategory.minus(stop, start))
+        println('Benötigte Zeit: ' + TimeCategory.minus(stop, start))
 
         docMap = docMap.sort { -(it.value.size()) }
         return docMap

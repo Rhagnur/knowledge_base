@@ -137,3 +137,17 @@ h2 {
 #search-results-table th[data-sort]{
     cursor:pointer;
 }
+.cat-checkbox-holder {
+    border: 1px solid rgba(0,0,0,0.2);
+    border-radius: 0.4em;
+    box-sizing: border-box;
+    padding: 1em;
+    margin-right: 1em;
+    margin-bottom: 1em;
+}
+.cat-checkbox-holder .cat-checkbox {
+    box-sizing: border-box;
+    margin-left: 1em;
+    margin-bottom: 0.4em;
+    float: left;
+}

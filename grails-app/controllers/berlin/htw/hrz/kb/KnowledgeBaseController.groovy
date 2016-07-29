@@ -64,8 +64,8 @@ class KnowledgeBaseController {
             docsFound.addAll(Document.findAllByDocTitleIlike("%$params.searchBar%"))
             docsFound.addAll(Step.findAllByStepTitleIlike("%$params.searchBar%").doc)
             docsFound.addAll(Step.findAllByStepTextIlike("%$params.searchBar%").doc)
-            docsFound.addAll(Faq.findAllByQuestionIlike("%$params.searchBar%").doc)
-            docsFound.addAll(Faq.findAllByAnswerIlike("%$params.searchBar%").doc)
+            docsFound.addAll(Faq.findAllByQuestionIlike("%$params.searchBar%"))
+            docsFound.addAll(Faq.findAllByAnswerIlike("%$params.searchBar%"))
             docsFound.sort { it.viewCount }.unique{ it.docTitle }
 
         } else {
@@ -145,6 +145,7 @@ class KnowledgeBaseController {
 
                 if (allAttrs.containsValue('') || allAttrs.containsValue(null) || !params.docTitle || params.docTitle.empty) {
                     flash.error = "Bitte alle Felder ausfüllen!"
+                    params.createTut = 'tutorial'
                 } else {
                     docTitle = params.docTitle
                     def allTitles = allAttrs.findAll{it.key =~ /stepTitle_[1-9]/}
@@ -162,6 +163,7 @@ class KnowledgeBaseController {
                         docContent = contentTemp
                     } else {
                         flash.error = "Fehler beim Verarbeiten!"
+                        params.createTut = 'tutorial'
                     }
                 }
             }
@@ -174,6 +176,7 @@ class KnowledgeBaseController {
 
                 } else {
                     flash.error = "Bitte alle Felder ausfüllen!"
+                    params.createFaq = 'faq'
                 }
 
             }
@@ -182,12 +185,9 @@ class KnowledgeBaseController {
             String tags = params.docTags
             docTags = tags.split(",")
 
-            int viewCount = 0
-            if (params.viewCount && params.viewCount =~/[0-9]/) {
-                viewCount = params.viewCount as int
-            }
 
             if (!flash.error) {
+                int viewCount = 0
                 categoryService.addDoc(docTitle, docContent, docTags, docSubs, docType, viewCount)
                 flash.info = 'Dokument erstellt'
                 redirect(view: 'index', model: [otherDocs: loadTestDocs(), principal: springSecurityService.principal])
@@ -195,11 +195,13 @@ class KnowledgeBaseController {
         }
 
         //todo: Anstatt eine gesamte 'Liste' lieber eine Hashmap mit Aufbaue [mainCatName1: [allSubcats], mainCatName2: [allSubcats],...]
-        String[] all = []
+        def all = [:]
         Maincategory.findAll().each { mainCat ->
+            def temp = []
             categoryService.getIterativeAllSubCats(mainCat.name).each { cat ->
-                all += cat.name as String
+                temp.add(cat.name as String)
             }
+            all.put(mainCat.name, temp.sort{ it })
         }
         println('all' + all)
         [cats: all, docType: params.createFaq?'faq':params.createTut?'tutorial':'', principal: springSecurityService.principal]
