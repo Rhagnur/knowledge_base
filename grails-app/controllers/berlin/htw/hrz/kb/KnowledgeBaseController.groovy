@@ -28,6 +28,7 @@ class KnowledgeBaseController {
 
     def loadTestDocs () {
         return categoryService.getDocsOfInterest(springSecurityService.principal, request)
+        //return null
     }
 
     def index() {
@@ -36,12 +37,6 @@ class KnowledgeBaseController {
         if (Maincategory.findAll().empty) {
             initService.initTestModell()
             flash.info = "Neo4j war leer, Test-Domainklassen, Dokumente und Beziehungen angelegt"
-        }
-
-        def myMap = categoryService.getAdditionalDocs(Document.findByDocTitle('WLAN für Windows 7'), true)
-        println(myMap)
-        myMap.each { doc ->
-                println(doc.docTitle)
         }
 
         println(request.getHeader('User-Agent'))

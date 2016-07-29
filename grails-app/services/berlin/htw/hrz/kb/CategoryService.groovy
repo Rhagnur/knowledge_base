@@ -365,6 +365,11 @@ class CategoryService {
         while (subCatNames && !subCatNames.empty) {
             def docs = getAllDocsAssociatedToSubCategories(subCatNames as String[])
             if (docs && !docs.empty) {
+                if (docs.size() > NumDocsToShow){
+                    docs = docs.sort {
+                        -it.viewCount
+                    }.subList(0, NumDocsToShow)
+                }
                 docMap.put('suggestion', docs)
                 break
             } else {

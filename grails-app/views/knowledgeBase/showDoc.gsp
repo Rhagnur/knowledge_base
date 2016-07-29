@@ -9,16 +9,14 @@
     </head>
 
     <content tag="main">
-        <p>Das Dokumente wurde schon ${document.viewCount} mal angeklickt</p>
-        <g:if test="${!document.faq}">
-            <h1>${document.docTitle}</h1>
-        </g:if>
         <g:link controller="KnowledgeBase" action="exportDoc"
-                params="[docTitle: document.docTitle, exportAs: 'json']">JSON 'Export'</g:link><br/>
+                params="[docTitle: document.docTitle, exportAs: 'json']">JSON</g:link>
         <g:link controller="KnowledgeBase" action="exportDoc"
-                params="[docTitle: document.docTitle, exportAs: 'xml']">XML 'Export'</g:link>
+                params="[docTitle: document.docTitle, exportAs: 'xml']">XML</g:link>
+        <h1>${document.docTitle}  </h1>
         <g:if test="${document.steps}">
-            <g:each in="${document.steps.sort{it.number}}">
+
+            <g:each in="${document.steps.sort { it.number }}">
                 <div class="step-header">
                     <h2>Schritt ${it.number}: ${it.stepTitle}</h2>
                 </div>
@@ -27,19 +25,38 @@
                     <div class="step-text">
                         <p>${raw(it.stepText)}</p>
                     </div>
+
                     <div class="step-media">
                         <a href="${it.mediaLink}"><g:img uri="${it.mediaLink}"/></a>
                     </div>
+
                     <div class="clear"></div>
                 </div>
             </g:each>
         </g:if>
         <g:elseif test="${document.question && document.answer}">
             <h2>${document.question}</h2>
+
             <p>${raw(document.answer)}</p>
         </g:elseif>
+        <g:elseif test="${document.docContent}">
+            <div class="article-container">
+                ${raw(document.docContent)}
+            </div>
+        </g:elseif>
 
-        <br/><p>Geschrieben von: ${author}</p><br/><br/>
+        <br/>
+
+        <hr/>
+        <p>Geschrieben von: ${author}</p>
+        <p>Das Dokumente wurde schon ${document.viewCount} mal angeklickt</p>
+        <g:if test="${document.hiddenTags}">
+            <p>
+                Schlagworte:
+                <g:each in="${document.hiddenTags?.toList()}">'${it}' </g:each>
+            </p>
+        </g:if>
+        <br/><br/>
 
         <g:if test="${similarDocs.tutorials}">
             <p>Anleitungen, die Sie auch interessieren könnten...</p>

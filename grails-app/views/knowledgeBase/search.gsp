@@ -26,12 +26,7 @@
                         <tr>
                             <td><g:link controller="KnowledgeBase" action="showDoc" params="[docTitle: it.docTitle]">${it.docTitle}</g:link></td>
                             <td>
-                                <g:if test="${it.steps}">
-                                    <p>Anleitung</p>
-                                </g:if>
-                                <g:else>
-                                    <p>FAQ</p>
-                                </g:else>
+                                <p>${it.getClass().simpleName}</p>
                             </td>
                             <td>${it.viewCount}</td>
                         </tr>
