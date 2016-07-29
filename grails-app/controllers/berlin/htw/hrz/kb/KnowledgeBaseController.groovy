@@ -6,6 +6,7 @@ package berlin.htw.hrz.kb
 
 import grails.plugin.springsecurity.annotation.Secured
 import groovy.time.TimeCategory
+import org.neo4j.graphdb.Result
 
 @Secured("IS_AUTHENTICATED_ANONYMOUSLY")
 class KnowledgeBaseController {
@@ -35,6 +36,12 @@ class KnowledgeBaseController {
         if (Maincategory.findAll().empty) {
             initService.initTestModell()
             flash.info = "Neo4j war leer, Test-Domainklassen, Dokumente und Beziehungen angelegt"
+        }
+
+        def myMap = categoryService.getAdditionalDocs(Document.findByDocTitle('WLAN für Windows 7'), true)
+        println(myMap)
+        myMap.each { doc ->
+                println(doc.docTitle)
         }
 
         println(request.getHeader('User-Agent'))
@@ -86,8 +93,10 @@ class KnowledgeBaseController {
             forward(view: 'index', model: [otherDocs: loadTestDocs(), principal: springSecurityService.principal])
         }
 
-        otherDocs.tutorials = myDoc.steps?categoryService.getSimilarDocs(myDoc, 'tutorial'):null
-        otherDocs.faq = myDoc.steps?categoryService.getSimilarDocs(myDoc, 'faq'):null
+        if (!(myDoc instanceof Faq)) {
+            otherDocs.tutorials = categoryService.getAdditionalDocs(myDoc)
+            otherDocs.faq = categoryService.getAdditionalDocs(myDoc, true)
+        }
 
         author = Subcategory.findAllByMainCat(Maincategory.findByName('author')).find{it.docs.contains(myDoc)}?.name
         if (!author) {

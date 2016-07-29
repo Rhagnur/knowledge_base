@@ -3,6 +3,7 @@ package berlin.htw.hrz.kb
 import grails.transaction.Transactional
 import groovy.time.TimeCategory
 import org.neo4j.graphdb.NotFoundException
+import org.neo4j.graphdb.Result
 
 @Transactional
 /**
@@ -173,6 +174,73 @@ class CategoryService {
         return docs
     }
 
+    def getAdditionalDocs(Document doc, Boolean forFaqs = false) {
+        def excludedMainCats = []
+        excludedMainCats.add('group')
+        excludedMainCats.add('author')
+        println(forFaqs)
+
+        if (forFaqs) {
+            println('FAQ')
+            def relatedFaqs = getSameAssociatedDocs(doc, excludedMainCats as String[], true)
+            if (!relatedFaqs) {
+                excludedMainCats.add('lang')
+                relatedFaqs = getSameAssociatedDocs(doc, excludedMainCats as String[], true)
+            }
+            return relatedFaqs
+        }
+
+        println('DOCS')
+        excludedMainCats.add('theme')
+        def similarDocs = getSameAssociatedDocs(doc, excludedMainCats as String[])
+        return similarDocs
+    }
+
+
+    def getSameAssociatedDocs(Document givenDoc, String[] excludedMainCats, Boolean forFaqs = false) {
+        //prepare query
+        def query = "MATCH (main:Maincategory)<-[*]-(sub:Subcategory)-[:DOCS]->(doc:Document), " +
+                    "(sub)-[:DOCS]->(otherDoc:Document)" +
+                    "WHERE doc.docTitle = '${givenDoc.docTitle}' AND main.name IS NOT NULL "
+        excludedMainCats.each { catName ->
+            query = query + " AND main.name <> '${catName}' "
+        }
+        query = query + "RETURN main.name AS mainName, sub.name as subName, otherDoc ORDER BY otherDoc.viewCount"
+
+        //fire query
+        //println(query)
+        Result myResult = Subcategory.cypherStatic(query)
+
+        //process query
+        def cats = []
+        def docs = []
+        def docsMap = [:]
+        myResult.each {
+                cats.add(it.subName)
+                docs.add(it.otherDoc as Document)
+        }
+
+        cats = cats.unique()
+        println(cats)
+
+        //find only docs which are associated to all found subcats
+        docs.each {
+            //println(it.docTitle)
+        }
+        docs = docs.findAll { docs.count(it) == cats.size() }.unique()
+        docs.each { doc ->
+            println 'Gefunden: '+doc.docTitle
+        }
+
+        if (forFaqs) {
+            println(query)
+            return docs.findAll{ it instanceof Faq }
+        }
+        else {
+            return docs.findAll { it instanceof Tutorial || it instanceof Article }
+        }
+    }
+
     //todo: vll einige Funktionen in eine extra Serviceklasse auslagern?
     //todo: optimieren match (main)<-[*]-(n:Subcategory)-[:DOCS]->(m:Document) where m.docTitle="Lan für Linux" and main.name is not null return main.name, n order by main.name
     def getDocsOfInterest(def userPrincipals, def request) {
@@ -288,6 +356,7 @@ class CategoryService {
         return docMap
     }
 
+
     def getSimilarDocs(Document doc, String typeOf) {
         def docs
         //prio reihenfolge thema, betriebssystem, sprache, gruppe
@@ -371,5 +440,6 @@ class CategoryService {
 
         return null
     }
+
 
 }
