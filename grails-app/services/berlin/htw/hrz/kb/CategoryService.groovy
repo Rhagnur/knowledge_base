@@ -58,6 +58,36 @@ class CategoryService {
         cat.delete()
     }
 
+    def newSubCategory(String catName, Maincategory mainCat, Subcategory[] subCats=null) {
+        if (!catName || catName.empty) throw new IllegalArgumentException("Argument 'catName' can not be null or empty")
+
+        Subcategory newSub = new Subcategory(name: catName)
+
+        if (!mainCat) throw new IllegalArgumentException("Argument 'mainCat' can not be null")
+        newSub.mainCat = mainCat
+
+        for (Subcategory sub in subCats) {
+            newSub.addToSubCats(sub)
+        }
+
+        return newSub.save(flush: true)
+    }
+
+    def newSubCategory(String catName, Subcategory parenCat, Subcategory[] subCats=null) {
+        if (!catName || catName.empty) throw new IllegalArgumentException("Argument 'catName' can not be null or empty")
+
+        Subcategory newSub = new Subcategory(name: catName)
+
+        if (!parenCat) throw new IllegalArgumentException("Argument 'parentCat' can not be null")
+        newSub.parentCat = parenCat
+
+        for (Subcategory sub in subCats) {
+            newSub.addToSubCats(sub)
+        }
+
+        return newSub.save(flush: true)
+    }
+
     /**
      *
      * @param oldName

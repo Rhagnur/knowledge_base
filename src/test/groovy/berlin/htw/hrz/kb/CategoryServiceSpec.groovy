@@ -78,6 +78,48 @@ class CategoryServiceSpec extends Specification {
             thrown NotFoundException
     }
 
+    void "test addSubCategory with parent = mainCat valid arguments"() {
+        when:
+            Subcategory sub = service.newSubCategory('Testing', new Maincategory(name: 'TestMain'), [new Subcategory(name: 'TestSub1'), new Subcategory(name: 'TestSub2')] as Subcategory[])
+        then:
+            notThrown Exception
+            sub.validate() == true
+            sub instanceof Subcategory
+            sub.parentCat == null
+            sub.mainCat instanceof Maincategory
+            sub.mainCat.name == 'TestMain'
+            sub.subCats instanceof Set<Subcategory>
+            sub.subCats.size() == 2
+    }
+
+    void "test addSubCategory with parent = subCat valid arguments"() {
+        when:
+            Subcategory sub = service.newSubCategory('Testing', new Subcategory(name: 'TestParent'), [new Subcategory(name: 'TestSub1'), new Subcategory(name: 'TestSub2')] as Subcategory[])
+        then:
+            notThrown Exception
+            sub.validate() == true
+            sub.mainCat == null
+            sub instanceof Subcategory
+            sub.parentCat instanceof Subcategory
+            sub.parentCat.name == 'TestParent'
+            sub.subCats instanceof Set<Subcategory>
+            sub.subCats.size() == 2
+    }
+
+    void "test addSubCategory null name"() {
+        when:
+            Subcategory sub = service.newSubCategory(null, new Maincategory(name: 'TestMain'), null)
+        then:
+            thrown IllegalArgumentException
+    }
+
+    void "test addSubCategory null parent"() {
+        when:
+        Subcategory sub = service.newSubCategory('Test', null as Maincategory, null)
+        then:
+        thrown IllegalArgumentException
+    }
+
     void "test getDocCount SubCat with existing Docs"() {
         given:
             Subcategory cat = new Subcategory(name: 'TestingDocCount').addToDocs(new Document(docTitle: 'TestDoc1')).addToDocs(new Document(docTitle: 'TestDoc2')).save()
