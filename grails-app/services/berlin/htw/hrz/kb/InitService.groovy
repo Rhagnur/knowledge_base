@@ -15,7 +15,7 @@ class InitService {
 
         //init docs
         def myDocs = []
-        for (int i = 0; i < 200; i++) {
+        for (int i = 0; i < 500; i++) {
             def magicNumber = random.nextInt(3)
 
             if (magicNumber == 0) {
@@ -95,6 +95,11 @@ class InitService {
             myMains.each {
                 Maincategory tempMain = it.value
                 def tempSubs = tempMain.subCats.findAll() asList()
+                def tempSubSub
+                tempSubs.collect().each {
+                    if (it.subCats) tempSubs.addAll(it.subCats)
+                }
+
                 Subcategory tempSub = tempSubs.get(random.nextInt(tempSubs.size()))
                 //println(tempMain.name + " - " + tempSub.name + " # " + tempSub.name.getClass())
                 if (!doc.tags) doc.tags = "${tempSub.name}"

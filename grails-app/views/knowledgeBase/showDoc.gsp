@@ -81,6 +81,17 @@
                 </g:each>
             </ul>
         </g:if>
+
+        <g:if test="${similarDocs.article}">
+            <p>Nützliche Artikel zum Thema...</p>
+            <ul>
+                <g:each in="${similarDocs.article}">
+                    <g:link controller="KnowledgeBase" action="showDoc" params="[docTitle: it.docTitle]">
+                        <li>${it.docTitle}</li>
+                    </g:link>
+                </g:each>
+            </ul>
+        </g:if>
         <br/><br/>
 
         <g:link controller="KnowledgeBase" action="index">Zur Startseite</g:link>

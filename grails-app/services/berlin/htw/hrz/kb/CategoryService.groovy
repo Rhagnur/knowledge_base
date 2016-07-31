@@ -123,22 +123,19 @@ class CategoryService {
      */
     def getAdditionalDocs(Document doc) throws Exception {
         def myDocs = [:]
-        def excludedMainCats = []
-        excludedMainCats.add('group')
-        excludedMainCats.add('author')
         def start, stop
 
         println('FAQ und Artikel')
         start = new Date()
-        def temp = getSameAssociatedDocs(doc, excludedMainCats as String[])
-        if (!temp) {
-            println('Nichts gefunden')
-            excludedMainCats.add('lang')
-            temp = getSameAssociatedDocs(doc, excludedMainCats as String[])
+        def temp = getSameAssociatedDocs(doc, ['theme', 'os'] as String[])
+        //if (!temp) {
+        //    println('Nichts gefunden')
+        //    temp = getSameAssociatedDocs(doc, ['theme'] as String[])
+        //}
+        if (temp) {
+            myDocs.faq = temp.findAll { it instanceof Faq }
+            myDocs.article = temp.findAll { it instanceof Article }
         }
-        println(temp)
-        myDocs.faq = temp.findAll { it instanceof Faq }
-        myDocs.article = temp.findAll { it instanceof Article }
         stop = new Date()
         println('Benötigte Zeit: ' + TimeCategory.minus(stop, start))
 
@@ -146,11 +143,12 @@ class CategoryService {
         println('Anleitungen')
         start = new Date()
 
-        if (isMainCatConnectedToDoc(doc.docTitle, 'os')) excludedMainCats.add('theme')
+        //if (isMainCatConnectedToDoc(doc.docTitle, 'os')) excludedMainCats.add('theme')
 
-        myDocs.tutorial = getSameAssociatedDocs(doc, excludedMainCats as String[], true)
+        myDocs.tutorial = getSameAssociatedDocs(doc, ['os', 'lang'] as String[], true)
         stop = new Date()
         println('Benötigte Zeit: ' + TimeCategory.minus(stop, start))
+        println('myDocs ' + myDocs)
         return myDocs
     }
 
@@ -383,49 +381,47 @@ class CategoryService {
      * This method will search for similar docs by checking the connection to the maincategories
      * You can exclude maincategories for a results. That means, if your first lookup didn't find anything exclude not so much important maincategories and lookup again
      * @param givenDoc
-     * @param excludedMainCats
+     * @param mainCats
      * @param forFaqs
      * @return
      */
-    def getSameAssociatedDocs(Document givenDoc, String[] excludedMainCats, Boolean forTutorial = false) {
+    def getSameAssociatedDocs(Document givenDoc, String[] mainCats, Boolean forTutorial=false) {
         //prepare query
-        def query = "MATCH (main:Maincategory)<-[*]-(sub:Subcategory)-[:DOCS]->(doc:Document), " +
-                "(sub)-[:DOCS]->(otherDoc:Document)" +
-                "WHERE doc.docTitle = '${givenDoc.docTitle}' AND main.name IS NOT NULL "
-        excludedMainCats.each { catName ->
-            query = query + " AND main.name <> '${catName}' "
+        def query = "MATCH (doc:Document) WHERE doc.docTitle='${givenDoc.docTitle}' WITH doc\n"
+        mainCats.eachWithIndex { catName, i ->
+            query += "MATCH (doc)<-[:DOCS]-(sub${i}:Subcategory)\n" +
+                     "MATCH (sub${i})-[*]->(main${i}:Maincategory{name:'${catName}'})\n" +
+                     "MATCH (sub${i})-[:DOCS]->(otherDoc:Document)\n"
         }
-        query = query + "RETURN main.name AS mainName, sub.name as subName, otherDoc ORDER BY otherDoc.viewCount"
+        query += "RETURN distinct otherDoc ORDER BY otherDoc.viewCount"
+
+        println(query)
 
         //fire query
         Result myResult = Subcategory.cypherStatic(query)
 
+        //println('list ' + myResult.toList(Document))
         //process query
-        def cats = []
-        def docs = []
-        myResult.each {
-            cats.add(it.subName)
-            docs.add(it.otherDoc as Document)
-        }
+        //def cats = []
+        //def docs = []
+        //myResult.each {
+            //cats.add(it.subName)
+            //docs.add(it.otherDoc as Document)
+        //}
 
-        cats = cats.unique()
+        //cats = cats.unique()
 
         //find only docs which are associated to all found subcats
-        docs.each {
-            //println(it.docTitle)
-        }
-        docs = docs.findAll { docs.count(it) == cats.size() }.unique()
-        if (!forTutorial) {
-            docs.each { doc ->
-                println 'Gefunden: ' + doc.docTitle
-            }
-        }
+        //docs.each {
+        //    println(it.docTitle)
+        //}
+        //docs = docs.findAll { docs.count(it) == cats.size() }.unique()
 
 
         if (forTutorial) {
-            return docs.findAll { it instanceof Tutorial }
+            return myResult.toList(Document).findAll { it instanceof Tutorial && it != givenDoc }
         } else {
-            return docs.findAll { it instanceof Faq || it instanceof Article }
+            return myResult.toList(Document).findAll { it instanceof Faq || (it instanceof Article && it != givenDoc) }
         }
     }
 
