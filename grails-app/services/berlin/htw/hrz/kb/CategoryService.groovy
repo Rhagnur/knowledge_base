@@ -5,6 +5,8 @@ import groovy.time.TimeCategory
 import org.neo4j.graphdb.NotFoundException
 import org.neo4j.graphdb.Result
 
+import java.rmi.NoSuchObjectException
+
 @Transactional
 /**
  * Service which help you for managing all kind of categories (main/sub)
@@ -38,8 +40,11 @@ class CategoryService {
      * @param catName
      * @return found main- or subcategory
      */
-    def getAllSubCats(String catName) {
-        return getCategory(catName).subCats
+    def getAllSubCats(def cat) {
+        if (!cat) throw new IllegalArgumentException('Argument can not be null')
+        if (!(cat instanceof Subcategory)&&!(cat instanceof Maincategory)) throw new IllegalArgumentException("Argument has wrong type, solution: 'berlin.htw.hrz.kb.Maincategory' or 'berlin.htw.hrz.kb.Subcategory'")
+
+        return cat.subCats?.findAll()
     }
 
     /**
@@ -47,15 +52,17 @@ class CategoryService {
      * @param catName
      * @return number of associated categories, error-code if something went wrong
      */
-    def getDocCount(String catName) {
-        def cat = getCategory(catName)
-        if (cat instanceof Maincategory) throw new NoSuchMethodException('ERROR: Maincategory do not have any documents')
+    def getDocCount(Subcategory cat) {
+        if (!cat) throw new IllegalArgumentException('Argument can not be null')
+
         cat.docs.size()
     }
 
-    def deleteCategory(String catName) {
-        def cat = getCategory(catName)
-        cat.delete()
+    def deleteCategory(def cat) {
+        if (!cat) throw new IllegalArgumentException('Argument can not be null')
+        if (!(cat instanceof Subcategory)&&!(cat instanceof Maincategory)) throw new IllegalArgumentException("Argument has wrong type, solution: 'berlin.htw.hrz.kb.Maincategory' or 'berlin.htw.hrz.kb.Subcategory'")
+
+        cat.delete(flush: true)
     }
 
     def newSubCategory(String catName, Maincategory mainCat, Subcategory[] subCats=null) {
@@ -94,15 +101,13 @@ class CategoryService {
      * @param newName
      * @return Errorcode as int, error-code if something went wrong
      */
-    def changeCategoryName(String oldName, String newName) {
-        if (!newName || newName == '') throw new IllegalArgumentException()
-
-        def cat = getCategory(oldName)
+    def changeCategoryName(def cat, String newName) {
+        if (!newName || newName.empty) throw new IllegalArgumentException("Argument 'newName' can not be null or empty.")
         cat.name = newName
 
         if (!cat.validate()) {
             cat.errors?.allErrors?.each { log.error(it) }
-            throw new Exception('ERROR: Validation of data wasn\'t successfull')
+            throw new Exception('Validation of data wasn\'t successfull')
         }
         return cat.save()
     }
@@ -115,13 +120,11 @@ class CategoryService {
     def getCategory(String catName) {
         if (!catName || catName == '') throw new IllegalArgumentException()
         def cat = Maincategory.findByName(catName) ?: Subcategory.findByName(catName) ?: null
-        if (!cat) throw new NotFoundException()
+        if (!cat) throw new NoSuchObjectException("Can not find a category with the name: '${catName}'")
         return cat
     }
 
-    def getAllDocs(String catName) {
-        def cat = getCategory(catName)
-        if (cat instanceof Maincategory) throw new NoSuchMethodException('ERROR: Maincategory do not have any documents')
+    def getDocs(Subcategory cat) {
         return cat.docs?.findAll()
     }
 
@@ -136,8 +139,8 @@ class CategoryService {
      * @param newCats
      * @return error-code as int, please have a look at the description of the class
      */
-    def changeSubCats(String catName, String[] newCats) {
-        def tempCat, cat = getCategory(catName)
+    def changeSubCats(def cat, String[] newCats) {
+        def tempCat
         def parent = null
 
         if (!(cat instanceof Maincategory)) {
@@ -315,7 +318,7 @@ class CategoryService {
             osName = 'mac'
         }
 
-        temp = getAllDocs(osName)
+        temp = getDocs(getCategory(osName) as Subcategory)
         if (temp.size() > NumDocsToShow){
             temp = temp.sort {
                 -it.viewCount
@@ -332,25 +335,25 @@ class CategoryService {
         start = new Date()
         //2 Get the documents of the associated groups [ROLE_GP-STAFF, ROLE_GP-STUD]
         if (userPrincipals.authorities.any { it.authority == ("ROLE_GP-PROF"||"ROLE_GP-LBA") }) {
-            docMap.put('faculty', getAllDocs('faculty').sort {
+            docMap.put('faculty', getDocs(getCategory('faculty') as Subcategory).sort {
                 -it.viewCount
             }.subList(0, NumDocsToShow))
             subCatNames.add('anonym')
         }
         if (userPrincipals.authorities.any { it.authority == "ROLE_GP-STAFF" }) {
-            docMap.put('staff', getAllDocs('staff').sort {
+            docMap.put('staff', getDocs(getCategory('staff') as Subcategory).sort {
                 -it.viewCount
             }.subList(0, NumDocsToShow))
             subCatNames.add('staff')
         }
         if (userPrincipals.authorities.any { it.authority == "ROLE_GP-STUD" }) {
-            docMap.put('student', getAllDocs('student').sort {
+            docMap.put('student', getDocs(getCategory('student') as Subcategory).sort {
                 -it.viewCount
             }.subList(0, NumDocsToShow))
             subCatNames.add('student')
         }
         if (userPrincipals.authorities.any { it.authority == "ROLE_ANONYMOUS" }) {
-            docMap.put('anonym', getAllDocs('anonym').sort {
+            docMap.put('anonym', getDocs(getCategory('anonym') as Subcategory).sort {
                 -it.viewCount
             }.subList(0, NumDocsToShow))
             subCatNames.add('anonym')

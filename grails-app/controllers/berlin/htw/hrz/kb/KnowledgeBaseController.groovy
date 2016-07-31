@@ -111,7 +111,7 @@ class KnowledgeBaseController {
         def myCats = Maincategory.findAll()
         //Default = hole alle Mainkategorien, ansonsten hole die Subkategorien der ausgewählten Kategorie
         if (params.cat) {
-            myCats = categoryService.getAllSubCats(params.cat)
+            myCats = categoryService.getAllSubCats(categoryService.getCategory(params.cat as String))
         }
         [cats: myCats, principal: springSecurityService.principal]
     }

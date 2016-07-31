@@ -7,8 +7,9 @@ package berlin.htw.hrz.kb
 
 import grails.test.mixin.Mock
 import grails.test.mixin.TestFor
-import org.neo4j.graphdb.NotFoundException
 import spock.lang.Specification
+
+import java.rmi.NoSuchObjectException
 
 /**
  * See the API for {@link grails.test.mixin.services.ServiceUnitTestMixin} for usage instructions
@@ -54,7 +55,7 @@ class CategoryServiceSpec extends Specification {
         when:
             def temp = service.getCategory('Nonsense')
         then:
-            thrown NotFoundException
+            thrown NoSuchObjectException
     }
 
     void "test deleteExistingCategory"() {
@@ -64,18 +65,41 @@ class CategoryServiceSpec extends Specification {
             mainCat instanceof Maincategory
             mainCat != null
         when:
-            service.deleteCategory(mainCat.name)
-            def temp = Maincategory.findByName('TestingDeleteCat')
+            service.deleteCategory(mainCat)
         then:
             notThrown Exception
-            temp == null
     }
 
     void "test deleteNonExistingCategory"() {
         when:
-            service.deleteCategory('Nonsense')
+            service.deleteCategory(null)
         then:
-            thrown NotFoundException
+            thrown IllegalArgumentException
+    }
+
+    void "test changeCatName valid"() {
+        given:
+            Subcategory cat = new Subcategory(name: 'TestChangeCatName').save()
+        expect:
+            cat instanceof Subcategory
+        when:
+            Subcategory temp = service.changeCategoryName(cat, 'NeuerName')
+        then:
+            notThrown Exception
+            temp.name == 'NeuerName'
+
+    }
+
+    void "test changeCatName null newName"() {
+        given:
+            Subcategory cat = new Subcategory(name: 'TestChangeCatName').save()
+        expect:
+            cat instanceof Subcategory
+        when:
+            Subcategory temp = service.changeCategoryName(cat, null)
+        then:
+            thrown IllegalArgumentException
+
     }
 
     void "test addSubCategory with parent = mainCat valid arguments"() {
@@ -128,29 +152,17 @@ class CategoryServiceSpec extends Specification {
             cat != null
             cat.docs.size() > 0
         when:
-            def count = service.getDocCount(cat.name)
+            def count = service.getDocCount(cat)
         then:
             count instanceof Integer
             count == 2
     }
 
-    void "test getDocCount MainCat"() {
-        given:
-            Maincategory cat = new Maincategory(name: 'TestingGetDocCountMainCat').save()
-        expect:
-            cat instanceof Maincategory
-            cat != null
+    void "test getDocCount null SubCat"() {
         when:
-            def count = service.getDocCount(cat.name)
+            def count = service.getDocCount(null)
         then:
-            thrown NoSuchMethodException
-    }
-
-    void "test getDocCount non-existing SubCat"() {
-        when:
-            def count = service.getDocCount('Nonsense')
-        then:
-            thrown NotFoundException
+            thrown IllegalArgumentException
     }
 
     void "test getAllSubCats existing Cat"() {
@@ -164,17 +176,25 @@ class CategoryServiceSpec extends Specification {
             cat instanceof Subcategory
             cat.subCats?.size() > 0
         when:
-            def subCats = service.getAllSubCats(cat.name)
+            def subCats = service.getAllSubCats(cat)
         then:
             subCats.size() == 3
     }
 
-    void "test getAllSubCats non-existing Cat"() {
+    void "test getAllSubCats wrong type"() {
         when:
-            def subCats = service.getAllSubCats('Nonsense')
+            def subCats = service.getAllSubCats('Hallo')
         then:
-            thrown NotFoundException
+            thrown IllegalArgumentException
     }
+
+    void "test getAllSubCats null argument"() {
+        when:
+            def subCats = service.getAllSubCats(null)
+        then:
+            thrown IllegalArgumentException
+    }
+
 
     void "test getIterativeAllSubCats"() {
         given:
