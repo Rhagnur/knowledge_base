@@ -32,33 +32,6 @@ class InitService {
             }
         }
 
-/*
-        def doc1 = new Tutorial(docTitle: 'WLAN für Windows 7', hiddenTags: ['wifi', 'wlan', 'windows 7'] as String[], viewCount: 42)
-                .addToSteps(new Step(number: 1, stepTitle: 'Dies ist ein Titel', stepText: 'Dies ist ein Absatz', mediaLink: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Image_manquante_2.svg/320px-Image_manquante_2.svg.png'))
-                .addToSteps(new Step(number: 2, stepTitle: 'Dies ist ein Titel', stepText: 'Dies ist ein Absatz', mediaLink: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Image_manquante_2.svg/320px-Image_manquante_2.svg.png'))
-                .addToSteps(new Step(number: 3, stepTitle: 'Dies ist ein Titel', stepText: 'Dies ist ein Absatz', mediaLink: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Image_manquante_2.svg/320px-Image_manquante_2.svg.png'))
-        .save()
-        def doc2 = new Tutorial(docTitle: 'WLAN for Windows 7 (HTML)', hiddenTags: ['wifi', 'wlan', 'windows 7'] as String[], viewCount: 2)
-                .addToSteps(new Step(number: 1, stepTitle: 'Dies ist ein Titel', stepText: 'Dies ist ein Absatz<br/><ul><li>Punkt 1</li><li>Punkt 2</li></ul><br/><b>Test</b>', mediaLink: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Image_manquante_2.svg/320px-Image_manquante_2.svg.png'))
-                .addToSteps(new Step(number: 2, stepTitle: 'Dies ist ein Titel', stepText: 'Dies ist ein Absatz<br/><ul><li>Punkt 1</li><li>Punkt 2</li></ul><br/><b>Test</b>', mediaLink: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Image_manquante_2.svg/320px-Image_manquante_2.svg.png'))
-                .addToSteps(new Step(number: 3, stepTitle: 'Dies ist ein Titel', stepText: 'Dies ist ein Absatz<br/><ul><li>Punkt 1</li><li>Punkt 2</li></ul><br/><b>Test</b>', mediaLink: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Image_manquante_2.svg/320px-Image_manquante_2.svg.png'))
-        .save()
-        def doc3 = new Tutorial(docTitle: 'Lan für Linux', hiddenTags: ['lan', 'linux'] as String[], viewCount: 815)
-                .addToSteps(new Step(number: 1, stepTitle: 'Dies ist ein Titel', stepText: 'Dies ist ein Absatz', mediaLink: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Image_manquante_2.svg/320px-Image_manquante_2.svg.png'))
-                .addToSteps(new Step(number: 2, stepTitle: 'Dies ist ein Titel', stepText: 'Dies ist ein Absatz', mediaLink: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Image_manquante_2.svg/320px-Image_manquante_2.svg.png'))
-                .addToSteps(new Step(number: 3, stepTitle: 'Dies ist ein Titel', stepText: 'Dies ist ein Absatz', mediaLink: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Image_manquante_2.svg/320px-Image_manquante_2.svg.png'))
-        .save()
-        def doc4 = new Tutorial(docTitle: 'Cisco-Telefonie', hiddenTags: ['telefonie', 'cisco', 'telephone'] as String[], viewCount: 66)
-                .addToSteps(new Step(number: 1, stepTitle: 'Dies ist ein Titel', stepText: 'Dies ist ein Absatz', mediaLink: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Image_manquante_2.svg/320px-Image_manquante_2.svg.png'))
-                .addToSteps(new Step(number: 2, stepTitle: 'Dies ist ein Titel', stepText: 'Dies ist ein Absatz', mediaLink: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Image_manquante_2.svg/320px-Image_manquante_2.svg.png'))
-                .addToSteps(new Step(number: 3, stepTitle: 'Dies ist ein Titel', stepText: 'Dies ist ein Absatz', mediaLink: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Image_manquante_2.svg/320px-Image_manquante_2.svg.png'))
-        .save()
-        def doc5 = new Faq(docTitle: 'Was ist die Antwort auf das Leben?', hiddenTags: ['Leben', '42'] as String[], viewCount: 1456, question: 'Was ist die Antwort auf das Leben?', answer: '42').save()
-        def doc6 = new Faq(docTitle: 'What shall we do with a drunken sailor?', hiddenTags: ['drunk', 'sailor'] as String[], viewCount: 48, question: 'What shall we do with a drunken sailor?', answer: 'Way hay and up she rises, Early in the morning').save()
-        def doc7 = new Faq(docTitle: 'Can i access the HTW WiFi with my Windows 7 Phone?', hiddenTags: ['wifi', 'windows phone'] as String[], viewCount: 586, question: 'Can i access the HTW WiFi with my Windows 7 Phone?', answer: 'No, because there is no such device like a windows 7 phone ').save()
-        def doc8 = new Faq(docTitle: 'Kann ich mein eigenes Cisco-Endgerät einfach zum Telefonieren nutzen?', hiddenTags: ['cisco', 'telefon'] as String[], viewCount: 173, question: 'Kann ich mein eigenes Cisco-Endgerät einfach zum Telefonieren nutzen?', answer: 'Nein, Sie müssen dieses erst durch den verantwortlichen Administrator freischalten lassen.').save()
-*/
-
         def myMains = [:]
 
         def group = new Maincategory(name: 'group')
