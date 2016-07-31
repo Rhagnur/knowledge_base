@@ -17,20 +17,18 @@ class InitService {
         def myDocs = []
         for (int i = 0; i < 200; i++) {
             def magicNumber = random.nextInt(3)
-            println("Next doc with magicNumber: ${magicNumber}")
 
             if (magicNumber == 0) {
-                Document doc = new Tutorial(docTitle: "Testanleitung${i}", viewCount: random.nextInt(1000), hiddenTags: ['Test'])
+                Document doc = new Tutorial(docTitle: "Testanleitung${i}", viewCount: random.nextInt(1000), tags: ["Test"], createDate: new Date())
                 for (int j = 0; j < (random.nextInt(8) + 1); j++) {
-                    println('next Step')
                     doc.addToSteps(new Step(number: (j + 1), stepTitle: 'Dies ist ein Titel', stepText: 'Dies ist ein Absatz<br/><ul><li>Punkt 1</li><li>Punkt 2</li></ul><br/><b>Test</b>', mediaLink: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Image_manquante_2.svg/320px-Image_manquante_2.svg.png'))
                 }
 
                 myDocs.add(doc.save(flush: true))
             } else if (magicNumber == 1) {
-                myDocs.add(new Faq(docTitle: "Testfrage${i}", viewCount: random.nextInt(1000), hiddenTags: ['Test'], question: 'Testfrage?', answer: 'Testantwort!').save(flush: true))
+                myDocs.add(new Faq(docTitle: "Testfrage${i}?", viewCount: random.nextInt(1000), tags: ["Test"], createDate: new Date(), question: "Testfrage${i}?", answer: 'Testantwort!').save(flush: true))
             } else if (magicNumber == 2) {
-                myDocs.add(new Article(docTitle: "Testartikel${i}", viewCount: random.nextInt(1000), hiddenTags: ['Test'], docContent: "Dies ist ein Absatz<br/><ul><li>Punkt 1</li><li>Punkt 2</li></ul><br/><b>Test</b><img src='https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Image_manquante_2.svg/320px-Image_manquante_2.svg.png' alt='Testbild' />").save(flush: true))
+                myDocs.add(new Article(docTitle: "Testartikel${i}", viewCount: random.nextInt(1000), tags: ["Test"], createDate: new Date(), docContent: "Dies ist ein Absatz<br/><ul><li>Punkt 1</li><li>Punkt 2</li></ul><br/><b>Test</b><img src='https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Image_manquante_2.svg/320px-Image_manquante_2.svg.png' alt='Testbild' />").save(flush: true))
             }
         }
 
@@ -125,8 +123,9 @@ class InitService {
                 Maincategory tempMain = it.value
                 def tempSubs = tempMain.subCats.findAll() asList()
                 Subcategory tempSub = tempSubs.get(random.nextInt(tempSubs.size()))
-                println(tempMain.name + " - " + tempSub.name + " # " + tempSub.name.getClass())
-                doc.hiddenTags += (tempSub.name as String )
+                //println(tempMain.name + " - " + tempSub.name + " # " + tempSub.name.getClass())
+                if (!doc.tags) doc.tags = "${tempSub.name}"
+                else doc.tags += "${tempSub.name}"
                 tempSub.addToDocs(doc.save(flush:true))
                 tempSub.save(flush: true)
             }

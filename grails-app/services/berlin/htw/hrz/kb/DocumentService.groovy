@@ -19,12 +19,12 @@ class DocumentService {
      * This method helps you to create a new tutorial
      * Attention: Method itself won't save the doc via save() method
      * @param docTitle
-     * @param hiddenTags
+     * @param tags
      * @param steps
      * @return new created document (tutorial)
      */
-    def newTutorial(String docTitle, String[] hiddenTags, Step[] steps) throws Exception {
-        def temp = new Tutorial(docTitle: docTitle, hiddenTags: hiddenTags, viewCount: 0)
+    def newTutorial(String docTitle, Step[] steps, String[] tags) throws Exception {
+        def temp = new Tutorial(docTitle: docTitle, tags: tags, viewCount: 0, createDate: new Date())
         steps?.each { step ->
             temp.addToSteps(step)
         }
@@ -36,12 +36,12 @@ class DocumentService {
      * This method helps you to create a new faq
      * Attention: Method itself won't save the doc via save() method
      * @param docTitle
-     * @param hiddenTags
+     * @param tags
      * @param faq
      * @return new created document (faq)
      */
-    def newFaq(String docTitle, String[] hiddenTags, String question, String answer) throws Exception {
-        def temp = new Faq(docTitle: docTitle, hiddenTags: hiddenTags, viewCount: 0, question: question, answer: answer)
+    def newFaq(String question, String answer, String[] tags) throws Exception {
+        def temp = new Faq(docTitle: question, tags: tags, createDate: new Date(), viewCount: 0, question: question, answer: answer)
         if (!temp.validate()) throw new Exception('ERROR: Validation of data wasn\'t successfull')
         return temp.save(flush: true)
     }
@@ -50,12 +50,12 @@ class DocumentService {
      * This method helps you to create a new article
      * Attention: Method itself won't save the doc via save() method
      * @param docTitle
-     * @param hiddenTags
+     * @param tags
      * @param docContent
      * @return new created document (article)
      */
-    def newArticle(String docTitle, String[] hiddenTags, String docContent) throws Exception {
-        def temp = new Article(docTitle: docTitle, hiddenTags: hiddenTags, viewCount: 0, docContent: docContent)
+    def newArticle(String docTitle, String docContent, String[] tags) throws Exception {
+        def temp = new Article(docTitle: docTitle, tags: tags, viewCount: 0, createDate: new Date(), docContent: docContent)
         if (!temp.validate()) throw new Exception('ERROR: Validation of data wasn\'t successfull')
         return temp.save(flush: true)
     }

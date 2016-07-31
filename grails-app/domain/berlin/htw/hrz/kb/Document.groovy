@@ -11,7 +11,7 @@ class Document {
 
     static constraints = {
         docContent nullable: true
-        hiddenTags nullable: true
+        tags nullable: true
         changedBy nullable: true
         createDate nullable: true
         changeDate nullable: true
@@ -24,7 +24,7 @@ class Document {
     //static hasOne = [faq: Faq]
 
     String docTitle, docContent
-    String[] hiddenTags, changedBy
+    String[] tags, changedBy
     Date createDate, changeDate
     Boolean locked
     int viewCount

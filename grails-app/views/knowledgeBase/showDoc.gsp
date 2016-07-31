@@ -13,7 +13,9 @@
                 params="[docTitle: document.docTitle, exportAs: 'json']">JSON</g:link>
         <g:link controller="KnowledgeBase" action="exportDoc"
                 params="[docTitle: document.docTitle, exportAs: 'xml']">XML</g:link>
-        <h1>${document.docTitle}  </h1>
+        <g:if test="${!document.question}">
+            <h1>${document.docTitle}</h1>
+        </g:if>
         <g:if test="${document.steps}">
 
             <g:each in="${document.steps.sort { it.number }}">
@@ -48,12 +50,12 @@
         <br/>
 
         <hr/>
-        <p>Geschrieben von: ${author}</p>
+        <p>Geschrieben von ${author} und erstellt am ${document.createDate}</p>
         <p>Das Dokumente wurde schon ${document.viewCount} mal angeklickt</p>
-        <g:if test="${document.hiddenTags}">
+        <g:if test="${document.tags}">
             <p>
                 Schlagworte:
-                <g:each in="${document.hiddenTags?.toList()}">'${it}' </g:each>
+                <g:each in="${document.tags?.toList()}">'${it}' </g:each>
             </p>
         </g:if>
         <br/><br/>

@@ -27,22 +27,22 @@ class DocumentServiceSpec extends Specification {
 
     void "test newTutorial with null steps"() {
         when:
-            def doc = service.newTutorial('TestingServiceTutorialNullSteps', ['Test'] as String[], null)
+            def doc = service.newTutorial('TestingServiceTutorialNullSteps',null , ['Test'] as String[])
         then:
             doc != null
             doc?.docTitle == 'TestingServiceTutorialNullSteps'
-            doc?.hiddenTags?.contains('Test')
+            doc?.tags?.contains('Test')
             doc?.steps == null
             notThrown Exception
     }
 
     void "test newTutorial with steps"() {
         when:
-            def doc = service.newTutorial('TestingServiceTutorialNullSteps', ['Test'] as String[], [new Step(number: 1, stepTitle: 'TestTitel1', stepText: 'TestTitel2', mediaLink: 'TestLink1'), new Step(number: 2, stepTitle: 'TestTitel2', stepText: 'TestTitel2', mediaLink: 'TestLink2')] as Step[])
+            def doc = service.newTutorial('TestingServiceTutorialNullSteps',[new Step(number: 1, stepTitle: 'TestTitel1', stepText: 'TestTitel2', mediaLink: 'TestLink1'), new Step(number: 2, stepTitle: 'TestTitel2', stepText: 'TestTitel2', mediaLink: 'TestLink2')] as Step[], ['Test'] as String[])
         then:
             doc instanceof Document
             doc?.docTitle == 'TestingServiceTutorialNullSteps'
-            doc?.hiddenTags?.contains('Test')
+            doc?.tags?.contains('Test')
             doc?.steps != null
             doc?.steps?.find({it.stepTitle == 'TestTitel1'}) != null
             doc?.steps?.find({it.stepTitle == 'TestTitel2'}) != null

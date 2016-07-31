@@ -122,8 +122,11 @@ class KnowledgeBaseController {
         if (params.submit) {
             def docTitle, docContent, docSubs, docType
             String[] docTags
+            def doc
 
-
+            //Verarbeite Daten, welche alle Dokumente gemeinsam haben
+            String tags = params.docTags
+            docTags = tags.split(",")
             //Hole Subkategorien, repräsentiert durch Checkboxen und erzeuge eine Liste aus den ausgewählten
             if (params.list('checkbox').empty) {
                 flash.error = "Bitte mindestens eine dazugehörige Kategorie auswählen ausfüllen!"
@@ -134,40 +137,38 @@ class KnowledgeBaseController {
 
             //Verarbeite dokumentspezifische Daten (Tutorial: verarbeite einzelne Steps, FAQ: verarbeite Frage-Antwort)
             if (params.tutorial == 'create') {
-                docType = 'tutorial'
-
                 def allAttrs = params.findAll{it.key =~ /step[A-Za-z]+_[1-9]/}
 
                 if (allAttrs.containsValue('') || allAttrs.containsValue(null) || !params.docTitle || params.docTitle.empty) {
                     flash.error = "Bitte alle Felder ausfüllen!"
                     params.createTut = 'tutorial'
                 } else {
-                    docTitle = params.docTitle
+                    def steps = []
+
+                    //find all necessary steps data
                     def allTitles = allAttrs.findAll{it.key =~ /stepTitle_[1-9]/}
                     def allTexts = allAttrs.findAll{it.key =~ /stepText_[1-9]/}
                     def allLinks = allAttrs.findAll{it.key =~ /stepLink_[1-9]/}
 
                     //Verarbeite einzelne Steps
                     if (allTitles.size() == allTexts.size() && allTitles.size() == allLinks.size()) {
-                        def contentTemp = []
                         for (int i = 1; i <= allTitles.size(); i++) {
-                            println('title: ' + allTitles.get(/stepTitle_/+i))
-                            contentTemp += [number: i, title: allTitles.get(/stepTitle_/+i), text: allTexts.get(/stepText_/+i), link: allLinks.get(/stepLink_/+i)]
+                            steps.add(new Step(number: i, stepTitle: allTitles.get(/stepTitle_/+i), stepText: allTexts.get(/stepText_/+i), mediaLink: allLinks.get(/stepLink_/+i) ))
                         }
-                        println (contentTemp)
-                        docContent = contentTemp
                     } else {
                         flash.error = "Fehler beim Verarbeiten!"
                         params.createTut = 'tutorial'
                     }
+
+                    doc = documentService.newTutorial(params.docTitle as String, steps as Step[], docTags)
                 }
             }
             else if (params.faq == 'create') {
-                docType = 'faq'
-
-                if (params.question && !params.question.empty || params.answer &&!params.answer.empty) {
-                    docTitle = params.question
-                    docContent = [question: params.question, answer: params.answer]
+                println('Faq')
+                if (params.question && !params.question.empty && params.answer && !params.answer.empty) {
+                    println('create Faq')
+                    doc = documentService.newFaq(params.question as String, params.answer as String, docTags).save()
+                    println('Faq erstellt')
 
                 } else {
                     flash.error = "Bitte alle Felder ausfüllen!"
@@ -175,15 +176,15 @@ class KnowledgeBaseController {
                 }
 
             }
+            //todo
+            //else if (params.article == 'create') {
 
-            //Verarbeite Daten, welche alle Dokumente gemeinsam haben
-            String tags = params.docTags
-            docTags = tags.split(",")
+            //}
 
 
             if (!flash.error) {
-                int viewCount = 0
-                categoryService.addDoc(docTitle, docContent, docTags, docSubs, docType, viewCount)
+                println(doc)
+                categoryService.addDoc(doc, docSubs)
                 flash.info = 'Dokument erstellt'
                 redirect(view: 'index', model: [otherDocs: loadTestDocs(), principal: springSecurityService.principal])
             }
