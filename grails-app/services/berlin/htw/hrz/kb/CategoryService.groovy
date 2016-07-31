@@ -114,7 +114,7 @@ class CategoryService {
     }
 
     /**
-     * This method will search für similar documents (if forFaqs = false) for the given document, so you get a set of other relevant documents
+     * This method will search für additional documents (if forFaqs = false) for the given document, so you get a set of other relevant documents
      * or a set of Faqs (if forFaqs = true) which share the same associated subcategories
      * @param doc
      * @param forFaqs
@@ -374,6 +374,14 @@ class CategoryService {
         }
     }
 
+    /**
+     * This method will search for similar docs by checking the connection to the maincategories
+     * You can exclude maincategories for a results. That means, if your first lookup didn't find anything exclude not so much important maincategories and lookup again
+     * @param givenDoc
+     * @param excludedMainCats
+     * @param forFaqs
+     * @return
+     */
     def getSameAssociatedDocs(Document givenDoc, String[] excludedMainCats, Boolean forFaqs = false) {
         //prepare query
         def query = "MATCH (main:Maincategory)<-[*]-(sub:Subcategory)-[:DOCS]->(doc:Document), " +
@@ -413,7 +421,13 @@ class CategoryService {
         }
     }
 
-
+    /**
+     * Adding a new subcategory to the database with a maincategory as parent
+     * @param catName
+     * @param mainCat
+     * @param subCats default null, or a list of subcategory which should be associated with
+     * @return
+     */
     def newSubCategory(String catName, Maincategory mainCat, Subcategory[] subCats = null) {
         if (!catName || catName.empty) throw new IllegalArgumentException("Argument 'catName' can not be null or empty")
 
@@ -429,6 +443,13 @@ class CategoryService {
         return newSub.save(flush: true)
     }
 
+    /**
+     * Adding a new subcategory to the database with a subcategory as parent
+     * @param catName
+     * @param parenCat
+     * @param subCats default null, or a list of subcategory which should be associated with
+     * @return
+     */
     def newSubCategory(String catName, Subcategory parenCat, Subcategory[] subCats = null) {
         if (!catName || catName.empty) throw new IllegalArgumentException("Argument 'catName' can not be null or empty")
 
