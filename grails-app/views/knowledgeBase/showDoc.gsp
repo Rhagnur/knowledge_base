@@ -60,10 +60,10 @@
         </g:if>
         <br/><br/>
 
-        <g:if test="${similarDocs.tutorials}">
+        <g:if test="${similarDocs.tutorial}">
             <p>Anleitungen, die Sie auch interessieren könnten...</p>
             <ul>
-                <g:each in="${similarDocs.tutorials}">
+                <g:each in="${similarDocs.tutorial}">
                     <g:link controller="KnowledgeBase" action="showDoc" params="[docTitle: it.docTitle]">
                         <li>${it.docTitle}</li>
                     </g:link>

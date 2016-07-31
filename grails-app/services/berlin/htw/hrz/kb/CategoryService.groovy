@@ -121,32 +121,37 @@ class CategoryService {
      * @return
      * @throws Exception
      */
-    def getAdditionalDocs(Document doc, Boolean forFaqs = false) throws Exception {
+    def getAdditionalDocs(Document doc) throws Exception {
+        def myDocs = [:]
         def excludedMainCats = []
         excludedMainCats.add('group')
         excludedMainCats.add('author')
         def start, stop
 
-        if (forFaqs) {
-            start = new Date()
-            println('FAQ')
-            def relatedFaqs = getSameAssociatedDocs(doc, excludedMainCats as String[], true)
-            if (!relatedFaqs) {
-                excludedMainCats.add('lang')
-                relatedFaqs = getSameAssociatedDocs(doc, excludedMainCats as String[], true)
-            }
-            stop = new Date()
-            println('Benötigte Zeit: ' + TimeCategory.minus(stop, start))
-            return relatedFaqs
-        }
-
-        println('DOCS')
+        println('FAQ und Artikel')
         start = new Date()
-        excludedMainCats.add('theme')
-        def similarDocs = getSameAssociatedDocs(doc, excludedMainCats as String[])
+        def temp = getSameAssociatedDocs(doc, excludedMainCats as String[])
+        if (!temp) {
+            println('Nichts gefunden')
+            excludedMainCats.add('lang')
+            temp = getSameAssociatedDocs(doc, excludedMainCats as String[])
+        }
+        println(temp)
+        myDocs.faq = temp.findAll { it instanceof Faq }
+        myDocs.article = temp.findAll { it instanceof Article }
         stop = new Date()
         println('Benötigte Zeit: ' + TimeCategory.minus(stop, start))
-        return similarDocs
+
+
+        println('Anleitungen')
+        start = new Date()
+
+        if (isMainCatConnectedToDoc(doc.docTitle, 'os')) excludedMainCats.add('theme')
+
+        myDocs.tutorial = getSameAssociatedDocs(doc, excludedMainCats as String[], true)
+        stop = new Date()
+        println('Benötigte Zeit: ' + TimeCategory.minus(stop, start))
+        return myDocs
     }
 
     /**
@@ -382,7 +387,7 @@ class CategoryService {
      * @param forFaqs
      * @return
      */
-    def getSameAssociatedDocs(Document givenDoc, String[] excludedMainCats, Boolean forFaqs = false) {
+    def getSameAssociatedDocs(Document givenDoc, String[] excludedMainCats, Boolean forTutorial = false) {
         //prepare query
         def query = "MATCH (main:Maincategory)<-[*]-(sub:Subcategory)-[:DOCS]->(doc:Document), " +
                 "(sub)-[:DOCS]->(otherDoc:Document)" +
@@ -410,15 +415,24 @@ class CategoryService {
             //println(it.docTitle)
         }
         docs = docs.findAll { docs.count(it) == cats.size() }.unique()
-        docs.each { doc ->
-            println 'Gefunden: ' + doc.docTitle
+        if (!forTutorial) {
+            docs.each { doc ->
+                println 'Gefunden: ' + doc.docTitle
+            }
         }
 
-        if (forFaqs) {
-            return docs.findAll { it instanceof Faq }
+
+        if (forTutorial) {
+            return docs.findAll { it instanceof Tutorial }
         } else {
-            return docs.findAll { it instanceof Tutorial || it instanceof Article }
+            return docs.findAll { it instanceof Faq || it instanceof Article }
         }
+    }
+
+    def isMainCatConnectedToDoc(String docTitle, String mainName) {
+        def query = "MATCH (main:Maincategory)<-[*]-(subs:Subcategory)-[:DOCS]->(doc:Document) WHERE doc.docTitle='${docTitle}' AND main.name='${mainName}' RETURN main"
+        Result result = Maincategory.cypherStatic(query)
+        return (result.size() > 0)
     }
 
     /**

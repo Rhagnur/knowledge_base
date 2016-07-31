@@ -89,8 +89,7 @@ class KnowledgeBaseController {
         }
 
         if (!(myDoc instanceof Faq)) {
-            otherDocs.tutorials = categoryService.getAdditionalDocs(myDoc)
-            otherDocs.faq = categoryService.getAdditionalDocs(myDoc, true)
+            otherDocs = categoryService.getAdditionalDocs(myDoc)
         }
 
         author = Subcategory.findAllByMainCat(Maincategory.findByName('author')).find{it.docs.contains(myDoc)}?.name
@@ -101,6 +100,7 @@ class KnowledgeBaseController {
         myDoc = documentService.increaseCounter(myDoc)
         stop = new Date()
         println('\nSeitenladezeit: '+TimeCategory.minus(stop, start))
+        println(otherDocs)
         [document: myDoc, author: author, similarDocs: otherDocs, principal: springSecurityService.principal]
     }
 
