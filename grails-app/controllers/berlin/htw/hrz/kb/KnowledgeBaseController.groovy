@@ -204,10 +204,9 @@ class KnowledgeBaseController {
     }
 
     def exportDoc() {
-        def docTitle = 'Cisco-Telefonie'
-        if (params.docTitle) {
-            docTitle = params.docTitle
-        }
-        render (documentService.exportDoc(docTitle, params.exportAs?params.exportAs:'map'))
+        Document doc
+        if (!params.docTitle && !params.exportAs) render("Error: Not enought arguments, 'docTitle' or 'exportAs' missing. Possible solutions for 'exportAs': 'json'/'xml'")
+        doc = documentService.getDoc(params.docTitle)
+        render (documentService.exportDoc(doc, params.exportAs as String))
     }
 }

@@ -65,10 +65,9 @@ class DocumentService {
      * @param docTitle
      * @return
      */
-    def deleteDoc(String docTitle) throws Exception {
-        def doc = getDoc(docTitle)
+    def deleteDoc(Document doc) throws Exception {
         if (doc instanceof Tutorial) {
-            doc.steps.collect().each { step ->
+            doc.steps?.collect()?.each { step ->
                 step.delete()
             }
         }
@@ -100,15 +99,15 @@ class DocumentService {
      * @param exportAs Decides which format will be returned, use 'json' or 'xml' for either format
      * @return
      */
-    def exportDoc(String docTitle, String exportAs) throws Exception {
-        def myDoc = getDoc(docTitle)
+    def exportDoc(Document doc, String exportAs) throws Exception {
+        if (!doc) throw new IllegalArgumentException("Argument 'doc' can not be null")
         def output = null
         if (exportAs == 'json') {
-            output = myDoc as JSON
+            output = doc as JSON
         } else if (exportAs == 'xml') {
-            output = myDoc as XML
+            output = doc as XML
         } else {
-            throw new IllegalArgumentException()
+            throw new IllegalArgumentException("No such 'exportAs' argument, please use 'json' or 'xml'.")
         }
         return output
     }
