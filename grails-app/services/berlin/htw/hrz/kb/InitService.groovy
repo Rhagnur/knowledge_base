@@ -26,7 +26,7 @@ class InitService {
 
                 myDocs.add(doc.save(flush: true))
             } else if (magicNumber == 1) {
-                myDocs.add(new Faq(docTitle: "Testfrage${i}?", viewCount: random.nextInt(1000), tags: ["Test"], createDate: new Date(), question: "Testfrage${i}?", answer: 'Testantwort!').save(flush: true))
+                myDocs.add(new Faq(docTitle: "Testfrage${i}?", viewCount: random.nextInt(1000), tags: ["Test"], createDate: new Date(), question: "Testfrage${i}?", answer: 'Eine mögliche Lösung wäre <a href="#">Testantwort</a>!').save(flush: true))
             } else if (magicNumber == 2) {
                 myDocs.add(new Article(docTitle: "Testartikel${i}", viewCount: random.nextInt(1000), tags: ["Test"], createDate: new Date(), docContent: "Dies ist ein Absatz<br/><ul><li>Punkt 1</li><li>Punkt 2</li></ul><br/><b>Test</b><img src='https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Image_manquante_2.svg/320px-Image_manquante_2.svg.png' alt='Testbild' />").save(flush: true))
             }

@@ -15,8 +15,8 @@ class BootStrap {
             if (author) output.author = author.name
             def lang = Subcategory.findAllByMainCat(Maincategory.findByName('lang')).find{it.docs.contains(doc)}
             if (lang) output.lang = lang.name
-            output.tags = doc.hiddenTags
-            if (doc.docContent) output.docContent = doc.docContent
+            if (doc.tags) output.tags = doc.tags
+            if (doc.docContent) output.content = doc.docContent
             if (doc.question) output.question = doc.question
             if (doc.answer) output.answer =  doc.answer
 
@@ -42,7 +42,8 @@ class BootStrap {
                 if (temp) author(temp.name)
                 temp = Subcategory.findAllByMainCat(Maincategory.findByName('lang')).find{it.docs.contains(doc)}
                 if (temp) lang(temp.name)
-                tags(doc.hiddenTags)
+                if (doc.tags) tags(doc.tags)
+                if (doc.docContent) content(doc.docContent)
                 if (doc.question && doc.answer) {
                     question(doc.question)
                     answer(doc.answer)
