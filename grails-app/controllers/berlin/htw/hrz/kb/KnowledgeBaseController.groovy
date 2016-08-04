@@ -111,6 +111,50 @@ class KnowledgeBaseController {
         [cat: cat, mainCats:(!cat)?categoryService.getAllMainCats():null]
     }
 
+    def changeCat() {
+        if (!params.submit) {
+            def all = [:]
+            categoryService.getAllMainCats().each { mainCat ->
+                def temp = []
+                categoryService.getIterativeAllSubCats(mainCat.name).each { cat ->
+                    temp.add(cat.name as String)
+                }
+                all.put(mainCat.name, temp.sort{ it })
+            }
+            [cat: params.name?categoryService.getCategory(params.name):null, allCats: Category.findAll().sort {it.name}, allCatsByMainCats: all]
+        } else {
+            println(params)
+
+            if (!params.catName || params.catName == '') flash.error = "Der neue Kategoriename darf nicht leer sein"
+
+
+            if (!(flash.error)) {
+                println('Cat ändern')
+                String[] cats = new String[params.list('checkbox').size()];
+
+
+                String newName = params.catName
+                def myCat = categoryService.getCategory(params.name)
+
+                if (myCat instanceof Subcategory){
+                    Category newParent = categoryService.getCategory(params.parentCat)
+                    myCat = categoryService.changeParent(myCat, newParent)
+                }
+
+                if (cats) {
+                    def docSubs = params.list('checkbox').toArray(cats)
+                    myCat = categoryService.changeSubCats(myCat, docSubs as String[])
+                }
+
+                myCat = categoryService.changeCategoryName(myCat, newName)
+
+
+                flash.info = 'Kategorie geändert'
+                redirect(view: 'index', model: [otherDocs: loadTestDocs(), principal: springSecurityService.principal])
+            }
+        }
+
+    }
 
     def navCat() {
         def myCats = null
@@ -137,7 +181,7 @@ class KnowledgeBaseController {
             docTags = tags.split(",")
             //Hole Subkategorien, repräsentiert durch Checkboxen und erzeuge eine Liste aus den ausgewählten
             if (params.list('checkbox').empty) {
-                flash.error = "Bitte mindestens eine dazugehörige Kategorie auswählen ausfüllen!"
+                flash.error = "Bitte mindestens eine dazugehörige Kategorie auswählen!"
             } else {
                 String[] cats = new String[params.list('checkbox').size()];
                 docSubs = params.list('checkbox').toArray(cats);
@@ -200,7 +244,7 @@ class KnowledgeBaseController {
 
         //todo: Anstatt eine gesamte 'Liste' lieber eine Hashmap mit Aufbaue [mainCatName1: [allSubcats], mainCatName2: [allSubcats],...]
         def all = [:]
-        Category.findAll().each { mainCat ->
+        categoryService.getAllMainCats().each { mainCat ->
             def temp = []
             categoryService.getIterativeAllSubCats(mainCat.name).each { cat ->
                 temp.add(cat.name as String)

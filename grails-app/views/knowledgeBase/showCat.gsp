@@ -15,6 +15,9 @@
             <h2>Eigenschaften</h2>
             <p>Name: ${cat.name}</p>
             <p>Typ: ${cat.getClass().simpleName}</p>
+            <g:if test="${cat instanceof berlin.htw.hrz.kb.Subcategory}">
+                <g:link controller="KnowledgeBase" action="changeCat" params="[name:cat.name]">Kategoriedetails ändern</g:link>
+            </g:if>
 
             <g:if test="${cat.parentCat}">
                 <h2>Eltern-Knoten</h2>

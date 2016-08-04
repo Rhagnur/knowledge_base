@@ -84,8 +84,16 @@ class CategoryService {
         for (Document doc in cat.docs) {
             tempCat.addToDocs(doc)
         }
-        cat.delete()
-        tempCat.save(flush: true)
+        if (tempCat.validate()) {
+            cat.delete()
+            tempCat.save(flush: true)
+        } else {
+            tempCat.errors.allErrors.each {
+                println it
+            }
+            null
+        }
+
     }
 
     //todo: Rausfinden warum Änderung temporär funktioniert aber NIE in die Datenbank gelangt
@@ -98,10 +106,9 @@ class CategoryService {
      */
     def changeSubCats(def cat, String[] newCats) {
         def tempCat
-        Category parent = null
 
-        if (cat.parentCat) {
-            tempCat = new Subcategory(name: cat.name, parentCat: parent)
+        if (cat instanceof Subcategory) {
+            tempCat = new Subcategory(name: cat.name, parentCat: cat.parentCat)
 
             for (Document doc in cat.docs) {
                 tempCat.addToDocs(doc)
@@ -115,8 +122,20 @@ class CategoryService {
             def temp = getCategory(cn)
             tempCat.addToSubCats(temp)
         }
-        cat.delete()
-        tempCat.save(flush: true)
+
+
+
+        if (tempCat.validate()) {
+            cat.delete()
+            tempCat.save(flush: true)
+        }
+        else {
+            tempCat.errors.allErrors.each {
+                println it
+            }
+            null
+        }
+
     }
 
     /**
