@@ -67,6 +67,10 @@
             <g:form controller="KnowledgeBase" action="navCat">
                 <g:submitButton name="nav" value="Durch Kategorien navigieren"/>
             </g:form>
+
+            <g:form controller="KnowledgeBase" action="findUnlinkedSubCats">
+                <g:submitButton name="nav" value="Unverlinkte Subkategorien finden"/>
+            </g:form>
         </section>
     </content>
 </g:applyLayout>

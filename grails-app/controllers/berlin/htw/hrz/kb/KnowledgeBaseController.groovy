@@ -111,6 +111,13 @@ class KnowledgeBaseController {
         [cat: cat, mainCats:(!cat)?categoryService.getAllMainCats():null]
     }
 
+    def findUnlinkedSubCats() {
+        def subCats = Subcategory.findAll()
+        subCats.removeAll { it.parentCat != null }
+        println(subCats)
+        [subCats: subCats]
+    }
+
     def changeCat() {
         if (!params.submit) {
             def all = [:]
