@@ -34,7 +34,7 @@ class InitService {
 
         def myMains = [:]
 
-        def group = new Maincategory(name: 'group')
+        def group = new Category(name: 'group')
                 .addToSubCats(new Subcategory(name: 'anonym'))
                 .addToSubCats(new Subcategory(name: 'student'))
                 .addToSubCats(new Subcategory(name: 'staff'))
@@ -42,7 +42,7 @@ class InitService {
                 .save()
         myMains.put('group', group)
 
-        def theme = new Maincategory(name: 'theme')
+        def theme = new Category(name: 'theme')
                 .addToSubCats(new Subcategory(name: 'eForms'))
                 .addToSubCats(new Subcategory(name: 'groupware'))
                 .addToSubCats(new Subcategory(name: 'account'))
@@ -58,13 +58,13 @@ class InitService {
                 .save()
         myMains.put('theme', theme)
 
-        def lang = new Maincategory(name: 'lang')
+        def lang = new Category(name: 'lang')
                 .addToSubCats(new Subcategory(name: 'de'))
                 .addToSubCats(new Subcategory(name: 'eng'))
                 .save()
         myMains.put('lang', lang)
 
-        def os = new Maincategory(name: 'os')
+        def os = new Category(name: 'os')
                 .addToSubCats(new Subcategory(name: 'windows')
                     .addToSubCats(new Subcategory(name: 'win_7'))
                     .addToSubCats(new Subcategory(name: 'win_8'))
@@ -85,7 +85,7 @@ class InitService {
                 .save()
         myMains.put('os', os)
 
-        def author = new Maincategory(name: 'author')
+        def author = new Category(name: 'author')
                 .addToSubCats(new Subcategory(name: 'didschu'))
                 .addToSubCats(new Subcategory(name: 'rack'))
                 .save()
@@ -93,7 +93,7 @@ class InitService {
 
         myDocs.each { doc ->
             myMains.each {
-                Maincategory tempMain = it.value
+                Category tempMain = it.value
                 def tempSubs = tempMain.subCats.findAll() asList()
                 def tempSubSub
                 tempSubs.collect().each {

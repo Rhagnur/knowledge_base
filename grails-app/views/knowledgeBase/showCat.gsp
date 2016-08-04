@@ -17,14 +17,10 @@
             <p>Typ: ${cat.getClass().simpleName}</p>
 
             <g:if test="${cat.parentCat}">
-                <h2>Eltern-Subkategorie</h2>
+                <h2>Eltern-Knoten</h2>
                 <p>Knoten: <g:link controller="KnowledgeBase" action="showCat" params="[name:cat.parentCat.name]">${cat.parentCat.name}</g:link></p>
             </g:if>
 
-            <g:if test="${cat.mainCat}">
-                <h2>Eltern-Mainkategorie</h2>
-                <p>Knoten: <g:link controller="KnowledgeBase" action="showCat" params="[name:cat.mainCat.name]">${cat.mainCat.name}</g:link></p>
-            </g:if>
 
             <g:if test="${cat.subCats}">
                 <h2>Subkategorien</h2>

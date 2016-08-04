@@ -5,7 +5,7 @@
 
 package berlin.htw.hrz.kb
 
-class Maincategory {
+class Category {
 
     static mapWith = "neo4j"
 

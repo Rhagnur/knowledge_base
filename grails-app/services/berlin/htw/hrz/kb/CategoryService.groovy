@@ -55,7 +55,7 @@ class CategoryService {
      * @param newName
      * @return Errorcode as int, error-code if something went wrong
      */
-    def changeCategoryName(def cat, String newName) {
+    def changeCategoryName(Category cat, String newName) {
         if (!newName || newName.empty) throw new IllegalArgumentException("Argument 'newName' can not be null or empty.")
         cat.name = newName
 
@@ -72,14 +72,11 @@ class CategoryService {
      * @param newParent can be either a subcategory or a maincategory
      * @return
      */
-    def changeParent(Subcategory cat, def newParent) {
+    def changeParent(Subcategory cat, Category newParent) {
         if (!cat || !newParent) throw new IllegalArgumentException('Argument can not be null.')
 
         Subcategory tempCat
-
-        if (newParent instanceof Maincategory) tempCat = new Subcategory(name: cat.name, mainCat: newParent)
-        else if (newParent instanceof Subcategory) tempCat = new Subcategory(name: cat.name, parentCat: newParent)
-        else throw new IllegalArgumentException("Argument 'newParent' is not of type 'berlin.htw.hrz.kb.Subcategory' or 'berlin.htw.hrz.kb.Maincategory'")
+        tempCat = new Subcategory(name: cat.name, parentCat: newParent)
 
         for (Subcategory subcat in cat.subCats) {
             tempCat.addToSubCats(subcat)
@@ -101,23 +98,17 @@ class CategoryService {
      */
     def changeSubCats(def cat, String[] newCats) {
         def tempCat
-        def parent = null
+        Category parent = null
 
-        if (!(cat instanceof Maincategory)) {
-            parent = cat.mainCat ?: cat.parentCat ?: null
+        if (cat.parentCat) {
+            tempCat = new Subcategory(name: cat.name, parentCat: parent)
 
-            if (parent instanceof Maincategory) {
-                tempCat = new Subcategory(name: cat.name, mainCat: parent)
-            } else {
-                tempCat = new Subcategory(name: cat.name, parentCat: parent)
-            }
-
-            for (doc in cat.docs) {
+            for (Document doc in cat.docs) {
                 tempCat.addToDocs(doc)
             }
 
         } else {
-            tempCat = new Maincategory(name: cat.name)
+            tempCat = new Category(name: cat.name)
         }
 
         for (cn in newCats) {
@@ -135,7 +126,7 @@ class CategoryService {
      */
     def deleteCategory(def cat) {
         if (!cat) throw new IllegalArgumentException('Argument can not be null')
-        if (!(cat instanceof Subcategory) && !(cat instanceof Maincategory)) throw new IllegalArgumentException("Argument has wrong type, solution: 'berlin.htw.hrz.kb.Maincategory' or 'berlin.htw.hrz.kb.Subcategory'")
+        if (!(cat instanceof Subcategory) && !(cat instanceof Category)) throw new IllegalArgumentException("Argument has wrong type, solution: 'berlin.htw.hrz.kb.Category' or 'berlin.htw.hrz.kb.Subcategory'")
 
         cat.delete(flush: true)
     }
@@ -209,7 +200,9 @@ class CategoryService {
      * @return
      */
     def getAllMainCats() {
-        return Maincategory.findAll()
+        def mainCats = Category.findAll()
+        mainCats.removeAll { it instanceof Subcategory}
+        return mainCats
     }
 
     /**
@@ -227,7 +220,7 @@ class CategoryService {
      */
     def getAllSubCats(def cat) {
         if (!cat) throw new IllegalArgumentException('Argument can not be null')
-        if (!(cat instanceof Subcategory) && !(cat instanceof Maincategory)) throw new IllegalArgumentException("Argument has wrong type, solution: 'berlin.htw.hrz.kb.Maincategory' or 'berlin.htw.hrz.kb.Subcategory'")
+        if (!(cat instanceof Subcategory) && !(cat instanceof Category)) throw new IllegalArgumentException("Argument has wrong type, solution: 'berlin.htw.hrz.kb.Category' or 'berlin.htw.hrz.kb.Subcategory'")
 
         return cat.subCats?.findAll()
     }
@@ -239,7 +232,7 @@ class CategoryService {
      */
     def getCategory(String catName) {
         if (!catName || catName == '') throw new IllegalArgumentException()
-        def cat = Maincategory.findByName(catName) ?: Subcategory.findByName(catName) ?: null
+        def cat = Category.findByName(catName) ?: Subcategory.findByName(catName) ?: null
         if (!cat) throw new NoSuchObjectException("Can not find a category with the name: '${catName}'")
         return cat
     }
@@ -401,7 +394,7 @@ class CategoryService {
     }
 
     /**
-     * This method will return iterative all associated subcategories to the given category (either Maincategory or Subcategory)
+     * This method will return iterative all associated subcategories to the given category (either Category or Subcategory)
      * @param cat Category you want to search through
      * @return Array of all found categories
      */
@@ -409,7 +402,7 @@ class CategoryService {
         def subs = []
         def cat = getCategory(catName)
         if (cat) {
-            if (!(cat instanceof Maincategory)) {
+            if (!(cat instanceof Category)) {
                 subs += cat
             }
             cat.subCats?.each { child ->
@@ -432,7 +425,7 @@ class CategoryService {
         def query = "MATCH (doc:Document) WHERE doc.docTitle='${givenDoc.docTitle}' WITH doc\n"
         mainCats.eachWithIndex { catName, i ->
             query += "MATCH (doc)<-[:DOCS]-(sub${i}:Subcategory)\n" +
-                     "MATCH (sub${i})-[*]->(main${i}:Maincategory{name:'${catName}'})\n" +
+                     "MATCH (sub${i})-[*]->(main${i}:Category{name:'${catName}'})\n" +
                      "MATCH (sub${i})-[:DOCS]->(otherDoc:Document)\n"
         }
         query += "RETURN distinct otherDoc ORDER BY otherDoc.viewCount"
@@ -448,8 +441,8 @@ class CategoryService {
     }
 
     def isMainCatConnectedToDoc(String docTitle, String mainName) {
-        def query = "MATCH (main:Maincategory)<-[*]-(subs:Subcategory)-[:DOCS]->(doc:Document) WHERE doc.docTitle='${docTitle}' AND main.name='${mainName}' RETURN main"
-        Result result = Maincategory.cypherStatic(query)
+        def query = "MATCH (main:Category)<-[*]-(subs:Subcategory)-[:DOCS]->(doc:Document) WHERE doc.docTitle='${docTitle}' AND main.name='${mainName}' RETURN main"
+        Result result = Category.cypherStatic(query)
         return (result.size() > 0)
     }
 
@@ -460,7 +453,7 @@ class CategoryService {
      * @param subCats default null, or a list of subcategory which should be associated with
      * @return
      */
-    def newSubCategory(String catName, Maincategory mainCat, Subcategory[] subCats = null) {
+    def newSubCategory(String catName, Category mainCat, Subcategory[] subCats = null) {
         if (!catName || catName.empty) throw new IllegalArgumentException("Argument 'catName' can not be null or empty")
 
         Subcategory newSub = new Subcategory(name: catName)

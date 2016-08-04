@@ -7,8 +7,8 @@ import spock.lang.Specification
 /**
  * See the API for {@link grails.test.mixin.domain.DomainClassUnitTestMixin} for usage instructions
  */
-@TestFor(Maincategory)
-@Mock([Maincategory, Subcategory])
+@TestFor(Category)
+@Mock([Category, Subcategory])
 class MaincategorySpec extends Specification {
 
     def setup() {
@@ -19,7 +19,7 @@ class MaincategorySpec extends Specification {
 
     void "test mainCat all"() {
         when:
-            Maincategory mainCat = new Maincategory(name: 'TestingMainCat').addToSubCats(new Subcategory(name: 'TestingMainCatSubCat1')).addToSubCats(new Subcategory(name: 'TestingMainCatSubCat1')).save()
+            Category mainCat = new Category(name: 'TestingMainCat').addToSubCats(new Subcategory(name: 'TestingMainCatSubCat1')).addToSubCats(new Subcategory(name: 'TestingMainCatSubCat1')).save()
         then:
             mainCat.validate() == true
             mainCat.name == 'TestingMainCat'
@@ -28,7 +28,7 @@ class MaincategorySpec extends Specification {
 
     void "test mainCat null name"() {
         when:
-            Maincategory mainCat = new Maincategory(name: null)
+            Category mainCat = new Category(name: null)
         then:
             mainCat.validate() == false
     }

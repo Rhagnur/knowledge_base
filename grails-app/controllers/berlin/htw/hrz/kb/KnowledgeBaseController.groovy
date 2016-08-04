@@ -6,7 +6,6 @@ package berlin.htw.hrz.kb
 
 import grails.plugin.springsecurity.annotation.Secured
 import groovy.time.TimeCategory
-import org.neo4j.graphdb.Result
 
 @Secured("IS_AUTHENTICATED_ANONYMOUSLY")
 class KnowledgeBaseController {
@@ -34,7 +33,7 @@ class KnowledgeBaseController {
     def index() {
         def start, stop, otherDocs = null
         start = new Date()
-        if (Maincategory.findAll().empty) {
+        if (Category.findAll().empty) {
             initService.initTestModell()
             flash.info = "Neo4j war leer, Test-Domainklassen, Dokumente und Beziehungen angelegt"
         }
@@ -92,7 +91,7 @@ class KnowledgeBaseController {
             otherDocs = categoryService.getAdditionalDocs(myDoc)
         }
 
-        author = Subcategory.findAllByMainCat(Maincategory.findByName('author')).find{it.docs.contains(myDoc)}?.name
+        author = Subcategory.findAllByMainCat(Category.findByName('author')).find{it.docs.contains(myDoc)}?.name
         if (!author) {
             author = 'Kein Autor gefunden'
         }
@@ -109,15 +108,18 @@ class KnowledgeBaseController {
         if (params.name) {
             cat = categoryService.getCategory(params.name)
         }
-        [cat: cat, mainCats:(!cat)?Maincategory.findAll():null]
+        [cat: cat, mainCats:(!cat)?categoryService.getAllMainCats():null]
     }
 
 
     def navCat() {
-        def myCats = Maincategory.findAll()
+        def myCats = null
         //Default = hole alle Mainkategorien, ansonsten hole die Subkategorien der ausgewählten Kategorie
         if (params.cat) {
             myCats = categoryService.getAllSubCats(categoryService.getCategory(params.cat as String))
+        }
+        else {
+            myCats = categoryService.getAllMainCats()
         }
         [cats: myCats, principal: springSecurityService.principal]
     }
@@ -198,7 +200,7 @@ class KnowledgeBaseController {
 
         //todo: Anstatt eine gesamte 'Liste' lieber eine Hashmap mit Aufbaue [mainCatName1: [allSubcats], mainCatName2: [allSubcats],...]
         def all = [:]
-        Maincategory.findAll().each { mainCat ->
+        Category.findAll().each { mainCat ->
             def temp = []
             categoryService.getIterativeAllSubCats(mainCat.name).each { cat ->
                 temp.add(cat.name as String)

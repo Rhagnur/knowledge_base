@@ -15,7 +15,7 @@ import java.rmi.NoSuchObjectException
  * See the API for {@link grails.test.mixin.services.ServiceUnitTestMixin} for usage instructions
  */
 @TestFor(CategoryService)
-@Mock([CategoryService, DocumentService, Maincategory, Subcategory, Document, Step, Faq])
+@Mock([CategoryService, DocumentService, Category, Subcategory, Document, Step, Faq])
 class CategoryServiceSpec extends Specification {
 
     def setup() {
@@ -26,24 +26,24 @@ class CategoryServiceSpec extends Specification {
 
     void "test getCategory valid MainCat"() {
         given:
-            Maincategory mainCat = new Maincategory(name: 'TestingGetMainCat').save()
+            Category mainCat = new Category(name: 'TestingGetMainCat').save()
         expect:
-            mainCat instanceof Maincategory
+            mainCat instanceof Category
             mainCat != null
         when:
             def temp = service.getCategory(mainCat.name)
         then:
             notThrown Exception
-            temp instanceof Maincategory
+            temp instanceof Category
             temp != null
             temp == mainCat
     }
 
     void "test getCategory null MainCat"() {
         given:
-            Maincategory mainCat = new Maincategory(name: 'TestingGetMainCat').save()
+            Category mainCat = new Category(name: 'TestingGetMainCat').save()
         expect:
-            mainCat instanceof Maincategory
+            mainCat instanceof Category
             mainCat != null
         when:
             def temp = service.getCategory(null)
@@ -60,9 +60,9 @@ class CategoryServiceSpec extends Specification {
 
     void "test deleteExistingCategory"() {
         given:
-            Maincategory mainCat = new Maincategory(name: 'TestingDeleteCat').save()
+            Category mainCat = new Category(name: 'TestingDeleteCat').save()
         expect:
-            mainCat instanceof Maincategory
+            mainCat instanceof Category
             mainCat != null
         when:
             service.deleteCategory(mainCat)
@@ -104,13 +104,13 @@ class CategoryServiceSpec extends Specification {
 
     void "test addSubCategory with parent = mainCat valid arguments"() {
         when:
-            Subcategory sub = service.newSubCategory('Testing', new Maincategory(name: 'TestMain'), [new Subcategory(name: 'TestSub1'), new Subcategory(name: 'TestSub2')] as Subcategory[])
+            Subcategory sub = service.newSubCategory('Testing', new Category(name: 'TestMain'), [new Subcategory(name: 'TestSub1'), new Subcategory(name: 'TestSub2')] as Subcategory[])
         then:
             notThrown Exception
             sub.validate() == true
             sub instanceof Subcategory
             sub.parentCat == null
-            sub.mainCat instanceof Maincategory
+            sub.mainCat instanceof Category
             sub.mainCat.name == 'TestMain'
             sub.subCats instanceof Set<Subcategory>
             sub.subCats.size() == 2
@@ -132,14 +132,14 @@ class CategoryServiceSpec extends Specification {
 
     void "test addSubCategory null name"() {
         when:
-            Subcategory sub = service.newSubCategory(null, new Maincategory(name: 'TestMain'), null)
+            Subcategory sub = service.newSubCategory(null, new Category(name: 'TestMain'), null)
         then:
             thrown IllegalArgumentException
     }
 
     void "test addSubCategory null parent"() {
         when:
-        Subcategory sub = service.newSubCategory('Test', null as Maincategory, null)
+        Subcategory sub = service.newSubCategory('Test', null as Category, null)
         then:
         thrown IllegalArgumentException
     }
@@ -198,13 +198,13 @@ class CategoryServiceSpec extends Specification {
 
     void "test getIterativeAllSubCats"() {
         given:
-            Maincategory cat = new Maincategory(name: 'TestingGetSubCats')
+            Category cat = new Category(name: 'TestingGetSubCats')
                     .addToSubCats(new Subcategory(name: 'TestSubCat1').addToSubCats(new Subcategory(name: 'TestSubSubCat11')))
                     .addToSubCats(new Subcategory(name: 'TestSubCat2').addToSubCats(new Subcategory(name: 'TestSubSubCat21')).addToSubCats(new Subcategory(name: 'TestSubSubCat22')))
                     .addToSubCats(new Subcategory(name: 'TestSubCat3').addToSubCats(new Subcategory(name: 'TestSubSubCat31').addToSubCats(new Subcategory(name: 'TestSubSubSubCat311'))))
                     .save()
         expect:
-            cat instanceof Maincategory
+            cat instanceof Category
             cat.subCats?.size() > 0
         when:
             def subCats = service.getIterativeAllSubCats(cat.name)

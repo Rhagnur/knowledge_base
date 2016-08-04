@@ -6,18 +6,15 @@
 package berlin.htw.hrz.kb
 
 
-class Subcategory {
+class Subcategory extends Category {
 
     static mapWith = "neo4j"
 
     static constraints = {
         name nullable: false
-        parentCat nullable: true
-        mainCat nullable: true
+        parentCat nullable: false
+        docs nullable: true
     }
-    static hasMany = [subCats: Subcategory, docs: Document]
-    Subcategory parentCat
-    Maincategory mainCat
-
-    String name;
+    static hasMany = [docs: Document]
+    Category parentCat
 }
