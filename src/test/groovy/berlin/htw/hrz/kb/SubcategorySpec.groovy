@@ -25,24 +25,15 @@ class SubcategorySpec extends Specification {
             sub.name == 'TestingSubCat'
             sub.parentCat instanceof Subcategory
             sub.parentCat.name == 'parentSub'
-            sub.mainCat instanceof Category
-            sub.mainCat.name == 'mainCat'
             sub.docs instanceof Set<Document>
             sub.docs.size() == 1
             sub.subCats instanceof Set<Subcategory>
             sub.subCats.size() == 2
     }
 
-    void "test subcategory nullable attrs = null"() {
-        when:
-            Subcategory sub = new Subcategory(name: 'TestingSubCatNullable', parentCat: null, mainCat: null)
-        then:
-            sub.validate() == true
-    }
-
     void "test subcategory not-nullable attrs = null"() {
         when:
-        Subcategory sub = new Subcategory(name: null, parentCat: null, mainCat: null)
+        Subcategory sub = new Subcategory(name: null, parentCat: null)
         then:
         sub.validate() == false
     }

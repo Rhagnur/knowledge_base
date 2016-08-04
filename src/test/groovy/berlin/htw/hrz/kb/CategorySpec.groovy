@@ -9,7 +9,7 @@ import spock.lang.Specification
  */
 @TestFor(Category)
 @Mock([Category, Subcategory])
-class MaincategorySpec extends Specification {
+class CategorySpec extends Specification {
 
     def setup() {
     }

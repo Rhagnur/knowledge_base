@@ -79,7 +79,7 @@ class CategoryServiceSpec extends Specification {
 
     void "test changeCatName valid"() {
         given:
-            Subcategory cat = new Subcategory(name: 'TestChangeCatName').save()
+            Subcategory cat = new Subcategory(name: 'TestChangeCatName', parentCat: new Category(name: 'Test')).save()
         expect:
             cat instanceof Subcategory
         when:
@@ -92,7 +92,7 @@ class CategoryServiceSpec extends Specification {
 
     void "test changeCatName null newName"() {
         given:
-            Subcategory cat = new Subcategory(name: 'TestChangeCatName').save()
+            Subcategory cat = new Subcategory(name: 'TestChangeCatName', parentCat: new Category(name: 'Test')).save()
         expect:
             cat instanceof Subcategory
         when:
@@ -102,30 +102,15 @@ class CategoryServiceSpec extends Specification {
 
     }
 
-    void "test addSubCategory with parent = mainCat valid arguments"() {
+    void "test addSubCategory with valid arguments"() {
         when:
             Subcategory sub = service.newSubCategory('Testing', new Category(name: 'TestMain'), [new Subcategory(name: 'TestSub1'), new Subcategory(name: 'TestSub2')] as Subcategory[])
         then:
             notThrown Exception
             sub.validate() == true
             sub instanceof Subcategory
-            sub.parentCat == null
-            sub.mainCat instanceof Category
-            sub.mainCat.name == 'TestMain'
-            sub.subCats instanceof Set<Subcategory>
-            sub.subCats.size() == 2
-    }
-
-    void "test addSubCategory with parent = subCat valid arguments"() {
-        when:
-            Subcategory sub = service.newSubCategory('Testing', new Subcategory(name: 'TestParent'), [new Subcategory(name: 'TestSub1'), new Subcategory(name: 'TestSub2')] as Subcategory[])
-        then:
-            notThrown Exception
-            sub.validate() == true
-            sub.mainCat == null
-            sub instanceof Subcategory
-            sub.parentCat instanceof Subcategory
-            sub.parentCat.name == 'TestParent'
+            sub.parentCat instanceof Category
+            sub.parentCat.name == 'TestMain'
             sub.subCats instanceof Set<Subcategory>
             sub.subCats.size() == 2
     }
@@ -146,7 +131,7 @@ class CategoryServiceSpec extends Specification {
 
     void "test getDocCount SubCat with existing Docs"() {
         given:
-            Subcategory cat = new Subcategory(name: 'TestingDocCount').addToDocs(new Document(docTitle: 'TestDoc1')).addToDocs(new Document(docTitle: 'TestDoc2')).save()
+            Subcategory cat = new Subcategory(name: 'TestingDocCount', parentCat: new Category(name: 'Test')).addToDocs(new Document(docTitle: 'TestDoc1')).addToDocs(new Document(docTitle: 'TestDoc2')).save()
         expect:
             cat instanceof Subcategory
             cat != null
@@ -167,7 +152,7 @@ class CategoryServiceSpec extends Specification {
 
     void "test getAllSubCats existing Cat"() {
         given:
-            Subcategory cat = new Subcategory(name: 'TestingGetSubCats')
+            Subcategory cat = new Subcategory(name: 'TestingGetSubCats', parentCat: new Category(name: 'Test'))
                     .addToSubCats(new Subcategory(name: 'TestSubCat1'))
                     .addToSubCats(new Subcategory(name: 'TestSubCat2'))
                     .addToSubCats(new Subcategory(name: 'TestSubCat3'))

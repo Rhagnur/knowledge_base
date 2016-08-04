@@ -402,7 +402,7 @@ class CategoryService {
         def subs = []
         def cat = getCategory(catName)
         if (cat) {
-            if (!(cat instanceof Category)) {
+            if (cat instanceof Subcategory) {
                 subs += cat
             }
             cat.subCats?.each { child ->
@@ -455,11 +455,9 @@ class CategoryService {
      */
     def newSubCategory(String catName, Category mainCat, Subcategory[] subCats = null) {
         if (!catName || catName.empty) throw new IllegalArgumentException("Argument 'catName' can not be null or empty")
-
-        Subcategory newSub = new Subcategory(name: catName)
-
         if (!mainCat) throw new IllegalArgumentException("Argument 'mainCat' can not be null")
-        newSub.mainCat = mainCat
+
+        Subcategory newSub = new Subcategory(name: catName, parentCat: mainCat)
 
         for (Subcategory sub in subCats) {
             newSub.addToSubCats(sub)
