@@ -66,8 +66,30 @@ class CategoryService {
         return cat.save()
     }
 
-    //todo: changeParent
-    //def changeParent
+    /**
+     * Changes the parent of the given category
+     * @param cat
+     * @param newParent can be either a subcategory or a maincategory
+     * @return
+     */
+    def changeParent(Subcategory cat, def newParent) {
+        if (!cat || !newParent) throw new IllegalArgumentException('Argument can not be null.')
+
+        Subcategory tempCat
+
+        if (newParent instanceof Maincategory) tempCat = new Subcategory(name: cat.name, mainCat: newParent)
+        else if (newParent instanceof Subcategory) tempCat = new Subcategory(name: cat.name, parentCat: newParent)
+        else throw new IllegalArgumentException("Argument 'newParent' is not of type 'berlin.htw.hrz.kb.Subcategory' or 'berlin.htw.hrz.kb.Maincategory'")
+
+        for (Subcategory subcat in cat.subCats) {
+            tempCat.addToSubCats(subcat)
+        }
+        for (Document doc in cat.docs) {
+            tempCat.addToDocs(doc)
+        }
+        cat.delete()
+        tempCat.save(flush: true)
+    }
 
     //todo: Rausfinden warum Änderung temporär funktioniert aber NIE in die Datenbank gelangt
     //Lösung 1: Zu ändernen Knoten löschen und mit neuen Beziehungn erstellen...meeeeh
@@ -89,6 +111,11 @@ class CategoryService {
             } else {
                 tempCat = new Subcategory(name: cat.name, parentCat: parent)
             }
+
+            for (doc in cat.docs) {
+                tempCat.addToDocs(doc)
+            }
+
         } else {
             tempCat = new Maincategory(name: cat.name)
         }
@@ -148,7 +175,6 @@ class CategoryService {
         myDocs.tutorial = getSameAssociatedDocs(doc, ['os', 'lang'] as String[], true)
         stop = new Date()
         println('Benötigte Zeit: ' + TimeCategory.minus(stop, start))
-        println('myDocs ' + myDocs)
         return myDocs
     }
 
@@ -176,6 +202,22 @@ class CategoryService {
         myDocs = myDocs.findAll { myDocs.count(it) == (subs.size() + 1) }.unique().sort { it.viewCount }
 
         return myDocs
+    }
+
+    /**
+     * Return all existing maincategories
+     * @return
+     */
+    def getAllMainCats() {
+        return Maincategory.findAll()
+    }
+
+    /**
+     * Return all existing subcategories
+     * @return
+     */
+    def getAllSubCats() {
+        return Subcategory.findAll()
     }
 
     /**
@@ -395,28 +437,8 @@ class CategoryService {
         }
         query += "RETURN distinct otherDoc ORDER BY otherDoc.viewCount"
 
-        println(query)
-
         //fire query
         Result myResult = Subcategory.cypherStatic(query)
-
-        //println('list ' + myResult.toList(Document))
-        //process query
-        //def cats = []
-        //def docs = []
-        //myResult.each {
-            //cats.add(it.subName)
-            //docs.add(it.otherDoc as Document)
-        //}
-
-        //cats = cats.unique()
-
-        //find only docs which are associated to all found subcats
-        //docs.each {
-        //    println(it.docTitle)
-        //}
-        //docs = docs.findAll { docs.count(it) == cats.size() }.unique()
-
 
         if (forTutorial) {
             return myResult.toList(Document).findAll { it instanceof Tutorial && it != givenDoc }

@@ -104,10 +104,16 @@ class KnowledgeBaseController {
         [document: myDoc, author: author, similarDocs: otherDocs, principal: springSecurityService.principal]
     }
 
-
-
-
     def showCat() {
+        def cat = null
+        if (params.name) {
+            cat = categoryService.getCategory(params.name)
+        }
+        [cat: cat, mainCats:(!cat)?Maincategory.findAll():null]
+    }
+
+
+    def navCat() {
         def myCats = Maincategory.findAll()
         //Default = hole alle Mainkategorien, ansonsten hole die Subkategorien der ausgewählten Kategorie
         if (params.cat) {

@@ -60,12 +60,12 @@
                 </g:form>
             <!--/sec:ifAllGranted-->
 
-            <g:form controller="KnowledgeBase" action="showDoc">
-                <g:submitButton name="show" value="Doc ansehen"/>
+            <g:form controller="KnowledgeBase" action="showCat">
+                <g:submitButton name="show" value="Kategorie ansehen"/>
             </g:form>
 
-            <g:form controller="KnowledgeBase" action="showCat">
-                <g:submitButton name="show" value="Cat ansehen"/>
+            <g:form controller="KnowledgeBase" action="navCat">
+                <g:submitButton name="nav" value="Durch Kategorien navigieren"/>
             </g:form>
         </section>
     </content>
