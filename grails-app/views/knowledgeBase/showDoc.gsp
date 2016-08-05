@@ -5,10 +5,11 @@
 
 <g:applyLayout name="subPage">
     <head>
-        <title>Dokument anzeigen</title>
+        <title><g:message code="kb.view.showDoc.headline"/></title>
     </head>
 
     <content tag="main">
+        <h1><g:message code="kb.view.showDoc.headline"/></h1>
         <g:link controller="KnowledgeBase" action="exportDoc"
                 params="[docTitle: document.docTitle, exportAs: 'json']">JSON</g:link>
         <g:link controller="KnowledgeBase" action="exportDoc"
@@ -50,18 +51,19 @@
         <br/>
 
         <hr/>
-        <p>Geschrieben von ${author} und erstellt am ${document.createDate}</p>
-        <p>Das Dokumente wurde schon ${document.viewCount} mal angeklickt</p>
+        <p><g:message code="kb.view.showDoc.author"/> ${author}</p>
+        <p><g:message code="kb.view.showDoc.createDate"/> ${document.createDate}</p>
+        <p><g:message code="kb.view.showDoc.clickCount"/> ${document.viewCount}</p>
         <g:if test="${document.tags}">
             <p>
-                Schlagworte:
+                <g:message code="kb.view.showDoc.tags"/>
                 <g:each in="${document.tags?.toList()}">'${it}' </g:each>
             </p>
         </g:if>
         <br/><br/>
 
         <g:if test="${similarDocs.tutorial}">
-            <p>Anleitungen, die Sie auch interessieren könnten...</p>
+            <p><g:message code="kb.view.showDoc.similarTuts"/></p>
             <ul>
                 <g:each in="${similarDocs.tutorial}">
                     <g:link controller="KnowledgeBase" action="showDoc" params="[docTitle: it.docTitle]">
@@ -72,7 +74,7 @@
         </g:if>
 
         <g:if test="${similarDocs.faq}">
-            <p>Nützliche Fragen und Antworten zum Thema...</p>
+            <p><g:message code="kb.view.showDoc.relatedFaqs"/></p>
             <ul>
                 <g:each in="${similarDocs.faq}">
                     <g:link controller="KnowledgeBase" action="showDoc" params="[docTitle: it.docTitle]">
@@ -83,7 +85,7 @@
         </g:if>
 
         <g:if test="${similarDocs.article}">
-            <p>Nützliche Artikel zum Thema...</p>
+            <p><g:message code="kb.view.showDoc.relatedArticles"/></p>
             <ul>
                 <g:each in="${similarDocs.article}">
                     <g:link controller="KnowledgeBase" action="showDoc" params="[docTitle: it.docTitle]">

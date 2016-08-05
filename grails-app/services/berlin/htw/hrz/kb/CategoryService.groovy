@@ -12,7 +12,7 @@ import java.rmi.NoSuchObjectException
  */
 class CategoryService {
 
-    def springSecurityService
+    //def springSecurityService
 
     /**
      * Number of documents which should be returned, so that not all found docs will be returned
@@ -26,7 +26,7 @@ class CategoryService {
      * @return
      * @throws Exception
      */
-    def addDoc(def doc, String[] subCats) throws Exception {
+    public boolean addDoc(Document doc, String[] subCats) throws Exception {
         def foundSubCats = []
         println('addDoc called')
         println(doc)
@@ -51,11 +51,12 @@ class CategoryService {
 
     /**
      * Change the name of the given category
-     * @param oldName
+     * @param cat
      * @param newName
-     * @return Errorcode as int, error-code if something went wrong
+     * @return
+     * @throws Exception
      */
-    def changeCategoryName(Category cat, String newName) {
+    public Category changeCategoryName(Category cat, String newName) throws Exception {
         if (!newName || newName.empty) throw new IllegalArgumentException("Argument 'newName' can not be null or empty.")
         cat.name = newName
 
@@ -69,10 +70,11 @@ class CategoryService {
     /**
      * Changes the parent of the given category
      * @param cat
-     * @param newParent can be either a subcategory or a maincategory
+     * @param newParent
      * @return
+     * @throws Exception
      */
-    def changeParent(Subcategory cat, Category newParent) {
+    public Subcategory changeParent(Subcategory cat, Category newParent) throws Exception {
         if (!cat || !newParent) throw new IllegalArgumentException('Argument can not be null.')
 
         Subcategory tempCat
@@ -100,11 +102,12 @@ class CategoryService {
     //Lösung 1: Zu ändernen Knoten löschen und mit neuen Beziehungn erstellen...meeeeh
     /**
      * Change the associated subcategories for the given category
-     * @param catName
+     * @param cat
      * @param newCats
-     * @return error-code as int, please have a look at the description of the class
+     * @return
+     * @throws Exception
      */
-    def changeSubCats(def cat, String[] newCats) {
+    public Category changeSubCats(def cat, String[] newCats) throws Exception {
         def tempCat
 
         if (cat instanceof Subcategory) {
@@ -119,7 +122,7 @@ class CategoryService {
         }
 
         for (cn in newCats) {
-            def temp = getCategory(cn)
+            Subcategory temp = getCategory(cn)
             tempCat.addToSubCats(temp)
         }
 
@@ -141,9 +144,9 @@ class CategoryService {
     /**
      * Delete given category from the database
      * @param cat
-     * @return
+     * @throws Exception
      */
-    def deleteSubCategory(Subcategory cat) {
+    public void deleteSubCategory(Subcategory cat) throws Exception {
         if (!cat) throw new IllegalArgumentException('Argument can not be null')
 
         cat.delete(flush: true)
@@ -154,7 +157,7 @@ class CategoryService {
      * or a set of Faqs (if forFaqs = true) which share the same associated subcategories
      * @param doc
      * @param forFaqs
-     * @return
+     * @return hashmap of found documents in format [ faq:[...], article:[...], tutorial:[...] ]
      * @throws Exception
      */
     def getAdditionalDocs(Document doc) throws Exception {
@@ -191,7 +194,7 @@ class CategoryService {
      * This methods will return all documents which are associated with the given subcategories
      * That mean, that only documents will be returned which are associated with all of the subcategories
      * @param subs
-     * @return
+     * @return list of found documents
      * @throws Exception
      */
     def getAllDocsAssociatedToSubCategories(String[] subs) throws Exception {
@@ -235,10 +238,10 @@ class CategoryService {
      * Getting all associated subcategories for the given category
      * @param catName
      * @return found main- or subcategory
+     * @throws Exception
      */
-    def getAllSubCats(def cat) {
+    def getAllSubCats(Category cat) throws Exception {
         if (!cat) throw new IllegalArgumentException('Argument can not be null')
-        if (!(cat instanceof Subcategory) && !(cat instanceof Category)) throw new IllegalArgumentException("Argument has wrong type, solution: 'berlin.htw.hrz.kb.Category' or 'berlin.htw.hrz.kb.Subcategory'")
 
         return cat.subCats?.findAll()
     }
@@ -247,10 +250,11 @@ class CategoryService {
      * Getting a single category by the given name
      * @param catName
      * @return found main- or subcategory
+     * @throws Exception
      */
-    def getCategory(String catName) {
+    public Category getCategory(String catName) throws Exception {
         if (!catName || catName == '') throw new IllegalArgumentException("Argument can not be null or empty")
-        def cat = Category.findByName(catName) ?: Subcategory.findByName(catName) ?: null
+        def cat = Category.findByName(catName) ?: null
         if (!cat) throw new NoSuchObjectException("Can not find a category with the name: '${catName}'")
         return cat
     }
@@ -259,19 +263,22 @@ class CategoryService {
      * Getting the document count of the given category
      * @param catName
      * @return number of associated categories, error-code if something went wrong
+     * @throws Exception
      */
-    def getDocCount(Subcategory cat) {
+    public Integer getDocCount(Subcategory cat) throws Exception {
         if (!cat) throw new IllegalArgumentException('Argument can not be null')
 
         cat.docs.size()
     }
 
     /**
-     * Getting all the associated docs to
+     * Getting all the associated docs from one subcategoy
      * @param cat
      * @return
+     * @throws Exception
      */
-    def getDocs(Subcategory cat) {
+    def getDocs(Subcategory cat) throws Exception {
+        if (!cat) throw new IllegalArgumentException('Argument can not be null')
         return cat.docs?.findAll()
     }
 
@@ -285,8 +292,9 @@ class CategoryService {
      * @param userPrincipals
      * @param request
      * @return
+     * @throws Exception
      */
-    def getDocsOfInterest(def userPrincipals, def request) {
+    def getDocsOfInterest(def userPrincipals, def request) throws Exception {
         def subCatNames = []
         def docMap = [:]
         def start, stop, temp
@@ -432,10 +440,11 @@ class CategoryService {
      * This method will return iterative all associated subcategories to the given category (either Category or Subcategory)
      * @param cat Category you want to search through
      * @return Array of all found categories
+     * @throws Exception
      */
-    def getIterativeAllSubCats(String catName) {
+    def getIterativeAllSubCats(String catName) throws Exception {
         def subs = []
-        def cat = getCategory(catName)
+        Category cat = getCategory(catName)
         if (cat) {
             if (cat instanceof Subcategory) {
                 subs += cat
@@ -454,8 +463,9 @@ class CategoryService {
      * @param mainCats
      * @param forFaqs
      * @return
+     * @throws Exception
      */
-    def getSameAssociatedDocs(Document givenDoc, String[] mainCats, Boolean forTutorial=false) {
+    def getSameAssociatedDocs(Document givenDoc, String[] mainCats, Boolean forTutorial=false) throws Exception {
         //prepare query
         def query = "MATCH (doc:Document) WHERE doc.docTitle='${givenDoc.docTitle}' WITH doc\n"
         mainCats.eachWithIndex { catName, i ->
@@ -475,7 +485,8 @@ class CategoryService {
         }
     }
 
-    def isMainCatConnectedToDoc(String docTitle, String mainName) {
+    //todo: vermutlich obsolet
+    public boolean isMainCatConnectedToDoc(String docTitle, String mainName) throws Exception {
         def query = "MATCH (main:Category)<-[*]-(subs:Subcategory)-[:DOCS]->(doc:Document) WHERE doc.docTitle='${docTitle}' AND main.name='${mainName}' RETURN main"
         Result result = Category.cypherStatic(query)
         return (result.size() > 0)
@@ -487,8 +498,9 @@ class CategoryService {
      * @param mainCat
      * @param subCats default null, or a list of subcategory which should be associated with
      * @return
+     * @throws Exception
      */
-    def newSubCategory(String catName, Category parentCat, Subcategory[] subCats = null) {
+    public Subcategory newSubCategory(String catName, Category parentCat, Subcategory[] subCats = null) throws Exception {
         if (!catName || catName.empty) throw new IllegalArgumentException("Argument 'catName' can not be null or empty")
         if (!parentCat) throw new IllegalArgumentException("Argument 'mainCat' can not be null")
 

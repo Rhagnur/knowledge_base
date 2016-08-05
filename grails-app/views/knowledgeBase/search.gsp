@@ -5,20 +5,19 @@
 
 <g:applyLayout name="subPage">
     <head>
-        <title>Suche</title>
+        <title><g:message code="kb.view.index.search.headline"/></title>
     </head>
 
     <content tag="main">
-        <h2>Suche</h2>
-        <p>Die Suche nach '${searchTerm}' brachte folgende Ergebnisse:</p>
-        <p>Hinweis: Klicken Sie auf den Tabellenkopf um die Zeilen zu sortieren.</p>
+        <h2><g:message code="kb.view.index.search.headline"/></h2>
+        <p><g:message code="kb.view.search.infoText"/></p>
         <g:if test="${foundDocs}">
             <table id="search-results-table">
                 <thead>
                     <tr>
-                        <th data-sort="string">Titel</th>
-                        <th data-sort="string">Typ</th>
-                        <th data-sort="int">Views</th>
+                        <th data-sort="string"><g:message code="kb.view.search.thTitle"/></th>
+                        <th data-sort="string"><g:message code="kb.view.search.thType"/></th>
+                        <th data-sort="int"><g:message code="kb.view.search.thCount"/></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -37,7 +36,7 @@
 
         </g:if>
         <g:else>
-            <p>Es wurden leider keine Dokumente gefunden!</p>
+            <p><g:message code="kb.view.index.doi.noDocsFound"/></p>
         </g:else>
         <div class="clear"></div>
 

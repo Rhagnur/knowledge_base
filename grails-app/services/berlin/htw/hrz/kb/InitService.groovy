@@ -95,7 +95,6 @@ class InitService {
             myMains.each {
                 Category tempMain = it.value
                 def tempSubs = tempMain.subCats.findAll() asList()
-                def tempSubSub
                 tempSubs.collect().each {
                     if (it.subCats) tempSubs.addAll(it.subCats)
                 }

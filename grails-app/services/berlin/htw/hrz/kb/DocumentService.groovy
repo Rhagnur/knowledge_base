@@ -8,7 +8,6 @@ package berlin.htw.hrz.kb
 import grails.converters.JSON
 import grails.converters.XML
 import grails.transaction.Transactional
-import org.neo4j.graphdb.NotFoundException
 
 
 @Transactional
@@ -23,6 +22,7 @@ class DocumentService {
      *
      * @param docTitle
      * @return
+     * @throws Exception
      */
     def deleteDoc(Document doc) throws Exception {
         if (doc instanceof Tutorial) {
@@ -38,10 +38,11 @@ class DocumentService {
      * @param docTitle
      * @param exportAs Decides which format will be returned, use 'json' or 'xml' for either format
      * @return
+     * @throws Exception
      */
     def exportDoc(Document doc, String exportAs) throws Exception {
         if (!doc) throw new IllegalArgumentException("Argument 'doc' can not be null")
-        def output = null
+        def output
         if (exportAs == 'json') {
             output = doc as JSON
         } else if (exportAs == 'xml') {
@@ -56,6 +57,7 @@ class DocumentService {
      *
      * @param docTitle
      * @return
+     * @throws Exception
      */
     def getDoc(String docTitle) throws Exception {
         if (!docTitle || docTitle == '') throw new IllegalArgumentException()
@@ -68,8 +70,9 @@ class DocumentService {
      *
      * @param doc
      * @return
+     * @throws Exception
      */
-    def increaseCounter(Document doc) {
+    def increaseCounter(Document doc) throws Exception {
         if (!doc) throw new IllegalArgumentException()
         doc?.viewCount = doc?.viewCount + 1
         if (!doc?.validate()) throw new Exception('ERROR: Validation of data wasn\'t successfull')
@@ -83,6 +86,7 @@ class DocumentService {
      * @param tags
      * @param docContent
      * @return new created document (article)
+     * @throws Exception
      */
     def newArticle(String docTitle, String docContent, String[] tags) throws Exception {
         def temp = new Article(docTitle: docTitle, tags: tags, viewCount: 0, createDate: new Date(), docContent: docContent)
@@ -97,6 +101,7 @@ class DocumentService {
      * @param tags
      * @param faq
      * @return new created document (faq)
+     * @throws Exception
      */
     def newFaq(String question, String answer, String[] tags) throws Exception {
         def temp = new Faq(docTitle: question, tags: tags, createDate: new Date(), viewCount: 0, question: question, answer: answer)
@@ -111,6 +116,7 @@ class DocumentService {
      * @param tags
      * @param steps
      * @return new created document (tutorial)
+     * @throws Exception
      */
     def newTutorial(String docTitle, Step[] steps, String[] tags) throws Exception {
         def temp = new Tutorial(docTitle: docTitle, tags: tags, viewCount: 0, createDate: new Date())

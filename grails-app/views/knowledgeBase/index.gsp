@@ -9,35 +9,35 @@
 
     <content tag="main">
         <section id="search">
-            <h2>Knowledge Base durchsuchen</h2>
-            <p>Bla bla bla, ich bin ein kleiner Begrüßgungs- und Hilfetext</p>
+            <h2><g:message code="kb.view.index.search.headline"/></h2>
+            <p><g:message code="kb.view.index.search.introText"/></p>
             <g:form controller="knowledgeBase" action="search" method="POST">
-                <g:textField name="searchBar" id="searchBar" placeholder="Suchbegriff eingeben, keine Eingabe um alle Dokumente aufzulisten"/>
-                <g:submitButton name="search" id="searchButton" value="Suchen"></g:submitButton>
+                <g:textField name="searchBar" id="searchBar" placeholder="${message(code: 'kb.view.index.search.placeholder')}"/>
+                <g:submitButton name="search" id="searchButton" value="${message(code: 'kb.view.index.search.buttonText')}"/>
             </g:form>
         </section>
         <section id="document-of-interest">
-            <h2>Dokumente von Interesse</h2>
+            <h2><g:message code="kb.view.index.doi.headline"/></h2>
             <g:if test="${otherDocs && otherDocs.size() == 0}">
-                <p>Es wurden keine relevanten Dokumente gefunden!</p>
+                <p><g:message code="kb.view.index.doi.noDocsFound"/></p>
             </g:if>
             <g:elseif test="${otherDocs && otherDocs.size() == 1}">
-                <p>Es wurden Dokumente in der folgenden Rubrik gefunden...</p>
+                <p><g:message code="kb.view.index.doi.docFound"/></p>
             </g:elseif>
             <g:elseif test="${otherDocs && otherDocs.size() > 1}">
-                <p>Es wurden Dokumente in den folgenden Rubriken gefunden...</p>
+                <p><g:message code="kb.view.index.doi.docsFound"/></p>
             </g:elseif>
             <g:else>
-                <p>Es ist ein unerwarteter Fehler aufgetreten!</p>
+                <p><g:message code="kb.error.somethingWentWrong"/></p>
             </g:else>
 
             <g:each in="${otherDocs}">
                 <div class="docDiv">
                     <g:if test="${it.key =='popular'}">
-                        <g:set var="popular" value="${true}"></g:set>
+                        <g:set var="popular" value="${true}"/>
                     </g:if>
                     <g:else>
-                        <g:set var="popular" value="${false}"></g:set>
+                        <g:set var="popular" value="${false}"/>
                     </g:else>
                     <p>...'${it.key}'</p>
                     <g:each in="${it.value}">

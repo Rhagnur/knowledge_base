@@ -20,7 +20,7 @@ class KnowledgeBaseController {
         logException(ex)
         render (view: '/error', model: [exception : ex])
     }
-    private void logException(final Exception ex) {
+    private static void logException(final Exception ex) {
         log.error("Exception thrown: ${ex?.message}")
     }
     //End global exception handling
@@ -31,27 +31,26 @@ class KnowledgeBaseController {
     }
 
     def index() {
-        def start, stop, otherDocs = null
+        def start, stop
         start = new Date()
         if (Category.findAll().empty) {
             initService.initTestModell()
-            flash.info = "Neo4j war leer, Test-Domainklassen, Dokumente und Beziehungen angelegt"
+            flash.info = message(code: 'kb.info.testStructureAndDataCreated') as String
         }
 
         println(request.getHeader('User-Agent'))
 
-        otherDocs = loadTestDocs()
         stop = new Date()
         println('\nSeitenladezeit: '+TimeCategory.minus(stop, start))
 
-        [otherDocs: otherDocs, principal: springSecurityService.principal];
+        [otherDocs: loadTestDocs(), principal: springSecurityService.principal];
     }
 
     def search () {
         def docsFound = []
 
         if (params.searchBar && params.searchBar.length() < 3) {
-            flash.error = "Suchbegriff zu kurz, mindestens 3 Zeichen!"
+            flash.error = message(code: 'kb.error.searchTermTooShort') as String
             redirect(view: 'index', model: [otherDocs: loadTestDocs(), principal: springSecurityService.principal])
         }
         else if (params.searchBar && params.searchBar.length() >= 3) {
@@ -74,7 +73,7 @@ class KnowledgeBaseController {
         def start, stop, author
         def otherDocs = [:]
         start = new Date()
-        Document myDoc
+        Document myDoc = null
 
         //Falls ein anderes Dokument angezeigt werden soll, überschreibe das Default-Test-Dokument
         if (params.docTitle) {
@@ -83,7 +82,7 @@ class KnowledgeBaseController {
             myDoc = Document.findByDocTitle('Cisco-Telefonie')
         }
         if (!myDoc) {
-            flash.error = "Kein Dokument gefunden"
+            flash.error = message(code: 'kb.error.noSuchDocument') as String
             forward(view: 'index', model: [otherDocs: loadTestDocs(), principal: springSecurityService.principal])
         }
 
@@ -91,7 +90,7 @@ class KnowledgeBaseController {
             otherDocs = categoryService.getAdditionalDocs(myDoc)
         }
 
-        author = Subcategory.findAllByMainCat(Category.findByName('author')).find{it.docs.contains(myDoc)}?.name
+        author = Subcategory.findAllByParentCat(Category.findByName('author')).find{it.docs.contains(myDoc)}?.name
         if (!author) {
             author = 'Kein Autor gefunden'
         }
@@ -117,17 +116,17 @@ class KnowledgeBaseController {
                 Category cat = categoryService.getCategory(params.name)
                 if (cat instanceof Subcategory) {
                     categoryService.deleteSubCategory(cat)
-                    flash.info = "Kategorie wurde gelöscht"
+                    flash.info = message(code: 'kb.info.catDeleted') as String
                 } else {
-                    flash.error = "Die gesuchte Kategorie ist keine Subkategorie, es ist nicht möglich Hauptkategorien zu löschen."
+                    flash.error = message(code: 'kb.error.cantDeleteMainCat') as String
                 }
             } catch (Exception e) {
-                flash.error = "Beim Versuch die Kategorie zu finden, ist etwas schief gelaufen, versuchen Sie es später noch einmal oder wenden Sie sich an den Administrator."
+                flash.error = message(code: 'kb.error.somethingWentWrong') as String
                 e.printStackTrace()
             }
         }
         else {
-            flash.error = "Kein Attribut 'name' gefunden, bitte geben Sie dieses an. Bsp. /deleteCat?name=<Kategoriename>"
+            flash.error = message(code: 'kb.error.attrNameNotFound') as String
         }
         redirect(view: 'index', model: [otherDocs: loadTestDocs(), principal: springSecurityService.principal])
     }
@@ -135,7 +134,7 @@ class KnowledgeBaseController {
     def createCat() {
         println(params)
         if (params.submit) {
-            if (!params.catName || params.catName == '') flash.error = "Der neue Kategoriename darf nicht leer sein"
+            if (!params.catName || params.catName == '') flash.error = message(code: 'kb.error.attrNameCantBeNull') as String
 
 
             if (!(flash.error)) {
@@ -157,10 +156,10 @@ class KnowledgeBaseController {
 
                 //create new subcat
                 if (categoryService.newSubCategory(params.catName as String, newParent, docSubs as Subcategory[])) {
-                    flash.info = 'Kategorie angelegt'
+                    flash.info = message(code: 'kb.info.catCreated') as String
                     redirect(view: 'index', model: [otherDocs: loadTestDocs(), principal: springSecurityService.principal])
                 } else {
-                    flash.error = "Fehler beim Anlegen der Kategorie, bitte nochmal versuchen."
+                    flash.error = message(code: 'kb.error.somethingWentWrong') as String
                 }
 
             }
@@ -198,7 +197,7 @@ class KnowledgeBaseController {
         } else {
             println(params)
 
-            if (!params.catName || params.catName == '') flash.error = "Der neue Kategoriename darf nicht leer sein"
+            if (!params.catName || params.catName == '') flash.error = message(code: 'kb.error.attrNameCantBeNull') as String
 
 
             if (!(flash.error)) {
@@ -221,8 +220,12 @@ class KnowledgeBaseController {
 
                 myCat = categoryService.changeCategoryName(myCat, newName)
 
+                if (myCat) {
+                    flash.info = message(code: 'kb.info.catChanged') as String
+                } else {
+                    flash.error = message(code: 'kb.error.somethingWentWrong') as String
+                }
 
-                flash.info = 'Kategorie geändert'
                 redirect(view: 'index', model: [otherDocs: loadTestDocs(), principal: springSecurityService.principal])
             }
         }
@@ -230,7 +233,7 @@ class KnowledgeBaseController {
     }
 
     def navCat() {
-        def myCats = null
+        def myCats
         //Default = hole alle Mainkategorien, ansonsten hole die Subkategorien der ausgewählten Kategorie
         if (params.cat) {
             myCats = categoryService.getAllSubCats(categoryService.getCategory(params.cat as String))
@@ -245,16 +248,16 @@ class KnowledgeBaseController {
     //@Secured("hasAuthority('ROLE_GP-STAFF')") //Für optinale Erweiterung "Autoren" später Abfrage, ob User als Autor eingetragen ist
     def createDoc() {
         if (params.submit) {
-            def docTitle, docContent, docSubs, docType
+            def docSubs = null
             String[] docTags
-            def doc
+            Document doc = null
 
             //Verarbeite Daten, welche alle Dokumente gemeinsam haben
             String tags = params.docTags
             docTags = tags.split(",")
             //Hole Subkategorien, repräsentiert durch Checkboxen und erzeuge eine Liste aus den ausgewählten
             if (params.list('checkbox').empty) {
-                flash.error = "Bitte mindestens eine dazugehörige Kategorie auswählen!"
+                flash.error = message(code: 'kb.error.noSubCatGiven') as String
             } else {
                 String[] cats = new String[params.list('checkbox').size()];
                 docSubs = params.list('checkbox').toArray(cats);
@@ -265,7 +268,7 @@ class KnowledgeBaseController {
                 def allAttrs = params.findAll{it.key =~ /step[A-Za-z]+_[1-9]/}
 
                 if (allAttrs.containsValue('') || allAttrs.containsValue(null) || !params.docTitle || params.docTitle.empty) {
-                    flash.error = "Bitte alle Felder ausfüllen!"
+                    flash.error = message(code: 'kb.error.fillOutAllFields') as String
                     params.createTut = 'tutorial'
                 } else {
                     def steps = []
@@ -281,7 +284,7 @@ class KnowledgeBaseController {
                             steps.add(new Step(number: i, stepTitle: allTitles.get(/stepTitle_/+i), stepText: allTexts.get(/stepText_/+i), mediaLink: allLinks.get(/stepLink_/+i) ))
                         }
                     } else {
-                        flash.error = "Fehler beim Verarbeiten!"
+                        flash.error = message(code: 'kb.error.somethingWentWrong') as String
                         params.createTut = 'tutorial'
                     }
 
@@ -296,7 +299,7 @@ class KnowledgeBaseController {
                     println('Faq erstellt')
 
                 } else {
-                    flash.error = "Bitte alle Felder ausfüllen!"
+                    flash.error = message(code: 'kb.error.fillOutAllFields') as String
                     params.createFaq = 'faq'
                 }
 
@@ -309,8 +312,8 @@ class KnowledgeBaseController {
 
             if (!flash.error) {
                 println(doc)
-                categoryService.addDoc(doc, docSubs)
-                flash.info = 'Dokument erstellt'
+                categoryService.addDoc(doc, docSubs as String[])
+                flash.info = message(code: 'kb.info.docCreated') as String
                 redirect(view: 'index', model: [otherDocs: loadTestDocs(), principal: springSecurityService.principal])
             }
         }
