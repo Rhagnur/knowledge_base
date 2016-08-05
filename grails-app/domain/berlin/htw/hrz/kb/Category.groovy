@@ -11,6 +11,7 @@ class Category {
 
     static constraints = {
         name nullable: false
+        subCats nullable: true
     }
     static hasMany = [subCats: Subcategory]
 
