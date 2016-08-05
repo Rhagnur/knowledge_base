@@ -166,13 +166,6 @@ class CategoryServiceSpec extends Specification {
             subCats.size() == 3
     }
 
-    void "test getAllSubCats wrong type"() {
-        when:
-            def subCats = service.getAllSubCats('Hallo')
-        then:
-            thrown IllegalArgumentException
-    }
-
     void "test getAllSubCats null argument"() {
         when:
             def subCats = service.getAllSubCats(null)

@@ -20,7 +20,7 @@ class KnowledgeBaseController {
         logException(ex)
         render (view: '/error', model: [exception : ex])
     }
-    private static void logException(final Exception ex) {
+    private void logException(final Exception ex) {
         log.error("Exception thrown: ${ex?.message}")
     }
     //End global exception handling
