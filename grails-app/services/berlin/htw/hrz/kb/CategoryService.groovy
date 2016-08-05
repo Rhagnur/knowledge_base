@@ -320,24 +320,29 @@ class CategoryService {
 //        OS/2 => OS/2,
         if (request.getHeader('User-Agent').toString().toLowerCase().contains('linux')) {
             osName = 'linux'
+        }else if (request.getHeader('User-Agent').toString().toLowerCase().contains('windows nt 5.1')) {
+            osName = 'win_xp'
+        }  else if (request.getHeader('User-Agent').toString().toLowerCase().contains('windows nt 6.0')) {
+            osName = 'win_vista'
         } else if (request.getHeader('User-Agent').toString().toLowerCase().contains('windows nt 6.1')) {
             osName = 'win_7'
         } else if (request.getHeader('User-Agent').toString().toLowerCase().contains('windows nt 6.2')) {
             osName = 'win_8'
+        } else if (request.getHeader('User-Agent').toString().toLowerCase().contains('windows nt 10.0')) {
+            osName = 'win_10'
         } else if (request.getHeader('User-Agent').toString().toLowerCase().contains('mac_powerpc') || request.getHeader('User-Agent').toString().toLowerCase().contains('macintosh')) {
             osName = 'mac'
         }
 
-        temp = getDocs(getCategory(osName) as Subcategory)
-        if (temp.size() > NumDocsToShow) {
-            temp = temp.sort {
-                -it.viewCount
-            }.subList(0, NumDocsToShow)
+        if (osName && osName != '') {
+            temp = getDocs(getCategory(osName) as Subcategory).findAll { it instanceof Tutorial || it instanceof Article }.sort { -it.viewCount }
+            if (temp.size() > NumDocsToShow) {
+                temp = temp.subList(0, NumDocsToShow)
+            }
+
+            docMap.put(osName, temp)
+            subCatNames.add(osName)
         }
-
-        docMap.put(osName, temp)
-        subCatNames.add(osName)
-
         stop = new Date()
         println('Benötigte Zeit: ' + TimeCategory.minus(stop, start))
 
@@ -345,27 +350,39 @@ class CategoryService {
         start = new Date()
         //2 Get the documents of the associated groups [ROLE_GP-STAFF, ROLE_GP-STUD]
         if (userPrincipals.authorities.any { it.authority == ("ROLE_GP-PROF" || "ROLE_GP-LBA") }) {
-            docMap.put('faculty', getDocs(getCategory('faculty') as Subcategory).sort {
-                -it.viewCount
-            }.subList(0, NumDocsToShow))
-            subCatNames.add('anonym')
+            temp = getDocs(getCategory('faculty') as Subcategory).findAll { it instanceof Tutorial || it instanceof Article }.sort { -it.viewCount }
+            if (temp.size() > NumDocsToShow) {
+                temp = temp.subList(0, NumDocsToShow)
+            }
+
+            docMap.put('faculty', temp)
+            subCatNames.add('faculty')
         }
         if (userPrincipals.authorities.any { it.authority == "ROLE_GP-STAFF" }) {
-            docMap.put('staff', getDocs(getCategory('staff') as Subcategory).sort {
-                -it.viewCount
-            }.subList(0, NumDocsToShow))
+            temp = getDocs(getCategory('staff') as Subcategory).findAll { it instanceof Tutorial || it instanceof Article }.sort { -it.viewCount }
+            if (temp.size() > NumDocsToShow) {
+                temp = temp.subList(0, NumDocsToShow)
+            }
+
+            docMap.put('staff', temp)
             subCatNames.add('staff')
         }
         if (userPrincipals.authorities.any { it.authority == "ROLE_GP-STUD" }) {
-            docMap.put('student', getDocs(getCategory('student') as Subcategory).sort {
-                -it.viewCount
-            }.subList(0, NumDocsToShow))
+            temp = getDocs(getCategory('student') as Subcategory).findAll { it instanceof Tutorial || it instanceof Article }.sort { -it.viewCount }
+            if (temp.size() > NumDocsToShow) {
+                temp = temp.subList(0, NumDocsToShow)
+            }
+
+            docMap.put('student', temp)
             subCatNames.add('student')
         }
         if (userPrincipals.authorities.any { it.authority == "ROLE_ANONYMOUS" }) {
-            docMap.put('anonym', getDocs(getCategory('anonym') as Subcategory).sort {
-                -it.viewCount
-            }.subList(0, NumDocsToShow))
+            temp = getDocs(getCategory('anonym') as Subcategory).findAll { it instanceof Tutorial || it instanceof Article }.sort { -it.viewCount }
+            if (temp.size() > NumDocsToShow) {
+                temp = temp.subList(0, NumDocsToShow)
+            }
+
+            docMap.put('anonym', temp)
             subCatNames.add('anonym')
         }
         stop = new Date()
@@ -393,12 +410,10 @@ class CategoryService {
         start = new Date()
         //4 Get suggestions, sugg are associated to OS and the user-groups
         while (subCatNames && !subCatNames.empty) {
-            def docs = getAllDocsAssociatedToSubCategories(subCatNames as String[])
+            def docs = getAllDocsAssociatedToSubCategories(subCatNames as String[]).findAll { it instanceof Tutorial || it instanceof Article }.sort{ -it.viewCount }
             if (docs && !docs.empty) {
                 if (docs.size() > NumDocsToShow) {
-                    docs = docs.sort {
-                        -it.viewCount
-                    }.subList(0, NumDocsToShow)
+                    docs = docs.subList(0, NumDocsToShow)
                 }
                 docMap.put('suggestion', docs)
                 break
