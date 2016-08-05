@@ -16,7 +16,8 @@
             <p>Name: ${cat.name}</p>
             <p>Typ: ${cat.getClass().simpleName}</p>
             <g:if test="${cat instanceof berlin.htw.hrz.kb.Subcategory}">
-                <g:link controller="KnowledgeBase" action="changeCat" params="[name:cat.name]">Kategoriedetails ändern</g:link>
+                <g:link controller="KnowledgeBase" action="changeCat" params="[name:cat.name]">Kategoriedetails ändern</g:link><br/><br/>
+                <g:link controller="KnowledgeBase" action="deleteCat" params="[name:cat.name]">Kategorie löschen(ohne Bestätigung!)</g:link>
             </g:if>
 
             <g:if test="${cat.parentCat}">

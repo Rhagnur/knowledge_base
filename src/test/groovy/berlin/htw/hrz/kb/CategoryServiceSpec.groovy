@@ -60,19 +60,19 @@ class CategoryServiceSpec extends Specification {
 
     void "test deleteExistingCategory"() {
         given:
-            Category mainCat = new Category(name: 'TestingDeleteCat').save()
+            Subcategory cat = new Subcategory(name: 'TestingDeleteCat', parentCat: new Category(name: 'Test')).save()
         expect:
-            mainCat instanceof Category
-            mainCat != null
+            cat instanceof Subcategory
+            cat != null
         when:
-            service.deleteCategory(mainCat)
+            service.deleteSubCategory(cat)
         then:
             notThrown Exception
     }
 
     void "test deleteNonExistingCategory"() {
         when:
-            service.deleteCategory(null)
+            service.deleteSubCategory(null)
         then:
             thrown IllegalArgumentException
     }

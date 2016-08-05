@@ -143,9 +143,8 @@ class CategoryService {
      * @param cat
      * @return
      */
-    def deleteCategory(def cat) {
+    def deleteSubCategory(Subcategory cat) {
         if (!cat) throw new IllegalArgumentException('Argument can not be null')
-        if (!(cat instanceof Subcategory) && !(cat instanceof Category)) throw new IllegalArgumentException("Argument has wrong type, solution: 'berlin.htw.hrz.kb.Category' or 'berlin.htw.hrz.kb.Subcategory'")
 
         cat.delete(flush: true)
     }
@@ -250,7 +249,7 @@ class CategoryService {
      * @return found main- or subcategory
      */
     def getCategory(String catName) {
-        if (!catName || catName == '') throw new IllegalArgumentException()
+        if (!catName || catName == '') throw new IllegalArgumentException("Argument can not be null or empty")
         def cat = Category.findByName(catName) ?: Subcategory.findByName(catName) ?: null
         if (!cat) throw new NoSuchObjectException("Can not find a category with the name: '${catName}'")
         return cat
@@ -388,6 +387,8 @@ class CategoryService {
         stop = new Date()
         println('Benötigte Zeit: ' + TimeCategory.minus(stop, start))
 
+
+        //todo Priorität Tutorial > Artikel > Faq
         println('5 Suggestion')
         start = new Date()
         //4 Get suggestions, sugg are associated to OS and the user-groups
@@ -466,39 +467,17 @@ class CategoryService {
     }
 
     /**
-     * Adding a new subcategory to the database with a maincategory as parent
+     * Adding a new subcategory to the database
      * @param catName
      * @param mainCat
      * @param subCats default null, or a list of subcategory which should be associated with
      * @return
      */
-    def newSubCategory(String catName, Category mainCat, Subcategory[] subCats = null) {
+    def newSubCategory(String catName, Category parentCat, Subcategory[] subCats = null) {
         if (!catName || catName.empty) throw new IllegalArgumentException("Argument 'catName' can not be null or empty")
-        if (!mainCat) throw new IllegalArgumentException("Argument 'mainCat' can not be null")
+        if (!parentCat) throw new IllegalArgumentException("Argument 'mainCat' can not be null")
 
-        Subcategory newSub = new Subcategory(name: catName, parentCat: mainCat)
-
-        for (Subcategory sub in subCats) {
-            newSub.addToSubCats(sub)
-        }
-
-        return newSub.save(flush: true)
-    }
-
-    /**
-     * Adding a new subcategory to the database with a subcategory as parent
-     * @param catName
-     * @param parenCat
-     * @param subCats default null, or a list of subcategory which should be associated with
-     * @return
-     */
-    def newSubCategory(String catName, Subcategory parenCat, Subcategory[] subCats = null) {
-        if (!catName || catName.empty) throw new IllegalArgumentException("Argument 'catName' can not be null or empty")
-
-        Subcategory newSub = new Subcategory(name: catName)
-
-        if (!parenCat) throw new IllegalArgumentException("Argument 'parentCat' can not be null")
-        newSub.parentCat = parenCat
+        Subcategory newSub = new Subcategory(name: catName, parentCat: parentCat)
 
         for (Subcategory sub in subCats) {
             newSub.addToSubCats(sub)

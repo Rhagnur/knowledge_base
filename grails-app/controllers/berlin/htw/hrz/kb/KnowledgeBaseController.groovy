@@ -111,6 +111,72 @@ class KnowledgeBaseController {
         [cat: cat, mainCats:(!cat)?categoryService.getAllMainCats():null]
     }
 
+    def deleteCat() {
+        if (params.name) {
+            try {
+                Category cat = categoryService.getCategory(params.name)
+                if (cat instanceof Subcategory) {
+                    categoryService.deleteSubCategory(cat)
+                    flash.info = "Kategorie wurde gelöscht"
+                } else {
+                    flash.error = "Die gesuchte Kategorie ist keine Subkategorie, es ist nicht möglich Hauptkategorien zu löschen."
+                }
+            } catch (Exception e) {
+                flash.error = "Beim Versuch die Kategorie zu finden, ist etwas schief gelaufen, versuchen Sie es später noch einmal oder wenden Sie sich an den Administrator."
+                e.printStackTrace()
+            }
+        }
+        else {
+            flash.error = "Kein Attribut 'name' gefunden, bitte geben Sie dieses an. Bsp. /deleteCat?name=<Kategoriename>"
+        }
+        redirect(view: 'index', model: [otherDocs: loadTestDocs(), principal: springSecurityService.principal])
+    }
+
+    def createCat() {
+        println(params)
+        if (params.submit) {
+            if (!params.catName || params.catName == '') flash.error = "Der neue Kategoriename darf nicht leer sein"
+
+
+            if (!(flash.error)) {
+                println('Cat anlegen')
+
+                def docSubs = []
+
+                //Get subcats
+                if (params.list('checkbox').size() > 0) {
+                    String[] cats = new String[params.list('checkbox').size()];
+                    def temp = params.list('checkbox').toArray(cats) as String[]
+                    temp.each {
+                        docSubs.add(categoryService.getCategory(it))
+                    }
+                }
+
+                //get parentCat
+                Category newParent = categoryService.getCategory(params.parentCat)
+
+                //create new subcat
+                if (categoryService.newSubCategory(params.catName as String, newParent, docSubs as Subcategory[])) {
+                    flash.info = 'Kategorie angelegt'
+                    redirect(view: 'index', model: [otherDocs: loadTestDocs(), principal: springSecurityService.principal])
+                } else {
+                    flash.error = "Fehler beim Anlegen der Kategorie, bitte nochmal versuchen."
+                }
+
+            }
+
+        }
+        def all = [:]
+        categoryService.getAllMainCats().each { mainCat ->
+            def temp = []
+            categoryService.getIterativeAllSubCats(mainCat.name).each { cat ->
+                temp.add(cat.name as String)
+            }
+            all.put(mainCat.name, temp.sort{ it })
+        }
+        [cat: params.name?categoryService.getCategory(params.name):null, allCatsByMainCats: all]
+    }
+
     def findUnlinkedSubCats() {
         def subCats = Subcategory.findAll()
         subCats.removeAll { it.parentCat != null }
@@ -128,7 +194,7 @@ class KnowledgeBaseController {
                 }
                 all.put(mainCat.name, temp.sort{ it })
             }
-            [cat: params.name?categoryService.getCategory(params.name):null, allCats: Category.findAll().sort {it.name}, allCatsByMainCats: all]
+            [cat: params.name?categoryService.getCategory(params.name):null, allCatsByMainCats: all]
         } else {
             println(params)
 

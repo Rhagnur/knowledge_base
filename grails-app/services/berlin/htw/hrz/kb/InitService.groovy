@@ -15,7 +15,7 @@ class InitService {
 
         //init docs
         def myDocs = []
-        for (int i = 0; i < 50; i++) {
+        for (int i = 0; i < 300; i++) {
             def magicNumber = random.nextInt(3)
 
             if (magicNumber == 0) {

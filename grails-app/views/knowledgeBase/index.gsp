@@ -64,12 +64,12 @@
                 <g:submitButton name="show" value="Kategorie ansehen"/>
             </g:form>
 
-            <g:form controller="KnowledgeBase" action="navCat">
-                <g:submitButton name="nav" value="Durch Kategorien navigieren"/>
+            <g:form controller="KnowledgeBase" action="createCat">
+                <g:submitButton name="create" value="Neue Subkategorie anlegen"/>
             </g:form>
 
             <g:form controller="KnowledgeBase" action="findUnlinkedSubCats">
-                <g:submitButton name="nav" value="Unverlinkte Subkategorien finden"/>
+                <g:submitButton name="find" value="Unverlinkte Subkategorien finden"/>
             </g:form>
         </section>
     </content>
