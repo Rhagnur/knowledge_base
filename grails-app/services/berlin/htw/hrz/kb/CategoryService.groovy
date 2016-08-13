@@ -474,13 +474,6 @@ class CategoryService {
         }
     }
 
-    //todo: vermutlich obsolet
-    public boolean isMainCatConnectedToDoc(String docTitle, String mainName) throws Exception {
-        def query = "MATCH (main:Category)<-[*]-(subs:Subcategory)-[:DOCS]->(doc:Document) WHERE doc.docTitle='${docTitle}' AND main.name='${mainName}' RETURN main"
-        Result result = Category.cypherStatic(query)
-        return (result.size() > 0)
-    }
-
     /**
      * Adding a new subcategory to the database
      * @param catName
