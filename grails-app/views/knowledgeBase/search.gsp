@@ -10,8 +10,7 @@
     <content tag="navigation" style="width: 60%!important;">
         <div id="nav-context">
             <section id="subnav">
-                <p>Filter Ergebnisse nach...</p>
-                <p>${filter}</p>
+                <p><g:message code="kb.view.index.search.filterText"/></p>
                 <g:form controller="knowledgeBase" action="search">
                     <g:hiddenField name="searchBar" id="searchBar" value="${searchBar}"/>
                     <g:each in="${allCatsByMainCats}">
@@ -28,6 +27,8 @@
 
     <content tag="main">
         <h2><g:message code="kb.view.index.search.headline"/></h2>
+        <p><g:message code="kb.view.search.term"/> '${seachrBar}'</p>
+        <p><g:message code="kb.view.search.count"/> ${foundDocs.size()}</p>
         <p><g:message code="kb.view.search.infoText"/></p>
         <g:if test="${foundDocs}">
             <table id="search-results-table">

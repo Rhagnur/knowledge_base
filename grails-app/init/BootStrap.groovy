@@ -11,9 +11,9 @@ class BootStrap {
             def output = [:]
             output.title = doc.docTitle
             output.docType=doc.class.simpleName
-            def author = Subcategory.findAllByMainCat(Category.findByName('author')).find{it.docs.contains(doc)}
+            def author = Subcategory.findAllByParentCat(Category.findByName('author')).find{it.docs.contains(doc)}
             if (author) output.author = author.name
-            def lang = Subcategory.findAllByMainCat(Category.findByName('lang')).find{it.docs.contains(doc)}
+            def lang = Subcategory.findAllByParentCat(Category.findByName('lang')).find{it.docs.contains(doc)}
             if (lang) output.lang = lang.name
             if (doc.tags) output.tags = doc.tags
             if (doc.docContent) output.content = doc.docContent
@@ -38,9 +38,9 @@ class BootStrap {
         XML.registerObjectMarshaller(Document) { doc, xml ->
             xml.build{
                 title(doc.docTitle)
-                def temp = Subcategory.findAllByMainCat(Category.findByName('author')).find{it.docs.contains(doc)}
+                def temp = Subcategory.findAllByParentCat(Category.findByName('author')).find{it.docs.contains(doc)}
                 if (temp) author(temp.name)
-                temp = Subcategory.findAllByMainCat(Category.findByName('lang')).find{it.docs.contains(doc)}
+                temp = Subcategory.findAllByParentCat(Category.findByName('lang')).find{it.docs.contains(doc)}
                 if (temp) lang(temp.name)
                 if (doc.tags) tags(doc.tags)
                 if (doc.docContent) content(doc.docContent)

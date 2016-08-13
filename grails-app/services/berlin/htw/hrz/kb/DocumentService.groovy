@@ -75,7 +75,10 @@ class DocumentService {
     def increaseCounter(Document doc) throws Exception {
         if (!doc) throw new IllegalArgumentException()
         doc?.viewCount = doc?.viewCount + 1
-        if (!doc?.validate()) throw new Exception('ERROR: Validation of data wasn\'t successfull')
+        if (!doc?.validate()) {
+            doc.errors?.allErrors?.each { log.error(it) }
+            throw new Exception('ERROR: Validation of data wasn\'t successfull')
+        }
         return doc.save(flush: true)
     }
 

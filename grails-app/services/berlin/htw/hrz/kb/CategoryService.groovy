@@ -150,7 +150,6 @@ class CategoryService {
      */
     public void deleteSubCategory(Subcategory cat) throws Exception {
         if (!cat) throw new IllegalArgumentException('Argument can not be null')
-
         cat.delete(flush: true)
     }
 

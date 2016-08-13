@@ -12,7 +12,7 @@ class InitService {
 
     def initTestModell() {
         Random random = new Random()
-        int numberOfDocs = 200
+        int numberOfDocs = 500
 
 
         def myMains = [:]

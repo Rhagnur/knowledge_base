@@ -20,9 +20,9 @@
                 <label for="parentCat">Elternknoten:</label><br/>
                 <select id="parentCat" name="parentCat">
                     <g:each in="${allCatsByMainCats.sort{ it.key }}">
-                        <option value="${it.key}"}>${it.key}</option>
+                        <option value="${it.key}" ${cat.parentCat.name == it.key?'selected':''} >${it.key}</option>
                         <g:each in="${it.value}">
-                            <option value="${it}"}>--- ${it}</option>
+                            <option value="${it}" ${cat.parentCat.name == it?'selected':''}>--- ${it}</option>
                         </g:each>
                     </g:each>
                 </select>
