@@ -15,5 +15,5 @@ class Subcategory extends Category {
         docs nullable: true
     }
     static hasMany = [docs: Document]
-    Category parentCat
+    static belongsTo = [parentCat: Category]
 }

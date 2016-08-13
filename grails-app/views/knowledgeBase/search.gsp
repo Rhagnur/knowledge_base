@@ -7,6 +7,24 @@
     <head>
         <title><g:message code="kb.view.index.search.headline"/></title>
     </head>
+    <content tag="navigation" style="width: 60%!important;">
+        <div id="nav-context">
+            <section id="subnav">
+                <p>Filter Ergebnisse nach...</p>
+                <p>${filter}</p>
+                <g:form controller="knowledgeBase" action="search">
+                    <g:hiddenField name="searchBar" id="searchBar" value="${searchBar}"/>
+                    <g:each in="${allCatsByMainCats}">
+                        <b>${it.key}</b><br/>
+                        <g:each in="${it.value}">
+                            <g:checkBox name="checkbox" value="${it}" checked="${!filter?'false':filter.contains(it)?'true':'false'}"/><label>${it}</label><br/>
+                        </g:each>
+                    </g:each>
+                    <g:submitButton name="filter" value="Filtern"/>
+                </g:form>
+            </section>
+        </div>
+    </content>
 
     <content tag="main">
         <h2><g:message code="kb.view.index.search.headline"/></h2>

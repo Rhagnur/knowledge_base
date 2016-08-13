@@ -17,6 +17,9 @@ class Document {
         locked nullable: true
     }
 
+    static hasMany = [parentCats: Subcategory]
+    static belongsTo = [Subcategory]
+
     String docTitle
     String[] tags, changedBy
     Date createDate, changeDate

@@ -12,25 +12,8 @@ class InitService {
 
     def initTestModell() {
         Random random = new Random()
+        int numberOfDocs = 200
 
-        //init docs
-        def myDocs = []
-        for (int i = 0; i < 300; i++) {
-            def magicNumber = random.nextInt(3)
-
-            if (magicNumber == 0) {
-                Document doc = new Tutorial(docTitle: "Testanleitung${i}", viewCount: random.nextInt(1000), tags: ["Test"], createDate: new Date())
-                for (int j = 0; j < (random.nextInt(8) + 1); j++) {
-                    doc.addToSteps(new Step(number: (j + 1), stepTitle: 'Dies ist ein Titel', stepText: 'Dies ist ein Absatz<br/><ul><li>Punkt 1</li><li>Punkt 2</li></ul><br/><b>Test</b>', mediaLink: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Image_manquante_2.svg/320px-Image_manquante_2.svg.png'))
-                }
-
-                myDocs.add(doc.save(flush: true))
-            } else if (magicNumber == 1) {
-                myDocs.add(new Faq(docTitle: "Testfrage${i}?", viewCount: random.nextInt(1000), tags: ["Test"], createDate: new Date(), question: "Testfrage${i}?", answer: 'Eine mögliche Lösung wäre <a href="#">Testantwort</a>!').save(flush: true))
-            } else if (magicNumber == 2) {
-                myDocs.add(new Article(docTitle: "Testartikel${i}", viewCount: random.nextInt(1000), tags: ["Test"], createDate: new Date(), docContent: "Dies ist ein Absatz<br/><ul><li>Punkt 1</li><li>Punkt 2</li></ul><br/><b>Test</b><img src='https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Image_manquante_2.svg/320px-Image_manquante_2.svg.png' alt='Testbild' />").save(flush: true))
-            }
-        }
 
         def myMains = [:]
 
@@ -91,7 +74,25 @@ class InitService {
                 .save()
         myMains.put('author', author)
 
-        myDocs.each { doc ->
+        for (int i = 0; i < numberOfDocs; i++) {
+            Document doc = null
+            def magicNumber = random.nextInt(6)
+            //println(i +' ' + magicNumber)
+
+            //Abfrage mag seltsam anmuten, soll aber dabei helfen die Menge an Dokumenten wie folgt zu halten Anleitungen > FAQ > Artikel
+            if (magicNumber == 0 || magicNumber == 1 || magicNumber == 2) {
+                doc = new Tutorial(docTitle: "Testanleitung${i}", viewCount: random.nextInt(3000), tags: ["Test"], createDate: new Date())
+                for (int j = 0; j < (random.nextInt(10) + 1); j++) {
+                    doc.addToSteps(new Step(number: (j + 1), stepTitle: 'Dies ist ein Titel', stepText: 'Dies ist ein Absatz<br/><ul><li>Punkt 1</li><li>Punkt 2</li></ul><br/><b>Test</b>', mediaLink: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Image_manquante_2.svg/320px-Image_manquante_2.svg.png'))
+                }
+            } else if (magicNumber == 3 || magicNumber == 4) {
+                doc = new Faq(docTitle: "Testfrage${i}?", viewCount: random.nextInt(3000), tags: ["Test"], createDate: new Date(), question: "Testfrage${i}?", answer: 'Eine mögliche Lösung wäre <a href="#">Testantwort</a>!')
+            } else {
+                doc = new Article(docTitle: "Testartikel${i}", viewCount: random.nextInt(3000), tags: ["Test"], createDate: new Date(), docContent: "Dies ist ein Absatz<br/><ul><li>Punkt 1</li><li>Punkt 2</li></ul><br/><b>Test</b><img src='https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Image_manquante_2.svg/320px-Image_manquante_2.svg.png' alt='Testbild' />")
+            }
+            doc.save()
+
+            //Aus jeder Hauptkategorie wird zufällig eine Unterkategorie gewählt und das Dokument daran gehangen.
             myMains.each {
                 Category tempMain = it.value
                 def tempSubs = tempMain.subCats.findAll() asList()
@@ -100,11 +101,23 @@ class InitService {
                 }
 
                 Subcategory tempSub = tempSubs.get(random.nextInt(tempSubs.size()))
+
+
+
                 //println(tempMain.name + " - " + tempSub.name + " # " + tempSub.name.getClass())
                 if (!doc.tags) doc.tags = "${tempSub.name}"
                 else doc.tags += "${tempSub.name}"
-                tempSub.addToDocs(doc.save(flush:true))
-                tempSub.save(flush: true)
+                //println('doc: ' + doc + ' ' + doc.docTitle)
+                //println('cat: ' + tempSub + ' ' + tempSub.name)
+                //doc.addToParentCats(tempSub)
+                tempSub.addToDocs(doc)
+                //println(doc.validate())
+                //println(tempSub.validate())
+                if (!tempSub.save(flush:true)) {
+                    doc.errors?.allErrors?.each { log.error(it) }
+                    tempSub.errors?.allErrors?.each { log.error(it) }
+                }
+
             }
         }
     }

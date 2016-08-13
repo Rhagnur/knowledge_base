@@ -22,11 +22,12 @@
 </header>
 
 <article id="page">
-    <nav id="nav-context" role="navigation">
+    <!--nav id="nav-context" role="navigation">
         <section id="subnav">
             Blablabla Navi hier
         </section>
-    </nav>
+    </nav-->
+    <g:pageProperty name="page.navigation"/>
     <div id="main">
         <g:if test="${flash.error}">
             <div class="alert alert-error" style="display: block">${flash.error}</div><br/><br/>
@@ -40,16 +41,16 @@
         <sec:ifLoggedIn>
             <p>Sie sind angemeldet als <b>${principal.fullname}</b>!</p>
             <form action="/logout">
-                <g:submitButton name="submit" value="Ausloggen"></g:submitButton>
+                <g:submitButton name="submit" value="Ausloggen"/>
             </form>
         </sec:ifLoggedIn>
         <sec:ifNotLoggedIn>
             <form action="/login/authenticate" method="POST" autocomplete="off" id="loginForm">
                 <label for="username">Benutzername</label><br/>
-                <g:textField name="username"></g:textField><br/><br/>
+                <g:textField name="username"/><br/><br/>
                 <label for="password">Passwort:</label><br/>
-                <g:passwordField name="password"></g:passwordField><br/><br/>
-                <g:submitButton name="submit" value="Einloggen"></g:submitButton>
+                <g:passwordField name="password"/><br/><br/>
+                <g:submitButton name="submit" value="Einloggen"/>
             </form>
         </sec:ifNotLoggedIn>
     </div>

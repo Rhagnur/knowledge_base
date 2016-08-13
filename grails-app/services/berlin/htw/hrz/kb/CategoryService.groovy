@@ -43,7 +43,9 @@ class CategoryService {
         println(foundSubCats)
         //save all the changes, save can't be made earlier, because otherwise it can happened that the doc will be associated with cats before a non-existing cat occurs and exception is thrown
         for (Subcategory cat in foundSubCats) {
-            cat.addToDocs(doc)
+            println(cat)
+            println(doc)
+            cat.addToDocs(doc.addToParentCats(cat))
             cat.save(flush: true)
         }
         return true
@@ -306,40 +308,28 @@ class CategoryService {
         //1 Get docs from associated OS []
         String osName = ''
         //process the os information from the request header
-
-//        Windows 3.11 => Win16,
-//        Windows 95 => (Windows 95)|(Win95)|(Windows_95),
-//        Windows 98 => (Windows 98)|(Win98),
-//        Windows 2000 => (Windows NT 5.0)|(Windows 2000),
-//        Windows XP => (Windows NT 5.1)|(Windows XP),
-//        Windows Server 2003 => (Windows NT 5.2),
-//        Windows Vista => (Windows NT 6.0),
-//        Windows 7 => (Windows NT 6.1),
-//        Windows 8 => (Windows NT 6.2),
-//        Windows 10 => (Windows NT 10.0),
-//        Windows NT 4.0 => (Windows NT 4.0)|(WinNT4.0)|(WinNT)|(Windows NT),
-//        Windows ME => Windows ME,
-//                              Open BSD => OpenBSD,
-//        Sun OS => SunOS,
-//        Linux => (Linux)|(X11),
-//        Mac OS => (Mac_PowerPC)|(Macintosh),
-//        QNX => QNX,
-//        BeOS => BeOS,
-//        OS/2 => OS/2,
         if (request.getHeader('User-Agent').toString().toLowerCase().contains('linux')) {
             osName = 'linux'
-        }else if (request.getHeader('User-Agent').toString().toLowerCase().contains('windows nt 5.1')) {
-            osName = 'win_xp'
-        }  else if (request.getHeader('User-Agent').toString().toLowerCase().contains('windows nt 6.0')) {
-            osName = 'win_vista'
+        } else if (request.getHeader('User-Agent').toString().toLowerCase().contains('android')) {
+            osName = 'android'
         } else if (request.getHeader('User-Agent').toString().toLowerCase().contains('windows nt 6.1')) {
             osName = 'win_7'
         } else if (request.getHeader('User-Agent').toString().toLowerCase().contains('windows nt 6.2')) {
             osName = 'win_8'
         } else if (request.getHeader('User-Agent').toString().toLowerCase().contains('windows nt 10.0')) {
             osName = 'win_10'
-        } else if (request.getHeader('User-Agent').toString().toLowerCase().contains('mac_powerpc') || request.getHeader('User-Agent').toString().toLowerCase().contains('macintosh')) {
-            osName = 'mac'
+        } else if (request.getHeader('User-Agent').toString().toLowerCase().contains('iphone os 6')) {
+            osName = 'ios_6'
+        } else if (request.getHeader('User-Agent').toString().toLowerCase().contains('iphone os 7')) {
+            osName = 'ios_7'
+        } else if (request.getHeader('User-Agent').toString().toLowerCase().contains('iphone os 9')) {
+            osName = 'ios_9'
+        } else if (request.getHeader('User-Agent').toString().toLowerCase().contains('os x 10_8')) {
+            osName = 'mac_108'
+        } else if (request.getHeader('User-Agent').toString().toLowerCase().contains('os x 10_9')) {
+            osName = 'mac_109'
+        } else if (request.getHeader('User-Agent').toString().toLowerCase().contains('os x 10_10')) {
+            osName = 'mac_1010'
         }
 
         if (osName && osName != '') {

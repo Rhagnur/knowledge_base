@@ -47,13 +47,16 @@ class KnowledgeBaseController {
     }
 
     def search () {
+        println(params)
         def docsFound = []
+        def filter = []
 
         if (params.searchBar && params.searchBar.length() < 3) {
             flash.error = message(code: 'kb.error.searchTermTooShort') as String
             redirect(view: 'index', model: [otherDocs: loadTestDocs(), principal: springSecurityService.principal])
         }
         else if (params.searchBar && params.searchBar.length() >= 3) {
+            println('bla')
             docsFound.addAll(Document.findAllByDocTitleIlike("%$params.searchBar%"))
             docsFound.addAll(Step.findAllByStepTitleIlike("%$params.searchBar%").doc)
             docsFound.addAll(Step.findAllByStepTextIlike("%$params.searchBar%").doc)
@@ -61,12 +64,40 @@ class KnowledgeBaseController {
             docsFound.addAll(Faq.findAllByAnswerIlike("%$params.searchBar%"))
             docsFound.sort { it.viewCount }.unique{ it.docTitle }
 
+
+
         } else {
             docsFound.addAll(Document.findAll().sort{it.steps})
         }
 
-        println(docsFound)
-        [foundDocs: docsFound ,principal: springSecurityService.principal, searchTerm: params.searchBar]
+        if (params.filter) {
+            println('filter')
+            def tempDocs = []
+            //Get subcats
+            if (params.list('checkbox').size() > 0) {
+                String[] cats = new String[params.list('checkbox').size()];
+                def temp = params.list('checkbox').toArray(cats) as String[]
+                temp.each { catName ->
+                    filter.add(catName)
+                    tempDocs.addAll(docsFound.findAll { it.parentCats.name.contains(catName)})
+                }
+                println(tempDocs)
+                docsFound = tempDocs.findAll { tempDocs.count(it) == (temp.size()) }.unique().sort { it.viewCount }
+                println(docsFound)
+            }
+        }
+
+        def all = [:]
+        categoryService.getAllMainCats().each { mainCat ->
+            def temp = []
+            categoryService.getIterativeAllSubCats(mainCat.name).each { cat ->
+                temp.add(cat.name as String)
+            }
+            all.put(mainCat.name, temp.sort{ it })
+        }
+
+        //println(docsFound)
+        [searchBar: params.searchBar ,foundDocs: docsFound ,principal: springSecurityService.principal, allCatsByMainCats: all, filter: filter]
     }
 
     def showDoc() {
