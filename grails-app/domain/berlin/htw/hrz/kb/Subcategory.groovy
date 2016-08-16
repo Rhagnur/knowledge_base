@@ -11,9 +11,10 @@ class Subcategory extends Category {
     static mapWith = "neo4j"
 
     static constraints = {
-        parentCat nullable: false
-        docs nullable: true
+        parentCat nullable: true
+        linker nullable: true
     }
-    static hasMany = [docs: Document]
+
+    static hasMany = [linker: Linker]
     static belongsTo = [parentCat: Category]
 }

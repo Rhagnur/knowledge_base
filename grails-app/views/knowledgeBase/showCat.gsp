@@ -40,12 +40,12 @@
                 </p>
             </g:if>
 
-            <g:if test="${cat.docs}">
+            <g:if test="${cat.linker}">
                 <h2>Dokumente</h2>
-                <p>Anzahl: ${cat.docs?.size()}</p>
+                <p>Anzahl: ${cat.linker?.size()}</p>
                 <p>Liste:
                 <ul>
-                    <g:each in="${cat.docs.sort{ it.docTitle }}">
+                    <g:each in="${cat.linker.doc.sort{ it.docTitle }}">
                         <li>
                             <g:link controller="KnowledgeBase" action="showDoc" params="[docTitle: it.docTitle]">${it.docTitle}</g:link>
                         </li>

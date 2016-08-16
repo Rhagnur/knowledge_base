@@ -51,26 +51,27 @@
         </section>
         <section id="debug">
             <h2>Debug-/Test-Funktionen</h2>
-            <!--sec:ifAllGranted roles="ROLE_GP-STAFF"-->
+            <sec:ifAnyGranted roles="ROLE_GP-STAFF,ROLE_GP-PROF">
                 <g:form controller="KnowledgeBase" action="createDoc" method="POST">
                     <g:submitButton name="createTut" value="Neue Anleitung erstellen"/>
                 </g:form>
                 <g:form controller="KnowledgeBase" action="createDoc" method="POST">
                     <g:submitButton name="createFaq" value="Neues FAQ erstellen"/>
                 </g:form>
-            <!--/sec:ifAllGranted-->
+                <g:form controller="KnowledgeBase" action="createCat">
+                    <g:submitButton name="create" value="Neue Subkategorie anlegen"/>
+                </g:form>
 
+                <g:form controller="KnowledgeBase" action="findUnlinkedSubCats">
+                    <g:submitButton name="find" value="Unverlinkte Subkategorien finden"/>
+                </g:form>
+                <br/>
+            </sec:ifAnyGranted>
             <g:form controller="KnowledgeBase" action="showCat">
                 <g:submitButton name="show" value="Kategorie ansehen"/>
             </g:form>
 
-            <g:form controller="KnowledgeBase" action="createCat">
-                <g:submitButton name="create" value="Neue Subkategorie anlegen"/>
-            </g:form>
 
-            <g:form controller="KnowledgeBase" action="findUnlinkedSubCats">
-                <g:submitButton name="find" value="Unverlinkte Subkategorien finden"/>
-            </g:form>
         </section>
     </content>
 </g:applyLayout>

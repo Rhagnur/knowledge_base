@@ -119,7 +119,7 @@ class KnowledgeBaseController {
         }
 
         //author = Subcategory.findAllByParentCat(Category.findByName('author')).find{it.docs.contains(myDoc)}?.name
-        author = myDoc.parentCats.find { it.parentCat.name == 'author' }?.name
+        author = myDoc.linker.find{ it.subcat?.parentCat?.name == 'author' }?.subcat?.name
         if (!author) {
             author = 'Kein Autor gefunden'
         }
@@ -232,21 +232,24 @@ class KnowledgeBaseController {
             if (!(flash.error)) {
                 println('Cat ändern')
                 String[] cats = new String[params.list('checkbox').size()];
-
-
-                String newName = params.catName
                 def myCat = categoryService.getCategory(params.name)
 
                 if (myCat instanceof Subcategory){
-                    Category newParent = categoryService.getCategory(params.parentCat)
-                    myCat = categoryService.changeParent(myCat, newParent)
+
+                    if(params.parentCat && myCat.parentCat.name != params.parentCat) {
+                        Category newParent = categoryService.getCategory(params.parentCat)
+                        myCat = categoryService.changeParent(myCat, newParent)
+                    }
 
                     if (cats) {
                         def docSubs = params.list('checkbox').toArray(cats)
                         myCat = categoryService.changeSubCats(myCat, docSubs as String[])
                     }
 
-                    myCat = categoryService.changeCategoryName(myCat, newName)
+                    if (params.catName && params.catName != myCat.name) {
+                        myCat = categoryService.changeCategoryName(myCat, params.catName)
+                    }
+
 
                     if (myCat) {
                         flash.info = message(code: 'kb.info.catChanged') as String
@@ -264,8 +267,8 @@ class KnowledgeBaseController {
 
     }
 
-    //todo: Secured wieder setzen, auch in index.gsp...zu Testzwecken erstmal deaktiviert
-    //@Secured("hasAuthority('ROLE_GP-STAFF')") //Für optinale Erweiterung "Autoren" später Abfrage, ob User als Autor eingetragen ist
+
+    @Secured("hasAuthority('ROLE_GP-STAFF')") //Für optinale Erweiterung "Autoren" später Abfrage, ob User als Autor eingetragen ist
     def createDoc() {
         if (params.submit) {
             def docSubs = null
@@ -338,7 +341,6 @@ class KnowledgeBaseController {
             }
         }
 
-        //todo: Anstatt eine gesamte 'Liste' lieber eine Hashmap mit Aufbaue [mainCatName1: [allSubcats], mainCatName2: [allSubcats],...]
         def all = [:]
         categoryService.getAllMainCats().each { mainCat ->
             def temp = []

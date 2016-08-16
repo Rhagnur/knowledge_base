@@ -15,7 +15,7 @@ import java.rmi.NoSuchObjectException
  * See the API for {@link grails.test.mixin.services.ServiceUnitTestMixin} for usage instructions
  */
 @TestFor(CategoryService)
-@Mock([CategoryService, DocumentService, Category, Subcategory, Document, Step, Faq])
+@Mock([CategoryService, DocumentService, Category, Subcategory, Document, Step, Faq, Linker])
 class CategoryServiceSpec extends Specification {
 
     def setup() {
@@ -131,11 +131,15 @@ class CategoryServiceSpec extends Specification {
 
     void "test getDocCount SubCat with existing Docs"() {
         given:
-            Subcategory cat = new Subcategory(name: 'TestingDocCount', parentCat: new Category(name: 'Test')).addToDocs(new Document(docTitle: 'TestDoc1')).addToDocs(new Document(docTitle: 'TestDoc2')).save()
+            Subcategory cat = new Subcategory(name: 'TestingDocCount', parentCat: new Category(name: 'Test')).save()
+            Document doc = new Document(docTitle: 'TestDoc1').save()
+            Document doc2 = new Document(docTitle: 'TestDoc2').save()
+            Linker.link(cat, doc)
+            Linker.link(cat, doc2)
         expect:
             cat instanceof Subcategory
             cat != null
-            cat.docs.size() > 0
+            cat.linker?.size() > 0
         when:
             def count = service.getDocCount(cat)
         then:

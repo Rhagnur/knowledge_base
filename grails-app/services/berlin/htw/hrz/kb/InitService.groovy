@@ -11,8 +11,9 @@ import grails.transaction.Transactional
 class InitService {
 
     def initTestModell() {
+        println('Start init...')
         Random random = new Random()
-        int numberOfDocs = 500
+        int numberOfDocs = 200
 
 
         def myMains = [:]
@@ -107,18 +108,19 @@ class InitService {
                 //println(tempMain.name + " - " + tempSub.name + " # " + tempSub.name.getClass())
                 if (!doc.tags) doc.tags = "${tempSub.name}"
                 else doc.tags += "${tempSub.name}"
-                //println('doc: ' + doc + ' ' + doc.docTitle)
-                //println('cat: ' + tempSub + ' ' + tempSub.name)
-                //doc.addToParentCats(tempSub)
-                tempSub.addToDocs(doc)
-                //println(doc.validate())
-                //println(tempSub.validate())
-                if (!tempSub.save(flush:true)) {
+
+                //tempSub.addToDocs(doc)
+                Linker tempLinker = Linker.link(tempSub, doc)
+
+
+                if (!tempLinker.save(flush: true)) {
                     doc.errors?.allErrors?.each { log.error(it) }
                     tempSub.errors?.allErrors?.each { log.error(it) }
                 }
 
             }
         }
+
+        println('End init')
     }
 }

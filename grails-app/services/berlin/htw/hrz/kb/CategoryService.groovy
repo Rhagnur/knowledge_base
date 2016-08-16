@@ -45,8 +45,8 @@ class CategoryService {
         for (Subcategory cat in foundSubCats) {
             println(cat)
             println(doc)
-            cat.addToDocs(doc.addToParentCats(cat))
-            cat.save(flush: true)
+            if (Linker.link(cat, doc)) cat.save(flush: true)
+            else throw new Exception('Somethinge went wrong')
         }
         return true
     }
@@ -79,25 +79,11 @@ class CategoryService {
     public Subcategory changeParent(Subcategory cat, Category newParent) throws Exception {
         if (!cat || !newParent) throw new IllegalArgumentException('Argument can not be null.')
 
-        Subcategory tempCat
-        tempCat = new Subcategory(name: cat.name, parentCat: newParent)
-
-        for (Subcategory subcat in cat.subCats) {
-            tempCat.addToSubCats(subcat)
-        }
-        for (Document doc in cat.docs) {
-            tempCat.addToDocs(doc)
-        }
-        if (tempCat.validate()) {
-            cat.delete()
-            tempCat.save(flush: true)
-        } else {
-            tempCat.errors.allErrors.each {
-                println it
-            }
-            null
-        }
-
+        newParent.removeFromSubCats(cat)
+        cat.parentCat = null
+        newParent.addToSubCats(cat)
+        if (cat.validate && newParent.validate && newParent.save(flush:true)) cat
+        else null
     }
 
     //todo: Rausfinden warum Änderung temporär funktioniert aber NIE in die Datenbank gelangt
@@ -109,38 +95,29 @@ class CategoryService {
      * @return
      * @throws Exception
      */
-    public Category changeSubCats(def cat, String[] newCats) throws Exception {
-        def tempCat
+    public Category changeSubCats(Category cat, String[] newCats) throws Exception {
+        def tempCats = []
 
-        if (cat instanceof Subcategory) {
-            tempCat = new Subcategory(name: cat.name, parentCat: cat.parentCat)
-
-            for (Document doc in cat.docs) {
-                tempCat.addToDocs(doc)
-            }
-
-        } else {
-            tempCat = new Category(name: cat.name)
-        }
-
+        //Hole benötigte Subcats
         for (cn in newCats) {
             Subcategory temp = getCategory(cn)
-            tempCat.addToSubCats(temp)
+            tempCats.add(temp)
         }
 
-
-
-        if (tempCat.validate()) {
-            cat.delete()
-            tempCat.save(flush: true)
+        //räume alte Verweise auf
+        cat.subCats.collect().each {
+            it.parentCat = null
+            it.save(flush: true)
         }
-        else {
-            tempCat.errors.allErrors.each {
-                println it
-            }
-            null
+        cat.subCats.clear()
+
+        //setze neue Beziehungen
+        tempCats.each {
+            cat.addToSubCats(it)
         }
 
+        if (cat.validate()) cat.save(flush: true)
+        else null
     }
 
     /**
@@ -150,7 +127,10 @@ class CategoryService {
      */
     public void deleteSubCategory(Subcategory cat) throws Exception {
         if (!cat) throw new IllegalArgumentException('Argument can not be null')
-        cat.delete(flush: true)
+        cat.linker.collect().each { linker ->
+            Linker.unlink(cat, linker.doc)
+        }
+        cat.delete()
     }
 
     /**
@@ -168,10 +148,6 @@ class CategoryService {
         println('FAQ und Artikel')
         start = new Date()
         def temp = getSameAssociatedDocs(doc, ['theme', 'os'] as String[])
-        //if (!temp) {
-        //    println('Nichts gefunden')
-        //    temp = getSameAssociatedDocs(doc, ['theme'] as String[])
-        //}
         if (temp) {
             myDocs.faq = temp.findAll { it instanceof Faq }
             myDocs.article = temp.findAll { it instanceof Article }
@@ -182,9 +158,6 @@ class CategoryService {
 
         println('Anleitungen')
         start = new Date()
-
-        //if (isMainCatConnectedToDoc(doc.docTitle, 'os')) excludedMainCats.add('theme')
-
         myDocs.tutorial = getSameAssociatedDocs(doc, ['os', 'lang'] as String[], true)
         stop = new Date()
         println('Benötigte Zeit: ' + TimeCategory.minus(stop, start))
@@ -200,7 +173,7 @@ class CategoryService {
      */
     def getAllDocsAssociatedToSubCategories(String[] subs) throws Exception {
         if (!subs) throw new IllegalArgumentException("Argument 'subs' can not be null.")
-        def query = "MATCH (sub:Subcategory)-[:DOCS]->(doc:Document) WHERE (sub.name='${subs[0]}' "
+        def query = "MATCH (sub:Subcategory)-[r*..2]-(doc:Document) WHERE (sub.name='${subs[0]}' "
         subs = subs.drop(1)
         subs.each {
             query += "OR sub.name='${it}'"
@@ -269,7 +242,7 @@ class CategoryService {
     public Integer getDocCount(Subcategory cat) throws Exception {
         if (!cat) throw new IllegalArgumentException('Argument can not be null')
 
-        cat.docs.size()
+        cat.linker?.doc?.size()
     }
 
     /**
@@ -280,7 +253,7 @@ class CategoryService {
      */
     def getDocs(Subcategory cat) throws Exception {
         if (!cat) throw new IllegalArgumentException('Argument can not be null')
-        return cat.docs?.findAll()
+        return cat.linker?.doc
     }
 
     //todo: anstatt Pincipal zu übergeben vll direkt hier im Service injecten und nutzen
@@ -449,18 +422,18 @@ class CategoryService {
      * This method will search for similar docs by checking the connection to the maincategories
      * You can exclude maincategories for a results. That means, if your first lookup didn't find anything exclude not so much important maincategories and lookup again
      * @param givenDoc
-     * @param mainCats
+     * @param excludedMainCats
      * @param forFaqs
      * @return
      * @throws Exception
      */
-    def getSameAssociatedDocs(Document givenDoc, String[] mainCats, Boolean forTutorial=false) throws Exception {
+    def getSameAssociatedDocs(Document givenDoc, String[] excludedMainCats, Boolean forTutorial=false) throws Exception {
         //prepare query
         def query = "MATCH (doc:Document) WHERE doc.docTitle='${givenDoc.docTitle}' WITH doc\n"
-        mainCats.eachWithIndex { catName, i ->
-            query += "MATCH (doc)<-[:DOCS]-(sub${i}:Subcategory)\n" +
+        excludedMainCats.eachWithIndex { catName, i ->
+            query += "MATCH (doc)-[*..2]-(sub${i}:Subcategory)\n" +
                      "MATCH (sub${i})-[*]->(main${i}:Category{name:'${catName}'})\n" +
-                     "MATCH (sub${i})-[:DOCS]->(otherDoc:Document)\n"
+                     "MATCH (sub${i})-[*..2]-(otherDoc:Document)\n"
         }
         query += "RETURN distinct otherDoc ORDER BY otherDoc.viewCount"
 

@@ -15,7 +15,10 @@ class Document {
         createDate nullable: true
         changeDate nullable: true
         locked nullable: true
+        linker nullable: true
     }
+
+    static hasMany = [linker: Linker]
 
     String docTitle
     String[] tags, changedBy
