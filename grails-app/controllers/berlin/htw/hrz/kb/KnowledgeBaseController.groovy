@@ -7,6 +7,8 @@ package berlin.htw.hrz.kb
 import grails.plugin.springsecurity.annotation.Secured
 import groovy.time.TimeCategory
 
+
+// TODO [TR]: Etliche "gefährliche" Methoden sind ja gar nicht abgesichert! Beispiel: deleteCat()
 @Secured("IS_AUTHENTICATED_ANONYMOUSLY")
 class KnowledgeBaseController {
 
@@ -54,6 +56,7 @@ class KnowledgeBaseController {
         }
         else if (params.searchBar && params.searchBar.length() >= 3) {
             println('bla')
+            // TODO [TR]: ILIKE geht auch mit Neo4J ?
             docsFound.addAll(Document.findAllByDocTitleIlike("%$params.searchBar%"))
             docsFound.addAll(Step.findAllByStepTitleIlike("%$params.searchBar%").doc)
             docsFound.addAll(Step.findAllByStepTextIlike("%$params.searchBar%").doc)
@@ -353,6 +356,7 @@ class KnowledgeBaseController {
         [cats: all, docType: params.createFaq?'faq':params.createTut?'tutorial':'', principal: springSecurityService.principal]
     }
 
+    // TODO [TR]: und der Content-Type ? Siehe RFC 1945
     def exportDoc() {
         Document doc
         if (!params.docTitle && !params.exportAs) render("Error: Not enought arguments, 'docTitle' or 'exportAs' missing. Possible solutions for 'exportAs': 'json'/'xml'")

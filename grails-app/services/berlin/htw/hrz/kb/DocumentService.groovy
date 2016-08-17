@@ -59,6 +59,7 @@ class DocumentService {
      * @return
      * @throws Exception
      */
+    // TODO [TR]: ist der Titel wirklich eine gute Wahl als PK ? Der kann durchaus redundant sein!
     def getDoc(String docTitle) throws Exception {
         if (!docTitle || docTitle == '') throw new IllegalArgumentException()
         def myDoc = Document.findByDocTitle(docTitle)
@@ -91,6 +92,7 @@ class DocumentService {
      * @return new created document (article)
      * @throws Exception
      */
+    // TODO [TR]: "Attention" leitet in die Irre! (siehe letzte Anweisung der Methode)
     def newArticle(String docTitle, String docContent, String[] tags) throws Exception {
         def temp = new Article(docTitle: docTitle, tags: tags, viewCount: 0, createDate: new Date(), docContent: docContent)
         if (!temp.validate()) throw new Exception('ERROR: Validation of data wasn\'t successfull')
@@ -106,6 +108,7 @@ class DocumentService {
      * @return new created document (faq)
      * @throws Exception
      */
+    // TODO [TR]: "Attention" leitet in die Irre! (siehe letzte Anweisung der Methode)
     def newFaq(String question, String answer, String[] tags) throws Exception {
         def temp = new Faq(docTitle: question, tags: tags, createDate: new Date(), viewCount: 0, question: question, answer: answer)
         if (!temp.validate()) throw new Exception('ERROR: Validation of data wasn\'t successfull')
@@ -121,6 +124,7 @@ class DocumentService {
      * @return new created document (tutorial)
      * @throws Exception
      */
+    // TODO [TR]: "Attention" leitet in die Irre! (siehe letzte Anweisung der Methode)
     def newTutorial(String docTitle, Step[] steps, String[] tags) throws Exception {
         def temp = new Tutorial(docTitle: docTitle, tags: tags, viewCount: 0, createDate: new Date())
         steps?.each { step ->

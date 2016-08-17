@@ -102,6 +102,7 @@ class CategoryServiceSpec extends Specification {
 
     }
 
+    // todo addSubcat anlegen btw Test anpassen, wird hier eher newSubcat getestet als explizit addSubCat
     void "test addSubCategory with valid arguments"() {
         when:
             Subcategory sub = service.newSubCategory('Testing', new Category(name: 'TestMain'), [new Subcategory(name: 'TestSub1'), new Subcategory(name: 'TestSub2')] as Subcategory[])
@@ -114,14 +115,14 @@ class CategoryServiceSpec extends Specification {
             sub.subCats instanceof Set<Subcategory>
             sub.subCats.size() == 2
     }
-
+// todo addSubcat anlegen btw Test anpassen, wird hier eher newSubcat getestet als explizit addSubCat
     void "test addSubCategory null name"() {
         when:
             Subcategory sub = service.newSubCategory(null, new Category(name: 'TestMain'), null)
         then:
             thrown IllegalArgumentException
     }
-
+// todo addSubcat anlegen btw Test anpassen, wird hier eher newSubcat getestet als explizit addSubCat
     void "test addSubCategory null parent"() {
         when:
         Subcategory sub = service.newSubCategory('Test', null as Category, null)

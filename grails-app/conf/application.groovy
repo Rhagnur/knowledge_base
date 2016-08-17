@@ -11,6 +11,7 @@ grails.plugin.springsecurity.controllerAnnotations.staticRules = [
         //[pattern: '/login/impersonate', access:['hasAuthority("OU_ZE_HRZ")', 'IS_AUTHENTICATED_FULLY' ]],
         //[pattern: '/logout/impersonate', access: ['permitAll']],
         [pattern: '/',               access: ['permitAll']],
+        // TODO [TR]: really ? permitAll für Actuator-Controller ?
         [pattern: '/health',               access: ['permitAll']],
         [pattern: '/error',          access: ['permitAll']],
         [pattern: '/index',          access: ['permitAll']],

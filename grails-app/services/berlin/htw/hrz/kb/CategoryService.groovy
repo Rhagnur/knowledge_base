@@ -6,6 +6,10 @@ import org.neo4j.graphdb.Result
 
 import java.rmi.NoSuchObjectException
 
+// TODO [TR]: "public": Access Scopes in Groovy ?
+// TODO [TR]: bessere Typisierung insbesondere in Services ?
+
+
 @Transactional
 /**
  * Service which help you managing all kind of categories (main/sub) and also search for similar or 'user-relevant' documents
@@ -17,6 +21,7 @@ class CategoryService {
     /**
      * Number of documents which should be returned, so that not all found docs will be returned
      */
+    // TODO[TR]: parametrisierung ?
     def NumDocsToShow = 5
 
     /**
@@ -26,6 +31,7 @@ class CategoryService {
      * @return
      * @throws Exception
      */
+    // TODO [TR]: wrapper für signature Document, Subcategory[]
     public boolean addDoc(Document doc, String[] subCats) throws Exception {
         def foundSubCats = []
         println('addDoc called')
@@ -105,6 +111,7 @@ class CategoryService {
         }
 
         //räume alte Verweise auf
+        // TODO [TR]: ist collect() hier nicht überflüssig ?
         cat.subCats.collect().each {
             it.parentCat = null
             it.save(flush: true)
@@ -141,6 +148,7 @@ class CategoryService {
      * @return hashmap of found documents in format [ faq:[...], article:[...], tutorial:[...] ]
      * @throws Exception
      */
+    // TODO [TR]: geht das nicht auch generisch ?
     def getAdditionalDocs(Document doc) throws Exception {
         def myDocs = [:]
         def start, stop
@@ -171,6 +179,8 @@ class CategoryService {
      * @return list of found documents
      * @throws Exception
      */
+    // TODO [TR]: cipher injection ?
+    // todo optimuerung anstatt ketzige form, lieber sub0->doc, sub1->doc where sub0.name AND sub1.name, dann fällt each, unique und sort weg
     def getAllDocsAssociatedToSubCategories(String[] subs) throws Exception {
         if (!subs) throw new IllegalArgumentException("Argument 'subs' can not be null.")
         def query = "MATCH (sub:Subcategory)-[r*..2]-(doc:Document) WHERE (sub.name='${subs[0]}' "
@@ -280,6 +290,7 @@ class CategoryService {
         //1 Get docs from associated OS []
         String osName = ''
         //process the os information from the request header
+        // TODO [TR]: würde es vielleicht ein generischer Algorithmus auf Basis einer Map tun ? z.B. in application.groovy ?
         if (request.getHeader('User-Agent').toString().toLowerCase().contains('linux')) {
             osName = 'linux'
         } else if (request.getHeader('User-Agent').toString().toLowerCase().contains('android')) {
@@ -376,6 +387,7 @@ class CategoryService {
 
 
         //todo Priorität Tutorial > Artikel > Faq
+        // TODO [TR]: aber doch sicher flexibel konfigurierbar, oder ?
         println('5 Suggestion')
         start = new Date()
         //4 Get suggestions, sugg are associated to OS and the user-groups
@@ -404,6 +416,7 @@ class CategoryService {
      * @return Array of all found categories
      * @throws Exception
      */
+    // TODO [TR]: könnte das nicht auch die getAllSubCats()-Methode tun, z.B. mit einem Parameter "boolean recurse=false"
     def getIterativeAllSubCats(String catName) throws Exception {
         def subs = []
         Category cat = getCategory(catName)
@@ -455,6 +468,7 @@ class CategoryService {
      * @return
      * @throws Exception
      */
+    // TODO [TR]: "public": Access Scopes in Groovy ?
     public Subcategory newSubCategory(String catName, Category parentCat, Subcategory[] subCats = null) throws Exception {
         if (!catName || catName.empty) throw new IllegalArgumentException("Argument 'catName' can not be null or empty")
         if (!parentCat) throw new IllegalArgumentException("Argument 'mainCat' can not be null")
