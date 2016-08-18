@@ -10,10 +10,22 @@
 
     <content tag="main">
         <h1><g:message code="kb.view.showDoc.headline"/></h1>
-        <g:link controller="KnowledgeBase" action="exportDoc"
-                params="[docTitle: document.docTitle, exportAs: 'json']">JSON</g:link>
-        <g:link controller="KnowledgeBase" action="exportDoc"
-                params="[docTitle: document.docTitle, exportAs: 'xml']">XML</g:link>
+        <p> Export:
+            <g:link controller="KnowledgeBase" action="exportDoc"
+                    params="[docTitle: document.docTitle, exportAs: 'json']">JSON</g:link>
+            <g:link controller="KnowledgeBase" action="exportDoc"
+                    params="[docTitle: document.docTitle, exportAs: 'xml']">XML</g:link>
+        </p>
+        <sec:ifAnyGranted roles="ROLE_GP-STAFF,ROLE_GP-PROF">
+            <p>
+                Edit:
+                <g:link controller="KnowledgeBase" action="deleteDoc"
+                        params="[docTitle: document.docTitle]">delete</g:link>
+                <g:link controller="KnowledgeBase" action="editDoc"
+                        params="[docTitle: document.docTitle]">edit</g:link>
+            </p>
+        </sec:ifAnyGranted>
+
         <g:if test="${!document.question}">
             <h1>${document.docTitle}</h1>
         </g:if>
@@ -54,6 +66,16 @@
         <p><g:message code="kb.view.showDoc.author"/> ${author}</p>
         <p><g:message code="kb.view.showDoc.createDate"/> ${document.createDate}</p>
         <p><g:message code="kb.view.showDoc.clickCount"/> ${document.viewCount}</p>
+        <g:if test="${document.linker}">
+            <p>
+                <g:message code="kb.view.showDoc.parents"/>
+                <g:each in="${document.linker}">
+                    '${it.subcat.name}'
+                </g:each>
+            </p>
+
+        </g:if>
+
         <g:if test="${document.tags}">
             <p>
                 <g:message code="kb.view.showDoc.tags"/>

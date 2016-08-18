@@ -16,6 +16,7 @@ class Document {
         changeDate nullable: true
         locked nullable: true
         linker nullable: true
+        docTitle unique: true
     }
 
     static hasMany = [linker: Linker]

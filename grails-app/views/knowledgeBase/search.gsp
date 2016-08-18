@@ -27,7 +27,7 @@
 
     <content tag="main">
         <h2><g:message code="kb.view.index.search.headline"/></h2>
-        <p><g:message code="kb.view.search.term"/> '${seachrBar}'</p>
+        <p><g:message code="kb.view.search.term"/> '${searchBar}'</p>
         <p><g:message code="kb.view.search.count"/> ${foundDocs.size()}</p>
         <p><g:message code="kb.view.search.infoText"/></p>
         <g:if test="${foundDocs}">

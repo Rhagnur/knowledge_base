@@ -32,29 +32,16 @@ class CategoryService {
      * @throws Exception
      */
     // TODO [TR]: wrapper für signature Document, Subcategory[]
-    public boolean addDoc(Document doc, String[] subCats) throws Exception {
-        def foundSubCats = []
-        println('addDoc called')
-        println(doc)
+    //todo ANPASSSEN AN NEUEN SIGNATUR!!!!!!!!!!!!!!
+    boolean addDoc(Document doc, List<Subcategory> subCats) throws Exception {
+        if (!subCats) { throw new IllegalArgumentException("Argument 'subCats' cant be null") }
 
-        if (!subCats) throw new IllegalArgumentException("Argument 'subCats' cant be null")
-
-        //check if there is any not-existing subcategory given in the argument string-array, if so throw exception and cancel the method without associating doc to any subcategory
-        for (def cat in subCats) {
-            Subcategory subCat = Subcategory.findByName(cat)
-            if (subCat) foundSubCats.add(subCat)
-            else throw new Exception("Subcategory '${cat}' do not exist, operation 'addDoc' canceled.")
-        }
-
-        println(foundSubCats)
         //save all the changes, save can't be made earlier, because otherwise it can happened that the doc will be associated with cats before a non-existing cat occurs and exception is thrown
-        for (Subcategory cat in foundSubCats) {
-            println(cat)
-            println(doc)
-            if (Linker.link(cat, doc)) cat.save(flush: true)
-            else throw new Exception('Somethinge went wrong')
+        for (Subcategory cat in subCats) {
+            if (Linker.link(cat, doc) && cat.validate()) { cat.save(flush: true) }
+            else { throw new Exception('Somethinge went wrong') }
         }
-        return true
+        true
     }
 
     /**
@@ -64,15 +51,15 @@ class CategoryService {
      * @return
      * @throws Exception
      */
-    public Category changeCategoryName(Category cat, String newName) throws Exception {
-        if (!newName || newName.empty) throw new IllegalArgumentException("Argument 'newName' can not be null or empty.")
+    Category changeCategoryName(Category cat, String newName) throws Exception {
+        if (!newName || newName.empty) { throw new IllegalArgumentException("Argument 'newName' can not be null or empty.") }
         cat.name = newName
 
         if (!cat.validate()) {
             cat.errors?.allErrors?.each { log.error(it) }
             throw new Exception('Validation of data wasn\'t successfull')
         }
-        return cat.save()
+        cat.save()
     }
 
     /**
@@ -82,18 +69,16 @@ class CategoryService {
      * @return
      * @throws Exception
      */
-    public Subcategory changeParent(Subcategory cat, Category newParent) throws Exception {
-        if (!cat || !newParent) throw new IllegalArgumentException('Argument can not be null.')
+    Subcategory changeParent(Subcategory cat, Category newParent) throws Exception {
+        if (!cat || !newParent) { throw new IllegalArgumentException('Argument can not be null.') }
 
         newParent.removeFromSubCats(cat)
         cat.parentCat = null
         newParent.addToSubCats(cat)
-        if (cat.validate && newParent.validate && newParent.save(flush:true)) cat
-        else null
+        if (cat.validate && newParent.validate && newParent.save(flush:true)) { cat }
+        else { null }
     }
 
-    //todo: Rausfinden warum Änderung temporär funktioniert aber NIE in die Datenbank gelangt
-    //Lösung 1: Zu ändernen Knoten löschen und mit neuen Beziehungn erstellen...meeeeh
     /**
      * Change the associated subcategories for the given category
      * @param cat
@@ -101,7 +86,7 @@ class CategoryService {
      * @return
      * @throws Exception
      */
-    public Category changeSubCats(Category cat, String[] newCats) throws Exception {
+    Category changeSubCats(Category cat, String[] newCats) throws Exception {
         def tempCats = []
 
         //Hole benötigte Subcats
@@ -123,8 +108,8 @@ class CategoryService {
             cat.addToSubCats(it)
         }
 
-        if (cat.validate()) cat.save(flush: true)
-        else null
+        if (cat.validate()) { cat.save(flush: true) }
+        else { null }
     }
 
     /**
@@ -132,8 +117,8 @@ class CategoryService {
      * @param cat
      * @throws Exception
      */
-    public void deleteSubCategory(Subcategory cat) throws Exception {
-        if (!cat) throw new IllegalArgumentException('Argument can not be null')
+    void deleteSubCategory(Subcategory cat) throws Exception {
+        if (!cat) { throw new IllegalArgumentException('Argument can not be null') }
         cat.linker.collect().each { linker ->
             Linker.unlink(cat, linker.doc)
         }
@@ -148,8 +133,7 @@ class CategoryService {
      * @return hashmap of found documents in format [ faq:[...], article:[...], tutorial:[...] ]
      * @throws Exception
      */
-    // TODO [TR]: geht das nicht auch generisch ?
-    def getAdditionalDocs(Document doc) throws Exception {
+    HashMap getAdditionalDocs(Document doc) throws Exception {
         def myDocs = [:]
         def start, stop
 
@@ -181,7 +165,7 @@ class CategoryService {
      */
     // TODO [TR]: cipher injection ?
     // todo optimuerung anstatt ketzige form, lieber sub0->doc, sub1->doc where sub0.name AND sub1.name, dann fällt each, unique und sort weg
-    def getAllDocsAssociatedToSubCategories(String[] subs) throws Exception {
+    List getAllDocsAssociatedToSubCategories(String[] subs) throws Exception {
         if (!subs) throw new IllegalArgumentException("Argument 'subs' can not be null.")
         def query = "MATCH (sub:Subcategory)-[r*..2]-(doc:Document) WHERE (sub.name='${subs[0]}' "
         subs = subs.drop(1)
@@ -195,27 +179,23 @@ class CategoryService {
             myDocs.add(it.doc as Document)
         }
 
-        myDocs = myDocs.findAll { myDocs.count(it) == (subs.size() + 1) }.unique().sort { it.viewCount }
-
-        return myDocs
+        myDocs.findAll { myDocs.count(it) == (subs.size() + 1) }.unique().sort { it.viewCount }
     }
 
     /**
      * Return all existing maincategories
      * @return
      */
-    def getAllMainCats() {
-        def mainCats = Category.findAll()
-        mainCats.removeAll { it instanceof Subcategory}
-        return mainCats
+    List getAllMainCats() {
+        Category.findAll()?.findAll { !(it instanceof Subcategory) }
     }
 
     /**
      * Return all existing subcategories
      * @return
      */
-    def getAllSubCats() {
-        return Subcategory.findAll()
+    List getAllSubCats() {
+        Subcategory.findAll()?.toList()
     }
 
     /**
@@ -224,10 +204,9 @@ class CategoryService {
      * @return found main- or subcategory
      * @throws Exception
      */
-    def getAllSubCats(Category cat) throws Exception {
-        if (!cat) throw new IllegalArgumentException('Argument can not be null')
-
-        return cat.subCats?.findAll()
+    List getAllSubCats(Category cat) throws Exception {
+        if (!cat) { throw new IllegalArgumentException('Argument can not be null') }
+        cat.subCats?.findAll()?.toList()
     }
 
     /**
@@ -236,11 +215,12 @@ class CategoryService {
      * @return found main- or subcategory
      * @throws Exception
      */
-    public Category getCategory(String catName) throws Exception {
-        if (!catName || catName == '') throw new IllegalArgumentException("Argument can not be null or empty")
-        def cat = Category.findByName(catName) ?: null
-        if (!cat) throw new NoSuchObjectException("Can not find a category with the name: '${catName}'")
-        return cat
+    //todo eigene Exception
+    Category getCategory(String catName) throws Exception {
+        if (!catName || catName == '') { throw new IllegalArgumentException("Argument can not be null or empty") }
+        def cat = Category.findByName(catName)?:null
+        if (!cat) { throw new NoSuchObjectException("Can not find a category with the name: '${catName}'") }
+        cat
     }
 
     /**
@@ -249,9 +229,8 @@ class CategoryService {
      * @return number of associated categories, error-code if something went wrong
      * @throws Exception
      */
-    public Integer getDocCount(Subcategory cat) throws Exception {
-        if (!cat) throw new IllegalArgumentException('Argument can not be null')
-
+    Integer getDocCount(Subcategory cat) throws Exception {
+        if (!cat) { throw new IllegalArgumentException('Argument can not be null') }
         cat.linker?.doc?.size()
     }
 
@@ -261,9 +240,9 @@ class CategoryService {
      * @return
      * @throws Exception
      */
-    def getDocs(Subcategory cat) throws Exception {
-        if (!cat) throw new IllegalArgumentException('Argument can not be null')
-        return cat.linker?.doc
+    List getDocs(Subcategory cat) throws Exception {
+        if (!cat) { throw new IllegalArgumentException('Argument can not be null') }
+        cat.linker.doc.toList()
     }
 
     //todo: anstatt Pincipal zu übergeben vll direkt hier im Service injecten und nutzen
@@ -278,9 +257,9 @@ class CategoryService {
      * @return
      * @throws Exception
      */
-    def getDocsOfInterest(def userPrincipals, def request) throws Exception {
+    HashMap getDocsOfInterest(def userPrincipals, def request) throws Exception {
         def subCatNames = []
-        def docMap = [:]
+        HashMap docMap = [:]
         def start, stop, temp
 
         println(userPrincipals.authorities)
@@ -301,6 +280,8 @@ class CategoryService {
             osName = 'win_8'
         } else if (request.getHeader('User-Agent').toString().toLowerCase().contains('windows nt 10.0')) {
             osName = 'win_10'
+        } else if (request.getHeader('User-Agent').toString().toLowerCase().contains('windows')) {
+            osName = 'windows'
         } else if (request.getHeader('User-Agent').toString().toLowerCase().contains('iphone os 6')) {
             osName = 'ios_6'
         } else if (request.getHeader('User-Agent').toString().toLowerCase().contains('iphone os 7')) {
@@ -313,6 +294,10 @@ class CategoryService {
             osName = 'mac_109'
         } else if (request.getHeader('User-Agent').toString().toLowerCase().contains('os x 10_10')) {
             osName = 'mac_1010'
+        } else if (request.getHeader('User-Agent').toString().toLowerCase().contains('os x 10_11')) {
+            osName = 'mac_1011'
+        } else if (request.getHeader('User-Agent').toString().toLowerCase().contains('os x')) {
+            osName = 'mac'
         }
 
         if (osName && osName != '') {
@@ -385,9 +370,6 @@ class CategoryService {
         stop = new Date()
         println('Benötigte Zeit: ' + TimeCategory.minus(stop, start))
 
-
-        //todo Priorität Tutorial > Artikel > Faq
-        // TODO [TR]: aber doch sicher flexibel konfigurierbar, oder ?
         println('5 Suggestion')
         start = new Date()
         //4 Get suggestions, sugg are associated to OS and the user-groups
@@ -406,18 +388,17 @@ class CategoryService {
         stop = new Date()
         println('Benötigte Zeit: ' + TimeCategory.minus(stop, start))
 
-        docMap = docMap.sort { -(it.value.size()) }
-        return docMap
+        docMap.sort { -(it.value.size()) } as HashMap
     }
 
     /**
      * This method will return iterative all associated subcategories to the given category (either Category or Subcategory)
      * @param cat Category you want to search through
-     * @return Array of all found categories
+     * @return
      * @throws Exception
      */
     // TODO [TR]: könnte das nicht auch die getAllSubCats()-Methode tun, z.B. mit einem Parameter "boolean recurse=false"
-    def getIterativeAllSubCats(String catName) throws Exception {
+    List getIterativeAllSubCats(String catName) throws Exception {
         def subs = []
         Category cat = getCategory(catName)
         if (cat) {
@@ -433,14 +414,14 @@ class CategoryService {
 
     /**
      * This method will search for similar docs by checking the connection to the maincategories
-     * You can exclude maincategories for a results. That means, if your first lookup didn't find anything exclude not so much important maincategories and lookup again
+     * You can exclude maincategories for a results. That means, if your first lookup didn't find anything, exclude less important maincategories and search again
      * @param givenDoc
      * @param excludedMainCats
      * @param forFaqs
      * @return
      * @throws Exception
      */
-    def getSameAssociatedDocs(Document givenDoc, String[] excludedMainCats, Boolean forTutorial=false) throws Exception {
+    List getSameAssociatedDocs(Document givenDoc, String[] excludedMainCats, Boolean forTutorial=false) throws Exception {
         //prepare query
         def query = "MATCH (doc:Document) WHERE doc.docTitle='${givenDoc.docTitle}' WITH doc\n"
         excludedMainCats.eachWithIndex { catName, i ->
@@ -453,11 +434,22 @@ class CategoryService {
         //fire query
         Result myResult = Subcategory.cypherStatic(query)
 
-        if (forTutorial) {
-            return myResult.toList(Document).findAll { it instanceof Tutorial && it != givenDoc }
-        } else {
-            return myResult.toList(Document).findAll { it instanceof Faq || (it instanceof Article && it != givenDoc) }
+        if (forTutorial) { return myResult.toList(Document).findAll { it instanceof Tutorial && it != givenDoc } }
+        else { return myResult.toList(Document).findAll { it instanceof Faq || (it instanceof Article && it != givenDoc) } }
+    }
+
+    /**
+     *
+     * @param catNames
+     * @return
+     */
+    List<Subcategory> getSubcategories(String[] catNames) throws IllegalArgumentException {
+        if (!catNames) { throw new IllegalArgumentException("Argument 'catNames' can not be null") }
+        List subCats = []
+        catNames.each { catName ->
+            subCats.add(getCategory(catName))
         }
+        subCats
     }
 
     /**
@@ -468,10 +460,9 @@ class CategoryService {
      * @return
      * @throws Exception
      */
-    // TODO [TR]: "public": Access Scopes in Groovy ?
-    public Subcategory newSubCategory(String catName, Category parentCat, Subcategory[] subCats = null) throws Exception {
-        if (!catName || catName.empty) throw new IllegalArgumentException("Argument 'catName' can not be null or empty")
-        if (!parentCat) throw new IllegalArgumentException("Argument 'mainCat' can not be null")
+    Subcategory newSubCategory(String catName, Category parentCat, Subcategory[] subCats = null) throws IllegalArgumentException {
+        if (!catName || catName.empty) { throw new IllegalArgumentException("Argument 'catName' can not be null or empty") }
+        if (!parentCat) { throw new IllegalArgumentException("Argument 'mainCat' can not be null") }
 
         Subcategory newSub = new Subcategory(name: catName, parentCat: parentCat)
 
@@ -479,6 +470,6 @@ class CategoryService {
             newSub.addToSubCats(sub)
         }
 
-        return newSub.save(flush: true)
+        newSub.save(flush: true)
     }
 }

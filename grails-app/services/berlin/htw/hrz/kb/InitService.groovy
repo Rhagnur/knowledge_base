@@ -13,7 +13,7 @@ class InitService {
     def initTestModell() {
         println('Start init...')
         Random random = new Random()
-        int numberOfDocs = 200
+        int numberOfDocs = 30
 
 
         def myMains = [:]
@@ -65,6 +65,7 @@ class InitService {
                     .addToSubCats(new Subcategory(name: 'mac_108'))
                     .addToSubCats(new Subcategory(name: 'mac_109'))
                     .addToSubCats(new Subcategory(name: 'mac_1010'))
+                    .addToSubCats(new Subcategory(name: 'mac_1011'))
                 )
                 .save()
         myMains.put('os', os)

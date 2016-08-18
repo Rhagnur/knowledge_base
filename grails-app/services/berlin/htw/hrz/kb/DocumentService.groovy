@@ -17,6 +17,9 @@ import grails.transaction.Transactional
 class DocumentService {
 
     //todo: ChangeDocument
+    Document changeDoc(Document oldDoc, Document newDoc) {
+        return null
+    }
 
     /**
      *
@@ -24,12 +27,18 @@ class DocumentService {
      * @return
      * @throws Exception
      */
-    def deleteDoc(Document doc) throws Exception {
+    void deleteDoc(Document doc) throws Exception {
         if (doc instanceof Tutorial) {
             doc.steps?.collect()?.each { step ->
                 step.delete()
             }
         }
+
+        //Vorsichtshalber Prüfung ob noch Linker gefunden werden, falls ja diese unlinken und löschen
+        doc.linker.collect().each { linker ->
+            Linker.unlink(linker.subcat, linker.doc)
+        }
+
         doc.delete()
     }
 
@@ -37,11 +46,11 @@ class DocumentService {
      * This method exports a specific doc in a machine-friendly output
      * @param docTitle
      * @param exportAs Decides which format will be returned, use 'json' or 'xml' for either format
-     * @return
+     * @return chosen document as JSON or XML Object
      * @throws Exception
      */
     def exportDoc(Document doc, String exportAs) throws Exception {
-        if (!doc) throw new IllegalArgumentException("Argument 'doc' can not be null")
+        if (!doc) { throw new IllegalArgumentException("Argument 'doc' can not be null") }
         def output
         if (exportAs == 'json') {
             output = doc as JSON
@@ -50,7 +59,7 @@ class DocumentService {
         } else {
             throw new IllegalArgumentException("No such 'exportAs' argument, please use 'json' or 'xml'.")
         }
-        return output
+        output
     }
 
     /**
@@ -60,11 +69,12 @@ class DocumentService {
      * @throws Exception
      */
     // TODO [TR]: ist der Titel wirklich eine gute Wahl als PK ? Der kann durchaus redundant sein!
-    def getDoc(String docTitle) throws Exception {
-        if (!docTitle || docTitle == '') throw new IllegalArgumentException()
-        def myDoc = Document.findByDocTitle(docTitle)
-        if (myDoc) return myDoc
-        throw new Exception('No such document found')
+    //todo exception
+    Document getDoc(String docTitle) throws Exception {
+        if (!docTitle || docTitle == '') { throw new IllegalArgumentException() }
+        Document myDoc = Document.findByDocTitle(docTitle)
+        if (!myDoc) { throw new Exception('No such document found') }
+        myDoc
     }
 
     /**
@@ -73,64 +83,62 @@ class DocumentService {
      * @return
      * @throws Exception
      */
-    def increaseCounter(Document doc) throws Exception {
-        if (!doc) throw new IllegalArgumentException()
+    //todo exception
+    Document increaseCounter(Document doc) throws Exception {
+        if (!doc) { throw new IllegalArgumentException() }
         doc?.viewCount = doc?.viewCount + 1
         if (!doc?.validate()) {
             doc.errors?.allErrors?.each { log.error(it) }
             throw new Exception('ERROR: Validation of data wasn\'t successfull')
         }
-        return doc.save(flush: true)
+        doc.save(flush: true)
     }
 
     /**
      * This method helps you to create a new article
-     * Attention: Method itself won't save the doc via save() method
      * @param docTitle
      * @param tags
      * @param docContent
      * @return new created document (article)
      * @throws Exception
      */
-    // TODO [TR]: "Attention" leitet in die Irre! (siehe letzte Anweisung der Methode)
-    def newArticle(String docTitle, String docContent, String[] tags) throws Exception {
+    //todo exception
+    Article newArticle(String docTitle, String docContent, String[] tags) throws Exception {
         def temp = new Article(docTitle: docTitle, tags: tags, viewCount: 0, createDate: new Date(), docContent: docContent)
-        if (!temp.validate()) throw new Exception('ERROR: Validation of data wasn\'t successfull')
-        return temp.save(flush: true)
+        if (!temp.validate()) { throw new Exception('ERROR: Validation of data wasn\'t successfull') }
+        temp.save(flush: true)
     }
 
     /**
      * This method helps you to create a new faq
-     * Attention: Method itself won't save the doc via save() method
      * @param docTitle
      * @param tags
      * @param faq
      * @return new created document (faq)
      * @throws Exception
      */
-    // TODO [TR]: "Attention" leitet in die Irre! (siehe letzte Anweisung der Methode)
-    def newFaq(String question, String answer, String[] tags) throws Exception {
+    //todo exception
+    Faq newFaq(String question, String answer, String[] tags) throws Exception {
         def temp = new Faq(docTitle: question, tags: tags, createDate: new Date(), viewCount: 0, question: question, answer: answer)
-        if (!temp.validate()) throw new Exception('ERROR: Validation of data wasn\'t successfull')
-        return temp.save(flush: true)
+        if (!temp.validate()) { throw new Exception('ERROR: Validation of data wasn\'t successfull') }
+        temp.save(flush: true)
     }
 
     /**
      * This method helps you to create a new tutorial
-     * Attention: Method itself won't save the doc via save() method
      * @param docTitle
      * @param tags
      * @param steps
      * @return new created document (tutorial)
      * @throws Exception
      */
-    // TODO [TR]: "Attention" leitet in die Irre! (siehe letzte Anweisung der Methode)
-    def newTutorial(String docTitle, Step[] steps, String[] tags) throws Exception {
+    //todo exception
+    Tutorial newTutorial(String docTitle, Step[] steps, String[] tags) throws Exception {
         def temp = new Tutorial(docTitle: docTitle, tags: tags, viewCount: 0, createDate: new Date())
         steps?.each { step ->
             temp.addToSteps(step)
         }
-        if (!temp.validate()) throw new Exception('ERROR: Validation of data wasn\'t successfull')
-        return temp.save(flush: true)
+        if (!temp.validate()) { throw new Exception('ERROR: Validation of data wasn\'t successfull') }
+        temp.save(flush: true)
     }
 }
