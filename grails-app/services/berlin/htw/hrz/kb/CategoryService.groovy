@@ -4,12 +4,6 @@ import grails.transaction.Transactional
 import groovy.time.TimeCategory
 import org.neo4j.graphdb.Result
 
-import java.rmi.NoSuchObjectException
-
-// TODO [TR]: "public": Access Scopes in Groovy ?
-// TODO [TR]: bessere Typisierung insbesondere in Services ?
-
-
 @Transactional
 /**
  * Service which help you managing all kind of categories (main/sub) and also search for similar or 'user-relevant' documents
@@ -162,29 +156,30 @@ class CategoryService {
     }
 
     /**
-     * This methods will return all documents which are associated with the given subcategories
-     * That mean, that only documents will be returned which are associated with all of the subcategories
-     * @param subs
-     * @return list of found documents
+     * This methods searchs for document (if needed of specific type) which are associated to all given subcategories
+     * @param subs argument CAN NOT be null
+     * @param docTypes argument can be null
+     * @return
      * @throws IllegalArgumentException
      */
     // TODO [TR]: cipher injection ?
     // todo optimuerung anstatt ketzige form, lieber sub0->doc, sub1->doc where sub0.name AND sub1.name, dann fällt each, unique und sort weg
-    List getAllDocsAssociatedToSubCategories(String[] subs) throws IllegalArgumentException {
+    List getAllDocsAssociatedToSubCategories(String[] subs, String[] docTypes) throws IllegalArgumentException {
         if (!subs) throw new IllegalArgumentException("Argument 'subs' can not be null.")
-        def query = "MATCH (sub:Subcategory)-[r*..2]-(doc:Document) WHERE (sub.name='${subs[0]}' "
-        subs = subs.drop(1)
-        subs.each {
-            query += "OR sub.name='${it}'"
+        def query = ""
+        subs.eachWithIndex { String sub, i ->
+            query += "MATCH (sub${i}:Subcategory) WHERE sub${i}.name='${sub}'\n" +
+                    "MATCH (sub${i})-[*..2]-(doc:Document)\n"
         }
-        query += ") RETURN sub.name AS subName, doc"
-        Result result = Subcategory.cypherStatic(query)
-        def myDocs = []
-        result.each {
-            myDocs.add(it.doc as Document)
+        docTypes.eachWithIndex{ docType,  j ->
+            if (j == 0) { query+=' WHERE ' }
+            query += "(doc:${docType})"
+            if (j < docTypes.size() - 1) { query+=' OR ' }
         }
 
-        myDocs.findAll { myDocs.count(it) == (subs.size() + 1) }.unique().sort { it.viewCount }
+        query += " RETURN doc ORDER BY doc.viewCount DESC LIMIT ${NumDocsToShow}"
+        Result result = Subcategory.cypherStatic(query)
+        result.toList(Document)
     }
 
     /**
@@ -379,11 +374,8 @@ class CategoryService {
         start = new Date()
         //4 Get suggestions, sugg are associated to OS and the user-groups
         while (subCatNames && !subCatNames.empty) {
-            def docs = getAllDocsAssociatedToSubCategories(subCatNames as String[]).findAll { it instanceof Tutorial || it instanceof Article }.sort{ -it.viewCount }
+            def docs = getAllDocsAssociatedToSubCategories(subCatNames as String[], ['Tutorial', 'Article'] as String[])
             if (docs && !docs.empty) {
-                if (docs.size() > NumDocsToShow) {
-                    docs = docs.subList(0, NumDocsToShow)
-                }
                 docMap.put('suggestion', docs)
                 break
             } else {
@@ -430,19 +422,23 @@ class CategoryService {
     List getSameAssociatedDocs(Document givenDoc, String[] excludedMainCats, Boolean forTutorial=false) throws IllegalArgumentException {
         if (!excludedMainCats) { throw new IllegalArgumentException("Argument 'excludedMainCats' can not be null") }
         //prepare query
+        def start, end
+        start = new Date()
         def query = "MATCH (doc:Document) WHERE doc.docTitle='${givenDoc.docTitle}' WITH doc\n"
         excludedMainCats.eachWithIndex { catName, i ->
             query += "MATCH (doc)-[*..2]-(sub${i}:Subcategory)\n" +
                      "MATCH (sub${i})-[*]->(main${i}:Category{name:'${catName}'})\n" +
                      "MATCH (sub${i})-[*..2]-(otherDoc:Document)\n"
         }
-        query += "RETURN distinct otherDoc ORDER BY otherDoc.viewCount"
+        if (forTutorial) { query += "WHERE (otherDoc:Tutorial) AND otherDoc.docTitle<>'${givenDoc.docTitle}'\n"}
+        else { query += "WHERE ((otherDoc:Article) OR (otherDoc:Faq)) AND otherDoc.docTitle<>'${givenDoc.docTitle}'\n"}
+        query += "RETURN distinct otherDoc ORDER BY otherDoc.docTitle"
 
         //fire query
         Result myResult = Subcategory.cypherStatic(query)
-
-        if (forTutorial) { return myResult.toList(Document).findAll { it instanceof Tutorial && it != givenDoc } }
-        else { return myResult.toList(Document).findAll { it instanceof Faq || (it instanceof Article && it != givenDoc) } }
+        end = new Date()
+        println('Queryzeit: ' + TimeCategory.minus(end, start))
+        myResult.toList(Document)
     }
 
     /**

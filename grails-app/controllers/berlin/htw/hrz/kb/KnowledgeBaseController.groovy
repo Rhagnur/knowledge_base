@@ -30,25 +30,16 @@ class KnowledgeBaseController {
 
 
     def index() {
-        def start, stop
-        start = new Date()
         if (Category.findAll().empty) {
             initService.initTestModell()
             flash.info = message(code: 'kb.info.testStructureAndDataCreated') as String
         }
-
-        println(request.getHeader('User-Agent'))
-        categoryService.getSubcategories(['didschu', 'lan'] as String[])
-
-        stop = new Date()
-        println('\nSeitenladezeit: '+TimeCategory.minus(stop, start))
 
         [otherDocs: categoryService.getDocsOfInterest(springSecurityService.principal, request), principal: springSecurityService.principal];
     }
 
     //Nicht schön, soll aber auch nur zu Demonstrationszwecken sein, wie eine spätere Suche + Anzeige + Filterung funktionen könnte
     def search () {
-        println(params)
         def docsFound = []
         def filter = []
 
@@ -77,9 +68,6 @@ class KnowledgeBaseController {
 
             temp.each { catName ->
                 filter.add(catName)
-                docsFound.each {
-                    println(it.docTitle + ' # ' + it.linker.subcat.name)
-                }
                 tempDocs += docsFound.findAll { it.linker?.subcat?.name?.contains(catName) }
             }
 
@@ -118,15 +106,13 @@ class KnowledgeBaseController {
     }
 
     def showDoc() {
-        def start, stop, author
+        String author
         def otherDocs = [:]
-        start = new Date()
         Document myDoc = null
 
         //Falls ein anderes Dokument angezeigt werden soll, überschreibe das Default-Test-Dokument
         if (params.docTitle) {
             myDoc = documentService.getDoc(params.docTitle)
-            println('parents ' + myDoc.parentCats)
         }
 
         if (!myDoc) {
@@ -145,9 +131,6 @@ class KnowledgeBaseController {
         }
 
         myDoc = documentService.increaseCounter(myDoc)
-        stop = new Date()
-        println('\nSeitenladezeit: '+TimeCategory.minus(stop, start))
-        println(otherDocs)
         [document: myDoc, author: author, similarDocs: otherDocs, principal: springSecurityService.principal]
     }
 
@@ -183,15 +166,12 @@ class KnowledgeBaseController {
 
     @Secured(["hasAuthority('ROLE_GP-STAFF')", "hasAuthority('ROLE_GP-PROF')"])
     def createCat() {
-        println(params)
         if (params.submit) {
             try {
                 if (!params.catName || params.catName == '') flash.error = message(code: 'kb.error.attrNameCantBeNull') as String
 
 
                 if (!(flash.error)) {
-                    println('Cat anlegen')
-
                     def docSubs = []
 
                     //Get subcats
@@ -238,7 +218,6 @@ class KnowledgeBaseController {
     def findUnlinkedSubCats() {
         def subCats = Subcategory.findAll()
         subCats.removeAll { it.parentCat != null }
-        println(subCats)
         [subCats: subCats, principal: springSecurityService.principal]
     }
 
@@ -255,13 +234,9 @@ class KnowledgeBaseController {
             }
             [cat: params.name?categoryService.getCategory(params.name):null, allCatsByMainCats: all, principal: springSecurityService.principal]
         } else {
-            println(params)
-
             if (!params.catName || params.catName == '') flash.error = message(code: 'kb.error.attrNameCantBeNull') as String
 
-
             if (!(flash.error)) {
-                println('Cat ändern')
                 String[] cats = new String[params.list('checkbox').size()];
                 def myCat = categoryService.getCategory(params.name)
 
@@ -346,12 +321,8 @@ class KnowledgeBaseController {
                     }
                 }
                 else if (params.faq == 'create') {
-                    println('Faq')
                     if (params.question && !params.question.empty && params.answer && !params.answer.empty) {
-                        println('create Faq')
                         doc = documentService.newFaq(params.question as String, params.answer as String, docTags).save()
-                        println('Faq erstellt')
-
                     } else {
                         flash.error = message(code: 'kb.error.fillOutAllFields') as String
                         params.createFaq = 'faq'
@@ -388,7 +359,6 @@ class KnowledgeBaseController {
             }
             all.put(mainCat.name, temp.sort{ it })
         }
-        println('all' + all)
         [cats: all, docType: params.createFaq?'faq':params.createTut?'tutorial':'', principal: springSecurityService.principal]
     }
 

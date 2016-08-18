@@ -11,13 +11,13 @@ class Linker {
     Subcategory subcat
 
     static Linker link (Subcategory sub, Document doc) {
-        Linker linker = Linker.findBySubcatAndDoc(sub, doc)
-        if (!linker) {
-            linker = new Linker()
+        //Linker linker = Linker.findBySubcatAndDoc(sub, doc)
+        //if (!linker) {
+            Linker linker = new Linker()
             sub?.addToLinker(linker)
             doc?.addToLinker(linker)
-            linker.save()
-        }
+            linker.save(flush: true)
+        //}
     }
 
     static void unlink(Subcategory sub, Document doc) {
@@ -25,7 +25,7 @@ class Linker {
         if (linker) {
             sub?.removeFromLinker(linker)
             doc?.removeFromLinker(linker)
-            linker.delete()
+            linker.delete(flush: true)
         }
     }
 }
