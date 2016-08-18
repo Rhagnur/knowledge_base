@@ -20,6 +20,8 @@ class KnowledgeBaseController {
     def Exception(final Exception ex) {
         logException(ex)
         render (view: '/error', model: [exception : ex])
+        //todo vll lieber weiterleitung auf index, damit user weiterarbeiten kann
+        //redirect(view: 'index', model: [otherDocs: categoryService.getDocsOfInterest(springSecurityService.principal, request), principal: springSecurityService.principal])
     }
     private void logException(final Exception ex) {
         log.error("Exception thrown: ${ex?.message}")
@@ -215,6 +217,7 @@ class KnowledgeBaseController {
                 }
             } catch (Exception e) {
                 log.error(e.printStackTrace())
+                flash.error = message (code: 'kb.error.somethingWentWrong') as String
             } finally {
                 redirect(view: 'index', model: [otherDocs: categoryService.getDocsOfInterest(springSecurityService.principal, request), principal: springSecurityService.principal])
             }
@@ -370,6 +373,7 @@ class KnowledgeBaseController {
             }
             catch (Exception e) {
                 log.error(e.printStackTrace())
+                flash.error = message (code: 'kb.error.somethingWentWrong') as String
             }
             finally {
                 redirect(view: 'index', model: [otherDocs: categoryService.getDocsOfInterest(springSecurityService.principal, request), principal: springSecurityService.principal])

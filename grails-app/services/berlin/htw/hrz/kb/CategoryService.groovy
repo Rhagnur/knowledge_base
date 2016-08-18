@@ -29,17 +29,19 @@ class CategoryService {
      * @param doc
      * @param subCats
      * @return
-     * @throws Exception
+     * @throws IllegalArgumentException
+     * @throws ValidationErrorException
      */
-    // TODO [TR]: wrapper für signature Document, Subcategory[]
-    //todo ANPASSSEN AN NEUEN SIGNATUR!!!!!!!!!!!!!!
-    boolean addDoc(Document doc, List<Subcategory> subCats) throws Exception {
+    boolean addDoc(Document doc, List<Subcategory> subCats) throws IllegalArgumentException, ValidationErrorException {
         if (!subCats) { throw new IllegalArgumentException("Argument 'subCats' cant be null") }
 
         //save all the changes, save can't be made earlier, because otherwise it can happened that the doc will be associated with cats before a non-existing cat occurs and exception is thrown
         for (Subcategory cat in subCats) {
-            if (Linker.link(cat, doc) && cat.validate()) { cat.save(flush: true) }
-            else { throw new Exception('Somethinge went wrong') }
+            if (cat.validate()) {
+                Linker.link(cat, doc)
+                cat.save(flush: true)
+            }
+            else { throw new ValidationErrorException('Validation was not successful!') }
         }
         true
     }
@@ -49,15 +51,16 @@ class CategoryService {
      * @param cat
      * @param newName
      * @return
-     * @throws Exception
+     * @throws IllegalArgumentException
+     * @throws ValidationErrorException
      */
-    Category changeCategoryName(Category cat, String newName) throws Exception {
+    Category changeCategoryName(Category cat, String newName) throws IllegalArgumentException, ValidationErrorException {
         if (!newName || newName.empty) { throw new IllegalArgumentException("Argument 'newName' can not be null or empty.") }
         cat.name = newName
 
         if (!cat.validate()) {
             cat.errors?.allErrors?.each { log.error(it) }
-            throw new Exception('Validation of data wasn\'t successfull')
+            throw new ValidationErrorException('Validation for category-data was not successful!')
         }
         cat.save()
     }
@@ -67,16 +70,17 @@ class CategoryService {
      * @param cat
      * @param newParent
      * @return
-     * @throws Exception
+     * @throws IllegalArgumentException
+     * @throws ValidationErrorException
      */
-    Subcategory changeParent(Subcategory cat, Category newParent) throws Exception {
+    Subcategory changeParent(Subcategory cat, Category newParent) throws IllegalArgumentException, ValidationErrorException {
         if (!cat || !newParent) { throw new IllegalArgumentException('Argument can not be null.') }
 
         newParent.removeFromSubCats(cat)
         cat.parentCat = null
         newParent.addToSubCats(cat)
         if (cat.validate && newParent.validate && newParent.save(flush:true)) { cat }
-        else { null }
+        else { throw new ValidationErrorException('Validation for category-data was not successful!') }
     }
 
     /**
@@ -84,9 +88,10 @@ class CategoryService {
      * @param cat
      * @param newCats
      * @return
-     * @throws Exception
+     * @throws ValidationErrorException
      */
-    Category changeSubCats(Category cat, String[] newCats) throws Exception {
+    //todo List of subcats anstatt String[]
+    Category changeSubCats(Category cat, String[] newCats) throws ValidationErrorException {
         def tempCats = []
 
         //Hole benötigte Subcats
@@ -109,15 +114,15 @@ class CategoryService {
         }
 
         if (cat.validate()) { cat.save(flush: true) }
-        else { null }
+        else { throw new ValidationErrorException('Validation for category-data was not successful!') }
     }
 
     /**
      * Delete given category from the database
      * @param cat
-     * @throws Exception
+     * @throws IllegalArgumentException
      */
-    void deleteSubCategory(Subcategory cat) throws Exception {
+    void deleteSubCategory(Subcategory cat) throws IllegalArgumentException {
         if (!cat) { throw new IllegalArgumentException('Argument can not be null') }
         cat.linker.collect().each { linker ->
             Linker.unlink(cat, linker.doc)
@@ -131,9 +136,9 @@ class CategoryService {
      * @param doc
      * @param forFaqs
      * @return hashmap of found documents in format [ faq:[...], article:[...], tutorial:[...] ]
-     * @throws Exception
+     * @throws IllegalArgumentException
      */
-    HashMap getAdditionalDocs(Document doc) throws Exception {
+    HashMap getAdditionalDocs(Document doc) throws IllegalArgumentException {
         def myDocs = [:]
         def start, stop
 
@@ -161,11 +166,11 @@ class CategoryService {
      * That mean, that only documents will be returned which are associated with all of the subcategories
      * @param subs
      * @return list of found documents
-     * @throws Exception
+     * @throws IllegalArgumentException
      */
     // TODO [TR]: cipher injection ?
     // todo optimuerung anstatt ketzige form, lieber sub0->doc, sub1->doc where sub0.name AND sub1.name, dann fällt each, unique und sort weg
-    List getAllDocsAssociatedToSubCategories(String[] subs) throws Exception {
+    List getAllDocsAssociatedToSubCategories(String[] subs) throws IllegalArgumentException {
         if (!subs) throw new IllegalArgumentException("Argument 'subs' can not be null.")
         def query = "MATCH (sub:Subcategory)-[r*..2]-(doc:Document) WHERE (sub.name='${subs[0]}' "
         subs = subs.drop(1)
@@ -201,10 +206,9 @@ class CategoryService {
     /**
      * Getting all associated subcategories for the given category
      * @param catName
-     * @return found main- or subcategory
-     * @throws Exception
+     * @throws IllegalArgumentException
      */
-    List getAllSubCats(Category cat) throws Exception {
+    List getAllSubCats(Category cat) throws IllegalArgumentException {
         if (!cat) { throw new IllegalArgumentException('Argument can not be null') }
         cat.subCats?.findAll()?.toList()
     }
@@ -213,13 +217,14 @@ class CategoryService {
      * Getting a single category by the given name
      * @param catName
      * @return found main- or subcategory
-     * @throws Exception
+     * @throws IllegalArgumentException
+     * @throws NoSuchObjectFoundException
      */
     //todo eigene Exception
-    Category getCategory(String catName) throws Exception {
+    Category getCategory(String catName) throws IllegalArgumentException, NoSuchObjectFoundException {
         if (!catName || catName == '') { throw new IllegalArgumentException("Argument can not be null or empty") }
         def cat = Category.findByName(catName)?:null
-        if (!cat) { throw new NoSuchObjectException("Can not find a category with the name: '${catName}'") }
+        if (!cat) { throw new NoSuchObjectFoundException("Can not find a category with the name: '${catName}'") }
         cat
     }
 
@@ -227,9 +232,9 @@ class CategoryService {
      * Getting the document count of the given category
      * @param catName
      * @return number of associated categories, error-code if something went wrong
-     * @throws Exception
+     * @throws IllegalArgumentException
      */
-    Integer getDocCount(Subcategory cat) throws Exception {
+    Integer getDocCount(Subcategory cat) throws IllegalArgumentException {
         if (!cat) { throw new IllegalArgumentException('Argument can not be null') }
         cat.linker?.doc?.size()
     }
@@ -238,9 +243,9 @@ class CategoryService {
      * Getting all the associated docs from one subcategoy
      * @param cat
      * @return
-     * @throws Exception
+     * @throws IllegalArgumentException
      */
-    List getDocs(Subcategory cat) throws Exception {
+    List getDocs(Subcategory cat) throws IllegalArgumentException {
         if (!cat) { throw new IllegalArgumentException('Argument can not be null') }
         cat.linker.doc.toList()
     }
@@ -255,9 +260,9 @@ class CategoryService {
      * @param userPrincipals
      * @param request
      * @return
-     * @throws Exception
+     * @throws IllegalArgumentException
      */
-    HashMap getDocsOfInterest(def userPrincipals, def request) throws Exception {
+    HashMap getDocsOfInterest(def userPrincipals, def request) throws IllegalArgumentException {
         def subCatNames = []
         HashMap docMap = [:]
         def start, stop, temp
@@ -395,10 +400,11 @@ class CategoryService {
      * This method will return iterative all associated subcategories to the given category (either Category or Subcategory)
      * @param cat Category you want to search through
      * @return
-     * @throws Exception
+     * @throws IllegalArgumentException
+     * @throws NoSuchObjectFoundException
      */
     // TODO [TR]: könnte das nicht auch die getAllSubCats()-Methode tun, z.B. mit einem Parameter "boolean recurse=false"
-    List getIterativeAllSubCats(String catName) throws Exception {
+    List getIterativeAllSubCats(String catName) throws IllegalArgumentException, NoSuchObjectFoundException {
         def subs = []
         Category cat = getCategory(catName)
         if (cat) {
@@ -419,9 +425,10 @@ class CategoryService {
      * @param excludedMainCats
      * @param forFaqs
      * @return
-     * @throws Exception
+     * @throws IllegalArgumentException
      */
-    List getSameAssociatedDocs(Document givenDoc, String[] excludedMainCats, Boolean forTutorial=false) throws Exception {
+    List getSameAssociatedDocs(Document givenDoc, String[] excludedMainCats, Boolean forTutorial=false) throws IllegalArgumentException {
+        if (!excludedMainCats) { throw new IllegalArgumentException("Argument 'excludedMainCats' can not be null") }
         //prepare query
         def query = "MATCH (doc:Document) WHERE doc.docTitle='${givenDoc.docTitle}' WITH doc\n"
         excludedMainCats.eachWithIndex { catName, i ->
@@ -442,6 +449,7 @@ class CategoryService {
      *
      * @param catNames
      * @return
+     * @throws IllegalArgumentException
      */
     List<Subcategory> getSubcategories(String[] catNames) throws IllegalArgumentException {
         if (!catNames) { throw new IllegalArgumentException("Argument 'catNames' can not be null") }
@@ -458,9 +466,10 @@ class CategoryService {
      * @param mainCat
      * @param subCats default null, or a list of subcategory which should be associated with
      * @return
-     * @throws Exception
+     * @throws IllegalArgumentException
+     * @throws ValidationErrorException
      */
-    Subcategory newSubCategory(String catName, Category parentCat, Subcategory[] subCats = null) throws IllegalArgumentException {
+    Subcategory newSubCategory(String catName, Category parentCat, Subcategory[] subCats = null) throws IllegalArgumentException, ValidationErrorException {
         if (!catName || catName.empty) { throw new IllegalArgumentException("Argument 'catName' can not be null or empty") }
         if (!parentCat) { throw new IllegalArgumentException("Argument 'mainCat' can not be null") }
 
@@ -470,6 +479,7 @@ class CategoryService {
             newSub.addToSubCats(sub)
         }
 
-        newSub.save(flush: true)
+        if (newSub.validate()) { newSub.save(flush: true) }
+        else { throw new ValidationErrorException('Validation for category-data was not successful!') }
     }
 }
