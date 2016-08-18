@@ -38,7 +38,7 @@ class DocumentServiceSpec extends Specification {
             doc?.docTitle == 'TestingServiceTutorialNullSteps'
             doc?.tags?.contains('Test')
             doc?.steps == null
-            notThrown Exception
+            notThrown ValidationErrorException
     }
 
     void "test newTutorial with steps"() {
@@ -51,14 +51,14 @@ class DocumentServiceSpec extends Specification {
             doc?.steps != null
             doc?.steps?.find({it.stepTitle == 'TestTitel1'}) != null
             doc?.steps?.find({it.stepTitle == 'TestTitel2'}) != null
-            notThrown Exception
+            notThrown ValidationErrorException
     }
 
     void "test newTutorial validation error"() {
         when:
             def doc = service.newTutorial(null, null, null)
         then:
-            thrown Exception
+            thrown ValidationErrorException
     }
 
     void "test getDoc"() {
@@ -75,7 +75,7 @@ class DocumentServiceSpec extends Specification {
         when:
             def doc = service.getDoc('Nonsens')
         then:
-            thrown Exception
+            notThrown NoSuchObjectFoundException
     }
 
     void "test getDoc null"() {
@@ -107,9 +107,11 @@ class DocumentServiceSpec extends Specification {
         expect:
             doc instanceof Document
         when:
+            String title = doc.docTitle
             service.deleteDoc(doc)
+            service.getDoc(title)
         then:
-            notThrown Exception
+            thrown NoSuchObjectFoundException
     }
 
     void "test export doc as JSON"() {

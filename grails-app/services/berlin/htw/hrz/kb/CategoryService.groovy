@@ -127,7 +127,7 @@ class CategoryService {
         cat.linker.collect().each { linker ->
             Linker.unlink(cat, linker.doc)
         }
-        cat.delete()
+        cat.delete(flush: true)
     }
 
     /**

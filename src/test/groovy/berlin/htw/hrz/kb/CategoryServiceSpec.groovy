@@ -55,7 +55,7 @@ class CategoryServiceSpec extends Specification {
         when:
             def temp = service.getCategory('Nonsense')
         then:
-            thrown NoSuchObjectException
+            thrown NoSuchObjectFoundException
     }
 
     void "test deleteExistingCategory"() {
@@ -65,9 +65,11 @@ class CategoryServiceSpec extends Specification {
             cat instanceof Subcategory
             cat != null
         when:
+            String name = cat.name
             service.deleteSubCategory(cat)
         then:
-            notThrown Exception
+            service.getCategory(name) == null
+            //thrown NoSuchObjectFoundException
     }
 
     void "test deleteNonExistingCategory"() {
@@ -125,9 +127,9 @@ class CategoryServiceSpec extends Specification {
 // todo addSubcat anlegen btw Test anpassen, wird hier eher newSubcat getestet als explizit addSubCat
     void "test addSubCategory null parent"() {
         when:
-        Subcategory sub = service.newSubCategory('Test', null as Category, null)
+            Subcategory sub = service.newSubCategory('Test', null as Category, null)
         then:
-        thrown IllegalArgumentException
+            thrown IllegalArgumentException
     }
 
     void "test getDocCount SubCat with existing Docs"() {
