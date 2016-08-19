@@ -10,14 +10,15 @@ class Linker {
     Document doc
     Subcategory subcat
 
+    //todo
     static Linker link (Subcategory sub, Document doc) {
-        //Linker linker = Linker.findBySubcatAndDoc(sub, doc)
-        //if (!linker) {
-            Linker linker = new Linker()
+        Linker linker = Linker.findBySubcatAndDoc(sub, doc)
+        if (!linker) {
+            linker = new Linker()
             sub?.addToLinker(linker)
             doc?.addToLinker(linker)
             linker.save(flush: true)
-        //}
+        }
     }
 
     static void unlink(Subcategory sub, Document doc) {

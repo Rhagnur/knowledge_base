@@ -5,37 +5,115 @@
 
 package berlin.htw.hrz.kb
 
+import grails.transaction.NotTransactional
 import grails.transaction.Transactional
 import groovy.time.TimeCategory
+import jdk.internal.org.objectweb.asm.tree.MethodNode
+import org.grails.datastore.gorm.neo4j.Neo4jSession
+import org.grails.datastore.gorm.neo4j.Neo4jTransaction
+import org.grails.datastore.gorm.neo4j.engine.Neo4jEntityPersister
+import org.grails.datastore.mapping.core.AbstractSession
+import org.grails.datastore.mapping.dirty.checking.DirtyCheckable
+import org.springframework.dao.InvalidDataAccessResourceUsageException
+import org.springframework.http.converter.AbstractGenericHttpMessageConverter
+
+import javax.persistence.FlushModeType
 
 @Transactional
 class InitService {
+
+
+/*    def flushOMatic(AbstractSession s)  {
+
+        //if(flushActive) return;
+            println "$s.pendingInserts"
+        boolean hasInserts;
+        try {
+
+            // flushActive = true;
+
+            hasInserts = s.hasUpdates();
+            if (!hasInserts) {
+                println "WE HAVE INSERTS"
+                s.flushPendingInserts(s.pendingInserts);
+                s.flushPendingUpdates(s.pendingUpdates);
+                s.flushPendingDeletes(s.pendingDeletes);
+
+                s.firstLevelCollectionCache.clear();
+
+                s.executePendings(s.postFlushOperations);
+            } else {
+                println "SORRY"
+            }
+
+        } finally {
+            s.clearPendingOperations();
+            //flushActive = false;
+        }
+        s.postFlush(hasInserts);
+
+    }
+
+    Neo4jEntityPersister
+        Document.cypherStatic('Match (n) DETACH DELETE n')
+        Neo4jSession.metaClass.cacheFuckup {
+            println pendingInserts
+            println "Persister: ${getPersister(Document)} (${getPersister(Document)?.class})"
+            for (Map<Serializable, Object> cache : firstLevelCache.values()) {
+                //println "value: $cache"
+                for (Object obj: cache.values()) {
+                    if (obj instanceof DirtyCheckable) {
+                        boolean isDirty = ((DirtyCheckable)obj).hasChanged();
+                        if (isDirty) {
+                            //persist(obj);
+                            println "dirty: $obj"
+                        } else {
+                            println "clean: $obj"
+                            persist(obj)
+                        }
+                    } else {
+                        println "not checkable: $obj"
+                    }
+                }
+            }
+        }
+
+        AbstractSession.metaClass.flushOMatic={ -> flushOMatic(delegate) }*/
+
+    @NotTransactional
     def initTestModell() {
+
+
         println('Start init...')
         Random random = new Random()
         def start, stop
         def myDocs = []
-        int numberOfDocs = 40
+        int numberOfDocs = 10
 
         //init docs
         start = new Date()
         for (int i = 0; i < numberOfDocs; i++) {
-            Document doc = null
-            def magicNumber = random.nextInt(6)
-            //println(i +' ' + magicNumber)
+            Document.withSession { session ->
+                session.flushMode = FlushModeType.AUTO
+                Document doc = null
+                def magicNumber = random.nextInt(6)
+                //println(i +' ' + magicNumber)
 
-            //Abfrage mag seltsam anmuten, soll aber dabei helfen die Menge an Dokumenten wie folgt zu halten Anleitungen > FAQ > Artikel
-            if (magicNumber == 0 || magicNumber == 1 || magicNumber == 2) {
-                doc = new Tutorial(docTitle: "Testanleitung${i}", viewCount: random.nextInt(3000), tags: ["Test"], createDate: new Date())
-                for (int j = 0; j < (random.nextInt(10) + 1); j++) {
-                    doc.addToSteps(new Step(number: (j + 1), stepTitle: 'Dies ist ein Titel', stepText: 'Dies ist ein Absatz<br/><ul><li>Punkt 1</li><li>Punkt 2</li></ul><br/><b>Test</b>', mediaLink: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Image_manquante_2.svg/320px-Image_manquante_2.svg.png'))
+                //Abfrage mag seltsam anmuten, soll aber dabei helfen die Menge an Dokumenten wie folgt zu halten Anleitungen > FAQ > Artikel
+                if (magicNumber == 0 || magicNumber == 1 || magicNumber == 2) {
+                    doc = new Tutorial(docTitle: "Testanleitung${i}", viewCount: random.nextInt(3000), tags: ["Test"], createDate: new Date())
+                    for (int j = 0; j < (random.nextInt(10) + 1); j++) {
+                        doc.addToSteps(new Step(number: (j + 1), stepTitle: 'Dies ist ein Titel', stepText: 'Dies ist ein Absatz<br/><ul><li>Punkt 1</li><li>Punkt 2</li></ul><br/><b>Test</b>', mediaLink: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Image_manquante_2.svg/320px-Image_manquante_2.svg.png'))
+                    }
+                } else if (magicNumber == 3 || magicNumber == 4) {
+                    doc = new Faq(docTitle: "Testfrage${i}?", viewCount: random.nextInt(3000), tags: ["Test"], createDate: new Date(), question: "Testfrage${i}?", answer: 'Eine mögliche Lösung wäre <a href="#">Testantwort</a>!')
+                } else {
+                    doc = new Article(docTitle: "Testartikel${i}", viewCount: random.nextInt(3000), tags: ["Test"], createDate: new Date(), docContent: "Dies ist ein Absatz<br/><ul><li>Punkt 1</li><li>Punkt 2</li></ul><br/><b>Test</b><img src='https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Image_manquante_2.svg/320px-Image_manquante_2.svg.png' alt='Testbild' />")
                 }
-            } else if (magicNumber == 3 || magicNumber == 4) {
-                doc = new Faq(docTitle: "Testfrage${i}?", viewCount: random.nextInt(3000), tags: ["Test"], createDate: new Date(), question: "Testfrage${i}?", answer: 'Eine mögliche Lösung wäre <a href="#">Testantwort</a>!')
-            } else {
-                doc = new Article(docTitle: "Testartikel${i}", viewCount: random.nextInt(3000), tags: ["Test"], createDate: new Date(), docContent: "Dies ist ein Absatz<br/><ul><li>Punkt 1</li><li>Punkt 2</li></ul><br/><b>Test</b><img src='https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Image_manquante_2.svg/320px-Image_manquante_2.svg.png' alt='Testbild' />")
-            }
-            myDocs.add(doc.save(flush: true))
+                myDocs.add(doc.save(flush: true))
+                session.flush()
+           }
+
         }
         stop = new Date()
         println('Zeit-InitDocs: ' + TimeCategory.minus(stop, start))
@@ -120,22 +198,27 @@ class InitService {
 
 
         start = new Date()
-        myDocs.eachWithIndex { doc, i ->
-            def starti, stopi
-            starti = new Date()
-            def myGroup = myMainsAll.get('group')
-            def myTheme = myMainsAll.get('theme')
-            def myLang = myMainsAll.get('lang')
-            def myAuthor = myMainsAll.get('author')
-            def myOs = myMainsAll.get('os')
-            Linker.link(myGroup.get(random.nextInt(myGroup.size())),doc)
-            Linker.link(myTheme.get(random.nextInt(myTheme.size())),doc)
-            Linker.link(myLang.get(random.nextInt(myLang.size())),doc)
-            Linker.link(myAuthor.get(random.nextInt(myAuthor.size())),doc)
-            Linker.link(myOs.get(random.nextInt(myOs.size())),doc)
 
-            stopi = new Date()
-            println("${i} : ${TimeCategory.minus(stopi, starti)}")
+        myDocs.eachWithIndex { doc, i ->
+            doc.withSession { session ->
+                def starti, stopi
+                starti = new Date()
+                def myGroup = myMainsAll.get('group')
+                def myTheme = myMainsAll.get('theme')
+                def myLang = myMainsAll.get('lang')
+                def myAuthor = myMainsAll.get('author')
+                def myOs = myMainsAll.get('os')
+                Linker.link(myGroup.get(random.nextInt(myGroup.size())),doc)
+                Linker.link(myTheme.get(random.nextInt(myTheme.size())),doc)
+                Linker.link(myLang.get(random.nextInt(myLang.size())),doc)
+                Linker.link(myAuthor.get(random.nextInt(myAuthor.size())),doc)
+                Linker.link(myOs.get(random.nextInt(myOs.size())),doc)
+                session.flush()
+                session.clear()
+                stopi = new Date()
+                print("${i}/${numberOfDocs} : ${TimeCategory.minus(stopi, starti)}             \r")
+            }
+
         }
         stop = new Date()
         println('Zeit-DocCatRelationsships: ' + TimeCategory.minus(stop, start))
