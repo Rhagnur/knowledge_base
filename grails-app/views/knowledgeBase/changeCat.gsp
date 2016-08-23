@@ -3,7 +3,7 @@
   User: didschu
 --%>
 
-<g:applyLayout name="subPage">
+<g:applyLayout name="main">
     <head>
         <title>Kategorie ändern</title>
     </head>

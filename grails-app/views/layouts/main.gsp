@@ -1,51 +1,70 @@
+<%--
+  Created by IntelliJ IDEA.
+  User: didschu
+--%>
 <!doctype html>
-<html lang="en" class="no-js">
+<html>
 <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
-    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
-    <title>
-        <g:layoutTitle default="Grails"/>
-    </title>
-    <meta name="viewport" content="width=device-width, initial-scale=1"/>
-
-    <asset:stylesheet src="application.css"/>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title><g:layoutTitle default="Knowledge Base"/></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <asset:stylesheet src="mainKB.css"/>
+    <asset:javascript src="mainKB.js"/>
 
     <g:layoutHead/>
 </head>
+
 <body>
+<header class="header" role="banner">
+    <section id="menubar-secondary">Platzhalter Header</section>
+    <section id="menubar-primary">Platzhalter Title, Image and Navigation</section>
+</header>
 
-    <div class="navbar navbar-default navbar-static-top" role="navigation">
-        <div class="container">
-            <div class="navbar-header">
-                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-                    <span class="sr-only">Toggle navigation</span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                </button>
-                <a class="navbar-brand" href="/#">
-                    <i class="fa grails-icon">
-                        <asset:image src="grails-cupsonly-logo-white.svg"/>
-                    </i> Grails
-                </a>
-            </div>
-            <div class="navbar-collapse collapse" aria-expanded="false" style="height: 0.8px;">
-                <ul class="nav navbar-nav navbar-right">
-                    <g:pageProperty name="page.nav" />
-                </ul>
-            </div>
-        </div>
+<article id="page">
+    <!--nav id="nav-context" role="navigation">
+        <section id="subnav">
+            Blablabla Navi hier
+        </section>
+    </nav-->
+    <g:pageProperty name="page.navigation"/>
+    <div id="main">
+        <g:if test="${flash.error}">
+            <div class="alert alert-error" style="display: block">${flash.error}</div><br/><br/>
+        </g:if>
+        <g:if test="${flash.info}">
+            <div class="alert alert-error" style="display: block">${flash.info}</div><br/><br/>
+        </g:if>
+        <g:pageProperty name="page.main"/>
     </div>
-
-    <g:layoutBody/>
-
-    <div class="footer" role="contentinfo"></div>
-
-    <div id="spinner" class="spinner" style="display:none;">
-        <g:message code="spinner.alt" default="Loading&hellip;"/>
+    <div id="sidebar">
+        <sec:ifLoggedIn>
+            <p>Sie sind angemeldet als <b>${principal.fullname}</b>!</p>
+            <form action="/logout">
+                <g:submitButton name="submit" value="Ausloggen"/>
+            </form>
+        </sec:ifLoggedIn>
+        <sec:ifNotLoggedIn>
+            <form action="/login/authenticate" method="POST" autocomplete="off" id="loginForm">
+                <label for="username">Benutzername</label><br/>
+                <g:textField name="username"/><br/><br/>
+                <label for="password">Passwort:</label><br/>
+                <g:passwordField name="password"/><br/><br/>
+                <g:submitButton name="submit" value="Einloggen"/>
+            </form>
+        </sec:ifNotLoggedIn>
     </div>
+    <div class="clear"></div>
+</article>
 
-    <asset:javascript src="application.js"/>
 
+<div id="footer">Platzhalter Footer</div>
+<asset:javascript src="jquery-2.2.0.min.js"/>
+<asset:javascript src="stupidtable.min.js"/>
+<script>
+    $( document ).ready(function() {
+        $("#search-results-table").stupidtable();
+    });
+</script>
 </body>
 </html>

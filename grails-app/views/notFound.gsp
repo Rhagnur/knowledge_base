@@ -1,4 +1,4 @@
-<g:applyLayout name="subPage">
+<g:applyLayout name="main">
     <head>
         <title>NOT FOUND</title>
     </head>
