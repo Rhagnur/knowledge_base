@@ -16,10 +16,7 @@ import grails.transaction.Transactional
  */
 class DocumentService {
 
-    //todo: ChangeDocument
-    Document changeDoc(Document oldDoc, Document newDoc) {
-        return null
-    }
+    //todo: changeTitle, changeTags, changeContent, ...Steps,Faq..bla
 
     /**
      *

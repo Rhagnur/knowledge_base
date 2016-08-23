@@ -7,29 +7,51 @@ package berlin.htw.hrz.kb
 import grails.plugin.springsecurity.annotation.Secured
 import groovy.time.TimeCategory
 
-
 @Secured("IS_AUTHENTICATED_ANONYMOUSLY")
 class KnowledgeBaseController {
 
+    //todo: Rausfinden ob forward oder redirect
+    //todo: Logik der Formularauswertung und grober Datenbearbeitung hier oder in Service???
     DocumentService documentService
     CategoryService categoryService
     InitService initService
     def springSecurityService
+    Date start, stop
 
     // Start global exception handling
-    def Exception(final Exception ex) {
+    /**
+     * Global exception handler method. Thanks to this methods you do not need a try/catch in every method which is using service methods that can throw exceptions
+     * @param ex
+     */
+    void Exception(final Exception ex) {
         logException(ex)
-        render (view: '/error', model: [exception : ex])
-        //todo vll lieber weiterleitung auf index, damit user weiterarbeiten kann
-        //redirect(view: 'index', model: [otherDocs: categoryService.getDocsOfInterest(springSecurityService.principal, request), principal: springSecurityService.principal])
+
+        def temp = ""
+        if (ex instanceof IllegalArgumentException) {
+            temp = message(code:'kb.error.illegalArgument')
+        } else if (ex instanceof NoSuchObjectFoundException) {
+            temp = message(code:'kb.error.noSuchObject')
+        } else if (ex instanceof ValidationErrorException) {
+            temp = message(code:'kb.error.validationError')
+        } else {
+            temp = message(code:'kb.error.general')
+        }
+
+        temp += ex.message
+        flash.error = temp
+        forward(view: 'index', model: [otherDocs: categoryService.getDocsOfInterest(springSecurityService.principal, request), principal: springSecurityService.principal])
     }
+    /**
+     *
+     * @param ex
+     */
     private void logException(final Exception ex) {
         log.error("Exception thrown: ${ex?.message}")
     }
     //End global exception handling
 
-
     def index() {
+        //Falls keine Hauptkategorie angelegt ist, lege Struktur mit Testdokuemten an
         if (Category.findAll().empty) {
             initService.initTestModell()
             flash.info = message(code: 'kb.info.testStructureAndDataCreated') as String
@@ -39,6 +61,7 @@ class KnowledgeBaseController {
     }
 
     //Nicht schön, soll aber auch nur zu Demonstrationszwecken sein, wie eine spätere Suche + Anzeige + Filterung funktionen könnte
+    //Ansonsten wäre es sinnvoller, die Logik in Service Methoden auszulagern
     def search () {
         def docsFound = []
         def filter = []
@@ -48,6 +71,8 @@ class KnowledgeBaseController {
             redirect(view: 'index', model: [otherDocs: categoryService.getDocsOfInterest(springSecurityService.principal, request), principal: springSecurityService.principal])
         }
         else if (params.searchBar && params.searchBar.length() >= 3) {
+            //Suche über die Eigenschaften der einzelnen Dokumente
+            //Dieser Entwurf ist recht langsam, wird aber später, durch die Volltextsuche der HTW Berlin ersetzt
             docsFound.addAll(Document.findAllByDocTitleIlike("%$params.searchBar%"))
             docsFound.addAll(Step.findAllByStepTitleIlike("%$params.searchBar%").doc)
             docsFound.addAll(Step.findAllByStepTextIlike("%$params.searchBar%").doc)
@@ -55,12 +80,11 @@ class KnowledgeBaseController {
             docsFound.addAll(Faq.findAllByAnswerIlike("%$params.searchBar%"))
             docsFound.addAll(Article.findAllByDocContentIlike("%$params.searchBar%"))
             docsFound.sort { it.viewCount }.unique{ it.docTitle }
-        } else {
-            docsFound.addAll(Document.findAll().sort{it.steps})
         }
+        else { docsFound.addAll(Document.findAll().sort{it.steps}) }
 
         //Filtere die Ergebnisse
-        if (params.list('checkbox').size() > 0) {
+        if (!params.list('checkbox').empty) {
             def tempDocs = []
 
             String[] cats = new String[params.list('checkbox').size()];
@@ -76,6 +100,7 @@ class KnowledgeBaseController {
         }
 
 
+        //todo: vll lieber als Methode im Service
         def all = [:]
         categoryService.getAllMainCats().each { mainCat ->
             def temp = []
@@ -87,51 +112,46 @@ class KnowledgeBaseController {
         [searchBar: params.searchBar ,foundDocs: docsFound ,principal: springSecurityService.principal, allCatsByMainCats: all, filter: filter]
     }
 
+    @Secured(["hasAuthority('ROLE_GP-STAFF')", "hasAuthority('ROLE_GP-PROF')"])
     def deleteDoc() {
         if (params.docTitle) {
             Document doc = documentService.getDoc(params.docTitle)
             if (doc) {
                 documentService.deleteDoc(doc)
                 flash.info = "Dokument '${params.docTitle}' wurde gelöscht"
-            } else {
-                flash.error = message(code: 'kb.error.noSuchDocument') as String
             }
-
-
-            redirect(view: 'index', model: [otherDocs: categoryService.getDocsOfInterest(springSecurityService.principal, request), principal: springSecurityService.principal])
-        } else {
-            flash.error = message(code: 'kb.error.attrDocTitleNotFound') as String
+            else { flash.error = message(code: 'kb.error.noSuchDocument') as String }
         }
-
+        else { flash.error = message(code: 'kb.error.attrDocTitleNotFound') as String }
+        redirect(view: 'index', model: [otherDocs: categoryService.getDocsOfInterest(springSecurityService.principal, request), principal: springSecurityService.principal])
     }
 
     def showDoc() {
+        Document myDoc = null
         String author
         def otherDocs = [:]
-        Document myDoc = null
 
-        //Falls ein anderes Dokument angezeigt werden soll, überschreibe das Default-Test-Dokument
         if (params.docTitle) {
             myDoc = documentService.getDoc(params.docTitle)
-        }
+            if (myDoc) {
+                myDoc = documentService.increaseCounter(myDoc)
+                if (!(myDoc instanceof Faq)) {
+                    otherDocs = categoryService.getAdditionalDocs(myDoc)
+                }
 
-        if (!myDoc) {
-            flash.error = message(code: 'kb.error.noSuchDocument') as String
+                //author = Subcategory.findAllByParentCat(Category.findByName('author')).find{it.docs.contains(myDoc)}?.name
+                author = myDoc.linker.find{ it.subcat?.parentCat?.name == 'author' }?.subcat?.name
+                if (!author) { author = 'Kein Autor gefunden' }
+            }
+            else { flash.error = message(code: 'kb.error.noSuchDocument') as String }
+        }
+        else { flash.error = message(code: 'kb.error.attrDocTitleNotFound') as String }
+
+        if (flash.error) {
             forward(view: 'index', model: [otherDocs: categoryService.getDocsOfInterest(springSecurityService.principal, request), principal: springSecurityService.principal])
+        } else {
+            [document: myDoc, author: author, similarDocs: otherDocs, principal: springSecurityService.principal]
         }
-
-        if (!(myDoc instanceof Faq)) {
-            otherDocs = categoryService.getAdditionalDocs(myDoc)
-        }
-
-        //author = Subcategory.findAllByParentCat(Category.findByName('author')).find{it.docs.contains(myDoc)}?.name
-        author = myDoc.linker.find{ it.subcat?.parentCat?.name == 'author' }?.subcat?.name
-        if (!author) {
-            author = 'Kein Autor gefunden'
-        }
-
-        myDoc = documentService.increaseCounter(myDoc)
-        [document: myDoc, author: author, similarDocs: otherDocs, principal: springSecurityService.principal]
     }
 
     def showCat() {
@@ -145,64 +165,48 @@ class KnowledgeBaseController {
     @Secured(["hasAuthority('ROLE_GP-STAFF')", "hasAuthority('ROLE_GP-PROF')"])
     def deleteCat() {
         if (params.name) {
-            try {
-                Category cat = categoryService.getCategory(params.name)
-                if (cat instanceof Subcategory) {
-                    categoryService.deleteSubCategory(cat)
-                    flash.info = message(code: 'kb.info.catDeleted') as String
-                } else {
-                    flash.error = message(code: 'kb.error.cantDeleteMainCat') as String
-                }
-            } catch (Exception e) {
-                flash.error = message(code: 'kb.error.somethingWentWrong') as String
-                e.printStackTrace()
+            Category cat = categoryService.getCategory(params.name)
+            if (cat) {
+                categoryService.deleteSubCategory(cat)
+                flash.info = message(code: 'kb.info.catDeleted') as String
             }
+            else { flash.error = message(code: 'kb.error.noSuchCategorie') as String }
         }
-        else {
-            flash.error = message(code: 'kb.error.attrNameNotFound') as String
-        }
+        else { flash.error = message(code: 'kb.error.attrNameNotFound') as String }
         redirect(view: 'index', model: [otherDocs: categoryService.getDocsOfInterest(springSecurityService.principal, request), principal: springSecurityService.principal])
     }
 
     @Secured(["hasAuthority('ROLE_GP-STAFF')", "hasAuthority('ROLE_GP-PROF')"])
+    //todo: logik auslagern?
     def createCat() {
+        //Falls createCat Form abgeschickt wurde, bearbeite Daten und erstelle Subkategorie
         if (params.submit) {
-            try {
-                if (!params.catName || params.catName == '') flash.error = message(code: 'kb.error.attrNameCantBeNull') as String
+            if (!params.catName) { flash.error = message(code: 'kb.error.attrNameCantBeNull') as String }
+            else {
+                def docSubs = []
 
-
-                if (!(flash.error)) {
-                    def docSubs = []
-
-                    //Get subcats
-                    if (params.list('checkbox').size() > 0) {
-                        String[] cats = new String[params.list('checkbox').size()];
-                        def temp = params.list('checkbox').toArray(cats) as String[]
-                        temp.each {
-                            docSubs.add(categoryService.getCategory(it))
-                        }
+                //Hole angeklickte Subkategorienamen und erstelle damit eine Liste der angeklickten Subkategorien
+                if (!params.list('checkbox').empty) {
+                    String[] cats = new String[params.list('checkbox').size()];
+                    def temp = params.list('checkbox').toArray(cats) as String[]
+                    temp.each {
+                        docSubs.add(categoryService.getCategory(it))
                     }
-
-                    //get parentCat
-                    Category newParent = categoryService.getCategory(params.parentCat)
-
-                    //create new subcat
-                    if (categoryService.newSubCategory(params.catName as String, newParent, docSubs as Subcategory[])) {
-                        flash.info = message(code: 'kb.info.catCreated') as String
-                        redirect(view: 'index', model: [otherDocs: categoryService.getDocsOfInterest(springSecurityService.principal, request), principal: springSecurityService.principal])
-                    } else {
-                        flash.error = message(code: 'kb.error.somethingWentWrong') as String
-                    }
-
                 }
-            } catch (Exception e) {
-                log.error(e.printStackTrace())
-                flash.error = message (code: 'kb.error.somethingWentWrong') as String
-            } finally {
-                redirect(view: 'index', model: [otherDocs: categoryService.getDocsOfInterest(springSecurityService.principal, request), principal: springSecurityService.principal])
-            }
 
+                //Hole die Elternkategorie, kann auch null sein, falls keine gegeben
+                Category newParent = categoryService.getCategory(params.parentCat)
+
+                //Erstelle neue Subkategorie
+                if (categoryService.newSubCategory(params.catName as String, newParent, docSubs as Subcategory[])) {
+                    flash.info = message(code: 'kb.info.catCreated') as String
+                }
+                else { flash.error = message(code: 'kb.error.somethingWentWrong') as String }
+
+            }
+            redirect(view: 'index', model: [otherDocs: categoryService.getDocsOfInterest(springSecurityService.principal, request), principal: springSecurityService.principal])
         }
+        //todo: methode in service
         def all = [:]
         categoryService.getAllMainCats().each { mainCat ->
             def temp = []
@@ -215,6 +219,7 @@ class KnowledgeBaseController {
     }
 
     @Secured(["hasAuthority('ROLE_GP-STAFF')", "hasAuthority('ROLE_GP-PROF')"])
+    //todo: logik auslagern?
     def findUnlinkedSubCats() {
         def subCats = Subcategory.findAll()
         subCats.removeAll { it.parentCat != null }
@@ -222,77 +227,72 @@ class KnowledgeBaseController {
     }
 
     @Secured(["hasAuthority('ROLE_GP-STAFF')", "hasAuthority('ROLE_GP-PROF')"])
+    //todo: logik auslagern?
     def changeCat() {
-        if (!params.submit) {
-            def all = [:]
-            categoryService.getAllMainCats().each { mainCat ->
-                def temp = []
-                categoryService.getIterativeAllSubCats(mainCat.name).each { cat ->
-                    temp.add(cat.name as String)
-                }
-                all.put(mainCat.name, temp.sort{ it })
-            }
-            [cat: params.name?categoryService.getCategory(params.name):null, allCatsByMainCats: all, principal: springSecurityService.principal]
-        } else {
-            if (!params.catName || params.catName == '') flash.error = message(code: 'kb.error.attrNameCantBeNull') as String
-
-            if (!(flash.error)) {
-                String[] cats = new String[params.list('checkbox').size()];
-                def myCat = categoryService.getCategory(params.name)
+        if (params.submit) {
+            if (!params.catName) { flash.error = message(code: 'kb.error.attrNameCantBeNull') as String }
+            else {
+                Category myCat = categoryService.getCategory(params.name)
 
                 if (myCat instanceof Subcategory){
-
                     if(params.parentCat && myCat.parentCat.name != params.parentCat) {
                         Category newParent = categoryService.getCategory(params.parentCat)
                         myCat = categoryService.changeParent(myCat, newParent)
                     }
-
-                    if (cats) {
+                    if (!params.list('checkbox').empty) {
+                        String[] cats = new String[params.list('checkbox').size()];
                         def docSubs = params.list('checkbox').toArray(cats)
                         myCat = categoryService.changeSubCats(myCat, docSubs as String[])
                     }
-
                     if (params.catName && params.catName != myCat.name) {
                         myCat = categoryService.changeCategoryName(myCat, params.catName)
                     }
 
-
                     if (myCat) {
                         flash.info = message(code: 'kb.info.catChanged') as String
-                    } else {
-                        flash.error = message(code: 'kb.error.somethingWentWrong') as String
                     }
-
-                }  else {
-                    flash.error = message(code: 'kb.error.cantDeleteMainCat') as String
+                    else { flash.error = message(code: 'kb.error.somethingWentWrong') as String }
                 }
-
+                else { flash.error = message(code: 'kb.error.cantDeleteOrChangeMainCat') as String }
                 redirect(view: 'index', model: [otherDocs: categoryService.getDocsOfInterest(springSecurityService.principal, request), principal: springSecurityService.principal])
             }
         }
-
+        def all = [:]
+        categoryService.getAllMainCats().each { mainCat ->
+            def temp = []
+            categoryService.getIterativeAllSubCats(mainCat.name).each { cat ->
+                temp.add(cat.name as String)
+            }
+            all.put(mainCat.name, temp.sort{ it })
+        }
+        [cat: params.name?categoryService.getCategory(params.name):null, allCatsByMainCats: all, principal: springSecurityService.principal]
     }
 
     @Secured(["hasAuthority('ROLE_GP-STAFF')", "hasAuthority('ROLE_GP-PROF')"]) //Für optinale Erweiterung "Autoren" später Abfrage, ob User als Autor eingetragen ist
+    //todo: logik auslagern?
+    //todo: autor = eingeloggter user, sprache = deutsch
     def createDoc() {
         if (params.submit) {
-            try {
-                def docSubs = null
-                String[] docTags
-                Document doc = null
+            def docSubs = null
+            String[] docTags
+            Document doc = null
 
-                //Verarbeite Daten, welche alle Dokumente gemeinsam haben
+            //Verarbeite Daten, welche alle Dokumente gemeinsam haben
+            //Hole und Verarbeite Tags
+            if (params.docTags) {
                 String tags = params.docTags
                 docTags = tags.split(",")
-                //Hole Subkategorien, repräsentiert durch Checkboxen und erzeuge eine Liste aus den ausgewählten
-                if (params.list('checkbox').empty) {
-                    flash.error = message(code: 'kb.error.noSubCatGiven') as String
-                } else {
-                    String[] cats = new String[params.list('checkbox').size()];
-                    docSubs = params.list('checkbox').toArray(cats);
-                }
+            }
+            //Hole Subkategorien, repräsentiert durch Checkboxen und erzeuge eine Liste aus den ausgewählten
+            if (params.list('checkbox').empty) {
+                flash.error = message(code: 'kb.error.noSubCatGiven') as String
+            } else {
+                String[] cats = new String[params.list('checkbox').size()];
+                docSubs = params.list('checkbox').toArray(cats);
+            }
 
-                //Verarbeite dokumentspezifische Daten (Tutorial: verarbeite einzelne Steps, FAQ: verarbeite Frage-Antwort)
+            //Verarbeite dokumentspezifische Daten (Tutorial: verarbeite einzelne Steps, FAQ: verarbeite Frage-Antwort)
+            if (!flash.error) {
                 if (params.tutorial == 'create') {
                     def allAttrs = params.findAll{it.key =~ /step[A-Za-z]+_[1-9]/}
 
@@ -334,23 +334,14 @@ class KnowledgeBaseController {
 
                 //}
 
-
                 if (!flash.error) {
                     categoryService.addDoc(doc, categoryService.getSubcategories(docSubs as String[]))
                     flash.info = message(code: 'kb.info.docCreated') as String
                     redirect(view: 'index', model: [otherDocs: categoryService.getDocsOfInterest(springSecurityService.principal, request), principal: springSecurityService.principal])
                 }
-                redirect(view: 'index', model: [otherDocs: categoryService.getDocsOfInterest(springSecurityService.principal, request), principal: springSecurityService.principal])
-            }
-            catch (Exception e) {
-                log.error(e.printStackTrace())
-                flash.error = message (code: 'kb.error.somethingWentWrong') as String
-            }
-            finally {
-                redirect(view: 'index', model: [otherDocs: categoryService.getDocsOfInterest(springSecurityService.principal, request), principal: springSecurityService.principal])
             }
         }
-
+        //todo: logik auslagern?
         def all = [:]
         categoryService.getAllMainCats().each { mainCat ->
             def temp = []
