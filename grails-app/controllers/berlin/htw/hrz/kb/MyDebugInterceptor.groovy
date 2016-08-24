@@ -1,3 +1,6 @@
+/*
+ * Created by didschu
+ */
 package berlin.htw.hrz.kb
 
 import groovy.time.TimeCategory

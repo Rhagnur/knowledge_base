@@ -1,17 +1,30 @@
+/*
+ * Created by didschu
+ */
 package berlin.htw.hrz.kb
 
+/**
+ * Domainclass that represents a single Faq
+ */
 class Faq extends Document {
 
     static mapWith = "neo4j"
 
     static constraints = {
-        question nullable: true
-        answer nullable: true
+        question nullable: false
+        answer nullable: false
     }
 
     static mapping = {
         answer type: "text"
     }
 
-    String question, answer
+    /**
+     * Not optional
+     */
+    String question
+    /**
+     * Not optional
+     */
+    String answer
 }

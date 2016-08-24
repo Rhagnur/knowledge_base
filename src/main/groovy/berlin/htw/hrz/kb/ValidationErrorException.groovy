@@ -1,8 +1,11 @@
+/*
+ * Created by didschu
+ */
 package berlin.htw.hrz.kb
 
 /**
- * Created by didschu on 18.08.16.
- */
+* custom exception
+*/
 class ValidationErrorException extends Exception {
     ValidationErrorException() {}
     ValidationErrorException(String message) { super(message) }

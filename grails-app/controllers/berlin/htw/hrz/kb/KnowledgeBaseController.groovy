@@ -7,6 +7,9 @@ package berlin.htw.hrz.kb
 import grails.plugin.springsecurity.SpringSecurityService
 import grails.plugin.springsecurity.annotation.Secured
 
+/**
+ * Controller class for handling the requests, redirects and processing data given from the views
+ */
 @Secured("IS_AUTHENTICATED_ANONYMOUSLY")
 class KnowledgeBaseController {
 

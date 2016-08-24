@@ -6,6 +6,10 @@ import grails.converters.XML
 
 class BootStrap {
 
+    /*
+    * Edited by didschu
+    * Marshaller eingerichtet für JSON und XML, um Schwierigkeiten bei 'nested data' zu umgehen und zudem unnötige Informationen zu verhindern und nützliche einzupflegen
+    */
     def init = { servletContext ->
         JSON.registerObjectMarshaller(Document) { doc ->
             def output = [:]

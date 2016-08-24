@@ -15,6 +15,10 @@ class Application extends GrailsAutoConfiguration implements EnvironmentAware {
         GrailsApp.run(Application, args)
     }
 
+    /*
+    * Edited by didschu
+    * Laden einer externen config-Datei
+    */
     @Override
     void setEnvironment(Environment environment) {
         def configBase = System.getenv('GRAILS_CONFIG_LOCATION') ?: System.getProperty('user.home') + '/.kbjan' ?: "/etc/kbjan/config"

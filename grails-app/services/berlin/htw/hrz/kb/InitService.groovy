@@ -1,6 +1,5 @@
 /*
-  Created by IntelliJ IDEA.
-  User: didschu
+ * Created by didschu
  */
 
 package berlin.htw.hrz.kb
@@ -19,6 +18,9 @@ import org.springframework.http.converter.AbstractGenericHttpMessageConverter
 
 import javax.persistence.FlushModeType
 
+/**
+ * This service class is only for debugging purpose. It creates the structure of all categories and subcategories and also some documents for testing.
+ */
 @Transactional
 class InitService {
 

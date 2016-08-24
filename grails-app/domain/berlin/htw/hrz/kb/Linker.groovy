@@ -1,5 +1,13 @@
+/*
+ * Created by didschu
+ */
 package berlin.htw.hrz.kb
 
+/**
+ * Domainclass that represents a single Linker-element.
+ * It's needed for providing a link between a single document and a subcategory.
+ * Without it the many to many relationship will provide side effects.
+ */
 class Linker {
 
     static constraints = {
@@ -7,10 +15,15 @@ class Linker {
         subcat nullable: true
     }
 
+    /**
+     * reference to a document
+     */
     Document doc
+    /**
+     * reference to a subcategory
+     */
     Subcategory subcat
 
-    //todo
     static Linker link (Subcategory sub, Document doc) {
         Linker linker = Linker.findBySubcatAndDoc(sub, doc)
         if (!linker) {

@@ -1,10 +1,13 @@
+/*
+ * Created by didschu
+ */
 package berlin.htw.hrz.kb
 
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.userdetails.User
 
 /**
- * Created by didschu on 14.07.16.
+ * Needed for extending the principal data of the user
  */
 class MyUserDetails extends User {
 

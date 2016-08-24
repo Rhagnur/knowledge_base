@@ -1,5 +1,11 @@
+/*
+ * Created by didschu
+ */
 package berlin.htw.hrz.kb
 
+/**
+ * Domainclass that represents a single article-document
+ */
 class Article extends Document {
 
     static mapping = {
@@ -7,8 +13,11 @@ class Article extends Document {
     }
 
     static constraints = {
-        docContent nullable: true
+        docContent nullable: false
     }
 
+    /**
+     * Not optional
+     */
     String docContent
 }

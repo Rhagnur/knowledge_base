@@ -1,5 +1,11 @@
+/*
+ * Created by didschu
+ */
 package berlin.htw.hrz.kb
 
+/**
+ * Domainclass that represents a single step
+ */
 class Step {
 
     static mapWith = "neo4j"
@@ -12,8 +18,25 @@ class Step {
     static constraints = {
         mediaLink nullable: true
     }
+    /**
+     * reference to the parent-document
+     */
     static belongsTo = [doc: Document]
 
+    /**
+     * Not optional
+     */
     int number;
-    String stepTitle, stepText, mediaLink;
+    /**
+     * Not optional
+     */
+    String stepTitle
+    /**
+     * Not optional
+     */
+    String stepText
+    /**
+     * optional, can be null
+     */
+    String mediaLink;
 }

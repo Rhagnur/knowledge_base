@@ -1,6 +1,5 @@
 /*
-  Created by IntelliJ IDEA.
-  User: didschu
+ * Created by didschu
  */
 
 package berlin.htw.hrz.kb
@@ -10,10 +9,11 @@ import grails.converters.XML
 import grails.transaction.Transactional
 
 
-@Transactional
+
 /**
  * Service which help you to manage the different types of documents
  */
+@Transactional
 class DocumentService {
 
     //todo: changeTitle, changeTags, changeContent, ...Steps,Faq..bla

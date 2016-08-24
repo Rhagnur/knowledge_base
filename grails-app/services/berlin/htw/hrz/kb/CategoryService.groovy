@@ -1,3 +1,6 @@
+/*
+ * Created by didschu
+ */
 package berlin.htw.hrz.kb
 
 import grails.transaction.Transactional
@@ -5,13 +8,16 @@ import groovy.time.TimeCategory
 import org.neo4j.graphdb.GraphDatabaseService
 import org.neo4j.graphdb.Result
 
-@Transactional
+
 /**
  * Service which help you managing all kind of categories (main/sub) and also search for similar or 'user-relevant' documents
  */
+@Transactional
 class CategoryService {
 
-    //def springSecurityService
+    /**
+     * Injection for getting access to the graphDatabaseService object. Necessary to execute self build queries.
+     */
     GraphDatabaseService graphDatabaseService
 
     /**
