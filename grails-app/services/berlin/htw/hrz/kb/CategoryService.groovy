@@ -2,6 +2,7 @@ package berlin.htw.hrz.kb
 
 import grails.transaction.Transactional
 import groovy.time.TimeCategory
+import org.neo4j.graphdb.GraphDatabaseService
 import org.neo4j.graphdb.Result
 
 @Transactional
@@ -11,6 +12,7 @@ import org.neo4j.graphdb.Result
 class CategoryService {
 
     //def springSecurityService
+    GraphDatabaseService graphDatabaseService
 
     /**
      * Number of documents which should be returned, so that not all found docs will be returned
@@ -80,30 +82,20 @@ class CategoryService {
     /**
      * Change the associated subcategories for the given category
      * @param cat
-     * @param newCats
+     * @param newSubcats
      * @return
      * @throws ValidationErrorException
      */
-    //todo List of subcats anstatt String[]
-    Category changeSubCats(Category cat, String[] newCats) throws ValidationErrorException {
-        def tempCats = []
-
-        //Hole benötigte Subcats
-        for (cn in newCats) {
-            Subcategory temp = getCategory(cn)
-            tempCats.add(temp)
-        }
-
+    Category changeSubCats(Category cat, List<Subcategory> newSubcats) throws ValidationErrorException {
         //räume alte Verweise auf
-        // TODO [TR]: ist collect() hier nicht überflüssig ?
-        cat.subCats.collect().each {
+        cat.subCats.each {
             it.parentCat = null
             it.save(flush: true)
         }
         cat.subCats.clear()
 
         //setze neue Beziehungen
-        tempCats.each {
+        newSubcats.each {
             cat.addToSubCats(it)
         }
 
@@ -162,23 +154,27 @@ class CategoryService {
      * @return
      * @throws IllegalArgumentException
      */
-    // TODO [TR]: cipher injection ?
-    // todo optimuerung anstatt ketzige form, lieber sub0->doc, sub1->doc where sub0.name AND sub1.name, dann fällt each, unique und sort weg
     List getAllDocsAssociatedToSubCategories(String[] subs, String[] docTypes) throws IllegalArgumentException {
         if (!subs) throw new IllegalArgumentException("Argument 'subs' can not be null.")
         def query = ""
+        def queryParams = [:]
         subs.eachWithIndex { String sub, i ->
-            query += "MATCH (sub${i}:Subcategory) WHERE sub${i}.name='${sub}'\n" +
+            query += "MATCH (sub${i}:Subcategory) WHERE sub${i}.name='{sub${i}}'\n" +
                     "MATCH (sub${i})-[*..2]-(doc:Document)\n"
+            queryParams.put("sub${i}" as String, sub)
         }
-        docTypes.eachWithIndex{ docType,  j ->
-            if (j == 0) { query+=' WHERE ' }
+        docTypes.eachWithIndex{ String docType,  i ->
+            //Muss leider so umständlich gemacht werden, da das Label nicht parametrisiert werden kann, execute() wirft sonst einen Fehler
+            if (docType!= 'Tutorial' && docType!='Article' && docType!='Faq') { throw new IllegalArgumentException("Wrong argument given in 'docTypes[]'!") }
+            if (i == 0) { query+='WHERE ' }
             query += "(doc:${docType})"
-            if (j < docTypes.size() - 1) { query+=' OR ' }
+            if (i < docTypes.size() - 1) { query+=' OR ' }
         }
 
-        query += " RETURN doc ORDER BY doc.viewCount DESC LIMIT ${NumDocsToShow}"
-        Result result = Subcategory.cypherStatic(query)
+        query += "\nRETURN doc ORDER BY doc.viewCount DESC LIMIT ${NumDocsToShow}"
+        //println(query)
+        //println(queryParams)
+        Result result = graphDatabaseService.execute(query, queryParams)
         result.toList(Document)
     }
 
@@ -188,6 +184,25 @@ class CategoryService {
      */
     List getAllMainCats() {
         Category.findAll()?.findAll { !(it instanceof Subcategory) }
+    }
+
+    /**
+     * Getting all categories with all of its associated subcategories
+     * @param excludedCat
+     * @return Map of all found entries, where key is the category and the value the associated subcategories
+     */
+    HashMap getAllMaincatsWithSubcats(List<Category> excludedCat = null) {
+        def all = [:]
+        getAllMainCats().each { Category mainCat ->
+            def temp = []
+            if (!excludedCat?.contains(mainCat)) {
+                getIterativeAllSubCats(mainCat.name).each { cat ->
+                    temp.add(cat.name as String)
+                }
+                all.put(mainCat.name, temp.sort{ it })
+            }
+        }
+        all
     }
 
     /**
@@ -207,6 +222,8 @@ class CategoryService {
         if (!cat) { throw new IllegalArgumentException('Argument can not be null') }
         cat.subCats?.findAll()?.toList()
     }
+
+
 
     /**
      * Getting a single category by the given name
@@ -395,7 +412,6 @@ class CategoryService {
      * @throws IllegalArgumentException
      * @throws NoSuchObjectFoundException
      */
-    // TODO [TR]: könnte das nicht auch die getAllSubCats()-Methode tun, z.B. mit einem Parameter "boolean recurse=false"
     List getIterativeAllSubCats(String catName) throws IllegalArgumentException, NoSuchObjectFoundException {
         def subs = []
         Category cat = getCategory(catName)
@@ -423,19 +439,24 @@ class CategoryService {
         if (!excludedMainCats) { throw new IllegalArgumentException("Argument 'excludedMainCats' can not be null") }
         //prepare query
         def start, end
+        def queryParams = [:]
         start = new Date()
         def query = "MATCH (doc:Document) WHERE doc.docTitle='${givenDoc.docTitle}' WITH doc\n"
-        excludedMainCats.eachWithIndex { catName, i ->
+        excludedMainCats.eachWithIndex { String catName, i ->
             query += "MATCH (doc)-[*..2]-(sub${i}:Subcategory)\n" +
-                     "MATCH (sub${i})-[*]->(main${i}:Category{name:'${catName}'})\n" +
+                     "MATCH (sub${i})-[*]->(main${i}:Category{name:{catName${i}}})\n" +
                      "MATCH (sub${i})-[*..2]-(otherDoc:Document)\n"
+            queryParams.put("catName${i}" as String, catName)
         }
         if (forTutorial) { query += "WHERE (otherDoc:Tutorial) AND otherDoc.docTitle<>'${givenDoc.docTitle}'\n"}
         else { query += "WHERE ((otherDoc:Article) OR (otherDoc:Faq)) AND otherDoc.docTitle<>'${givenDoc.docTitle}'\n"}
         query += "RETURN distinct otherDoc ORDER BY otherDoc.docTitle"
 
         //fire query
-        Result myResult = Subcategory.cypherStatic(query)
+        //println(query)
+        //println(queryParams)
+        //Result myResult = Subcategory.cypherStatic(query)
+        Result myResult = graphDatabaseService.execute(query, queryParams)
         end = new Date()
         println('Queryzeit: ' + TimeCategory.minus(end, start))
         myResult.toList(Document)

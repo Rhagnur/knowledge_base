@@ -16,9 +16,10 @@
             <p>Name: ${cat.name}</p>
             <p>Typ: ${cat.getClass().simpleName}</p>
             <g:if test="${cat instanceof berlin.htw.hrz.kb.Subcategory}">
-                <g:link controller="KnowledgeBase" action="changeCat" params="[name:cat.name]">Kategoriedetails ändern</g:link><br/><br/>
-                <g:link controller="KnowledgeBase" action="deleteCat" params="[name:cat.name]">Kategorie löschen(ohne Bestätigung!)</g:link>
+                <sec:link controller="KnowledgeBase" action="changeCat" params="[name:cat.name]">Kategoriedetails ändern</sec:link><br/>
+                <sec:link controller="KnowledgeBase" action="deleteCat" params="[name:cat.name]">Kategorie löschen(ohne Bestätigung!)</sec:link><br/>
             </g:if>
+            <sec:link controller="KnowledgeBase" action="createCat" params="[originName:cat.name]">Neue Subkategorie anlegen</sec:link><br/>
 
             <g:if test="${cat.parentCat}">
                 <h2>Eltern-Knoten</h2>

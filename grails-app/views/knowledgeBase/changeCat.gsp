@@ -27,24 +27,6 @@
                     </g:each>
                 </select>
             </g:if>
-            <br/><br/><br/>
-            <p>Kindsknoten:</p>
-            <g:each in="${allCatsByMainCats}">
-                <g:if test="${it.value != null}">
-                    <div class="cat-checkbox-holder">
-                        <p>'${it.key}' - Subkategorien</p>
-                        <g:each var="myCat" in="${it.value}">
-                            <div class="cat-checkbox">
-                                <g:checkBox name="checkbox" value="${myCat}" checked="${(cat.subCats?.find{ it.name == myCat})?'true':'false'}"/>
-                                <label for="checkbox">${myCat}</label>
-                            </div>
-                        </g:each>
-                        <div class="clear"></div>
-                    </div>
-                </g:if>
-            </g:each>
-
-
             <div class="clear"></div>
             <br/><br/>
             <g:submitButton name="submit" value="submit">Speichern</g:submitButton>

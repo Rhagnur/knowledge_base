@@ -4,8 +4,8 @@
  */
 package berlin.htw.hrz.kb
 
+import grails.plugin.springsecurity.SpringSecurityService
 import grails.plugin.springsecurity.annotation.Secured
-import groovy.time.TimeCategory
 
 @Secured("IS_AUTHENTICATED_ANONYMOUSLY")
 class KnowledgeBaseController {
@@ -15,8 +15,7 @@ class KnowledgeBaseController {
     DocumentService documentService
     CategoryService categoryService
     InitService initService
-    def springSecurityService
-    Date start, stop
+    SpringSecurityService springSecurityService
 
     // Start global exception handling
     /**
@@ -50,12 +49,17 @@ class KnowledgeBaseController {
     }
     //End global exception handling
 
+    /**
+     *
+     * @return
+     */
     def index() {
         //Falls keine Hauptkategorie angelegt ist, lege Struktur mit Testdokuemten an
         if (Category.findAll().empty) {
             initService.initTestModell()
             flash.info = message(code: 'kb.info.testStructureAndDataCreated') as String
         }
+        println springSecurityService.principal
 
         [otherDocs: categoryService.getDocsOfInterest(springSecurityService.principal, request), principal: springSecurityService.principal];
     }
@@ -98,18 +102,7 @@ class KnowledgeBaseController {
             docsFound.removeAll { it == null }
             docsFound = tempDocs.findAll { tempDocs.count(it) == (temp.size()) }.unique().sort { it.viewCount }
         }
-
-
-        //todo: vll lieber als Methode im Service
-        def all = [:]
-        categoryService.getAllMainCats().each { mainCat ->
-            def temp = []
-            categoryService.getIterativeAllSubCats(mainCat.name).each { cat ->
-                temp.add(cat.name as String)
-            }
-            all.put(mainCat.name, temp.sort{ it })
-        }
-        [searchBar: params.searchBar ,foundDocs: docsFound ,principal: springSecurityService.principal, allCatsByMainCats: all, filter: filter]
+        [searchBar: params.searchBar ,foundDocs: docsFound ,principal: springSecurityService.principal, allCatsByMainCats: categoryService.getAllMaincatsWithSubcats(), filter: filter]
     }
 
     @Secured(["hasAuthority('ROLE_GP-STAFF')", "hasAuthority('ROLE_GP-PROF')"])
@@ -139,7 +132,6 @@ class KnowledgeBaseController {
                     otherDocs = categoryService.getAdditionalDocs(myDoc)
                 }
 
-                //author = Subcategory.findAllByParentCat(Category.findByName('author')).find{it.docs.contains(myDoc)}?.name
                 author = myDoc.linker.find{ it.subcat?.parentCat?.name == 'author' }?.subcat?.name
                 if (!author) { author = 'Kein Autor gefunden' }
             }
@@ -177,28 +169,16 @@ class KnowledgeBaseController {
     }
 
     @Secured(["hasAuthority('ROLE_GP-STAFF')", "hasAuthority('ROLE_GP-PROF')"])
-    //todo: logik auslagern?
     def createCat() {
         //Falls createCat Form abgeschickt wurde, bearbeite Daten und erstelle Subkategorie
         if (params.submit) {
             if (!params.catName) { flash.error = message(code: 'kb.error.attrNameCantBeNull') as String }
             else {
-                def docSubs = []
-
-                //Hole angeklickte Subkategorienamen und erstelle damit eine Liste der angeklickten Subkategorien
-                if (!params.list('checkbox').empty) {
-                    String[] cats = new String[params.list('checkbox').size()];
-                    def temp = params.list('checkbox').toArray(cats) as String[]
-                    temp.each {
-                        docSubs.add(categoryService.getCategory(it))
-                    }
-                }
-
-                //Hole die Elternkategorie, kann auch null sein, falls keine gegeben
+                //Hole die Elternkategorie
                 Category newParent = categoryService.getCategory(params.parentCat)
 
                 //Erstelle neue Subkategorie
-                if (categoryService.newSubCategory(params.catName as String, newParent, docSubs as Subcategory[])) {
+                if (categoryService.newSubCategory(params.catName as String, newParent)) {
                     flash.info = message(code: 'kb.info.catCreated') as String
                 }
                 else { flash.error = message(code: 'kb.error.somethingWentWrong') as String }
@@ -206,16 +186,7 @@ class KnowledgeBaseController {
             }
             redirect(view: 'index', model: [otherDocs: categoryService.getDocsOfInterest(springSecurityService.principal, request), principal: springSecurityService.principal])
         }
-        //todo: methode in service
-        def all = [:]
-        categoryService.getAllMainCats().each { mainCat ->
-            def temp = []
-            categoryService.getIterativeAllSubCats(mainCat.name).each { cat ->
-                temp.add(cat.name as String)
-            }
-            all.put(mainCat.name, temp.sort{ it })
-        }
-        [cat: params.name?categoryService.getCategory(params.name):null, allCatsByMainCats: all, principal: springSecurityService.principal]
+        [cat: params.name?categoryService.getCategory(params.name):null, allCatsByMainCats: categoryService.getAllMaincatsWithSubcats(), principal: springSecurityService.principal, origin: params.originName]
     }
 
     @Secured(["hasAuthority('ROLE_GP-STAFF')", "hasAuthority('ROLE_GP-PROF')"])
@@ -227,7 +198,6 @@ class KnowledgeBaseController {
     }
 
     @Secured(["hasAuthority('ROLE_GP-STAFF')", "hasAuthority('ROLE_GP-PROF')"])
-    //todo: logik auslagern?
     def changeCat() {
         if (params.submit) {
             if (!params.catName) { flash.error = message(code: 'kb.error.attrNameCantBeNull') as String }
@@ -238,11 +208,6 @@ class KnowledgeBaseController {
                     if(params.parentCat && myCat.parentCat.name != params.parentCat) {
                         Category newParent = categoryService.getCategory(params.parentCat)
                         myCat = categoryService.changeParent(myCat, newParent)
-                    }
-                    if (!params.list('checkbox').empty) {
-                        String[] cats = new String[params.list('checkbox').size()];
-                        def docSubs = params.list('checkbox').toArray(cats)
-                        myCat = categoryService.changeSubCats(myCat, docSubs as String[])
                     }
                     if (params.catName && params.catName != myCat.name) {
                         myCat = categoryService.changeCategoryName(myCat, params.catName)
@@ -257,23 +222,16 @@ class KnowledgeBaseController {
                 redirect(view: 'index', model: [otherDocs: categoryService.getDocsOfInterest(springSecurityService.principal, request), principal: springSecurityService.principal])
             }
         }
-        def all = [:]
-        categoryService.getAllMainCats().each { mainCat ->
-            def temp = []
-            categoryService.getIterativeAllSubCats(mainCat.name).each { cat ->
-                temp.add(cat.name as String)
-            }
-            all.put(mainCat.name, temp.sort{ it })
-        }
-        [cat: params.name?categoryService.getCategory(params.name):null, allCatsByMainCats: all, principal: springSecurityService.principal]
+        [cat: params.name?categoryService.getCategory(params.name):null, allCatsByMainCats: categoryService.getAllMaincatsWithSubcats(), principal: springSecurityService.principal]
     }
 
-    @Secured(["hasAuthority('ROLE_GP-STAFF')", "hasAuthority('ROLE_GP-PROF')"]) //Für optinale Erweiterung "Autoren" später Abfrage, ob User als Autor eingetragen ist
+    @Secured(["hasAuthority('ROLE_GP-STAFF')", "hasAuthority('ROLE_GP-PROF')"]) //Für optionale Erweiterung "Autoren" später Abfrage, ob User als Autor eingetragen ist
     //todo: logik auslagern?
     //todo: autor = eingeloggter user, sprache = deutsch
     def createDoc() {
+        println("params: ${params}")
         if (params.submit) {
-            def docSubs = null
+            def docSubs = []
             String[] docTags
             Document doc = null
 
@@ -287,28 +245,26 @@ class KnowledgeBaseController {
             if (params.list('checkbox').empty) {
                 flash.error = message(code: 'kb.error.noSubCatGiven') as String
             } else {
-                String[] cats = new String[params.list('checkbox').size()];
-                docSubs = params.list('checkbox').toArray(cats);
+                String[] cats = new String[params.list('checkbox').size()]
+                docSubs.addAll(params.list('checkbox').toArray(cats))
+                docSubs.add(springSecurityService.principal.username)
             }
 
             //Verarbeite dokumentspezifische Daten (Tutorial: verarbeite einzelne Steps, FAQ: verarbeite Frage-Antwort)
             if (!flash.error) {
                 if (params.tutorial == 'create') {
-                    def allAttrs = params.findAll{it.key =~ /step[A-Za-z]+_[1-9]/}
+                    //find all necessary steps data
+                    def allTitles = params.findAll{it.key =~ /stepTitle_[0-9]+/}
+                    def allTexts = params.findAll{it.key =~ /stepText_[0-9]+/}
+                    def allLinks = params.findAll{it.key =~ /stepLink_[0-9]+/}
 
-                    if (allAttrs.containsValue('') || allAttrs.containsValue(null) || !params.docTitle || params.docTitle.empty) {
+                    if (allTitles && allTitles.size() != allTexts?.size() || !params.docTitle) {
                         flash.error = message(code: 'kb.error.fillOutAllFields') as String
                         params.createTut = 'tutorial'
                     } else {
                         def steps = []
-
-                        //find all necessary steps data
-                        def allTitles = allAttrs.findAll{it.key =~ /stepTitle_[1-9]/}
-                        def allTexts = allAttrs.findAll{it.key =~ /stepText_[1-9]/}
-                        def allLinks = allAttrs.findAll{it.key =~ /stepLink_[1-9]/}
-
                         //Verarbeite einzelne Steps
-                        if (allTitles.size() == allTexts.size() && allTitles.size() == allLinks.size()) {
+                        if (allTitles.size() == allTexts.size()) {
                             for (int i = 1; i <= allTitles.size(); i++) {
                                 steps.add(new Step(number: i, stepTitle: allTitles.get(/stepTitle_/+i), stepText: allTexts.get(/stepText_/+i), mediaLink: allLinks.get(/stepLink_/+i) ))
                             }
@@ -322,7 +278,7 @@ class KnowledgeBaseController {
                 }
                 else if (params.faq == 'create') {
                     if (params.question && !params.question.empty && params.answer && !params.answer.empty) {
-                        doc = documentService.newFaq(params.question as String, params.answer as String, docTags).save()
+                        doc = documentService.newFaq(params.question as String, params.answer as String, docTags)
                     } else {
                         flash.error = message(code: 'kb.error.fillOutAllFields') as String
                         params.createFaq = 'faq'
@@ -341,16 +297,7 @@ class KnowledgeBaseController {
                 }
             }
         }
-        //todo: logik auslagern?
-        def all = [:]
-        categoryService.getAllMainCats().each { mainCat ->
-            def temp = []
-            categoryService.getIterativeAllSubCats(mainCat.name).each { cat ->
-                temp.add(cat.name as String)
-            }
-            all.put(mainCat.name, temp.sort{ it })
-        }
-        [cats: all, docType: params.createFaq?'faq':params.createTut?'tutorial':'', principal: springSecurityService.principal]
+        [cats: categoryService.getAllMaincatsWithSubcats([categoryService.getCategory('author')] as List), docType: params.createFaq?'faq':params.createTut?'tutorial':'', principal: springSecurityService.principal]
     }
 
     /**
@@ -358,8 +305,8 @@ class KnowledgeBaseController {
      * @return rendered JSON or XML text
      */
     def exportDoc() {
-        if (!params.docTitle && !params.exportAs) render("Error: Not enough arguments, 'docTitle' or 'exportAs' missing. Possible solutions for 'exportAs': 'json'/'xml'")
-        if (params.exportAs != 'json' && params.exportAs != 'xml') render("Error: Wrong argument for 'exportAs', supported are 'exportAs=json' or 'exportAs=xml'")
+        if (!params.docTitle && !params.exportAs) { render("Error: Not enough arguments, 'docTitle' or 'exportAs' missing. Possible solutions for 'exportAs': 'json'/'xml'") }
+        if (params.exportAs != 'json' && params.exportAs != 'xml') { render("Error: Wrong argument for 'exportAs', supported are 'exportAs=json' or 'exportAs=xml'") }
 
         render (text: documentService.exportDoc(documentService.getDoc(params.docTitle), params.exportAs as String), encoding: 'UTF-8', contentType: "application/${params.exportAs}")
     }
