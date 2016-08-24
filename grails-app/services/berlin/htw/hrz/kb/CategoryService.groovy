@@ -28,9 +28,9 @@ class CategoryService {
 
     /**
      * Adding the given doc to the given subcategories
-     * @param doc
-     * @param subCats
-     * @return
+     * @param a single document to add to subcategories
+     * @param list of subcategories where the doc should be added
+     * @return true if operation was successful
      * @throws IllegalArgumentException
      * @throws ValidationErrorException
      */
@@ -50,13 +50,13 @@ class CategoryService {
 
     /**
      * Change the name of the given category
-     * @param cat
-     * @param newName
-     * @return
+     * @param subcategory which should be changed
+     * @param new name of the subcategory
+     * @return subcategory if successful
      * @throws IllegalArgumentException
      * @throws ValidationErrorException
      */
-    Category changeCategoryName(Category cat, String newName) throws IllegalArgumentException, ValidationErrorException {
+    Category changeCategoryName(Subcategory cat, String newName) throws IllegalArgumentException, ValidationErrorException {
         if (!newName || newName.empty) { throw new IllegalArgumentException("Argument 'newName' can not be null or empty.") }
         cat.name = newName
 
@@ -69,9 +69,9 @@ class CategoryService {
 
     /**
      * Changes the parent of the given category
-     * @param cat
-     * @param newParent
-     * @return
+     * @param subcategory which should be changed
+     * @param new parent for the subcategory
+     * @return subcategory if successful
      * @throws IllegalArgumentException
      * @throws ValidationErrorException
      */
@@ -87,9 +87,9 @@ class CategoryService {
 
     /**
      * Change the associated subcategories for the given category
-     * @param cat
-     * @param newSubcats
-     * @return
+     * @param subcategory which should be changed
+     * @param list of new subcategories which should be associated
+     * @return subcategory if successful
      * @throws ValidationErrorException
      */
     Category changeSubCats(Category cat, List<Subcategory> newSubcats) throws ValidationErrorException {
@@ -111,7 +111,7 @@ class CategoryService {
 
     /**
      * Delete given category from the database
-     * @param cat
+     * @param subcategory which should be deleted
      * @throws IllegalArgumentException
      */
     void deleteSubCategory(Subcategory cat) throws IllegalArgumentException {
@@ -125,8 +125,7 @@ class CategoryService {
     /**
      * This method will search für additional documents (if forFaqs = false) for the given document, so you get a set of other relevant documents
      * or a set of Faqs (if forFaqs = true) which share the same associated subcategories
-     * @param doc
-     * @param forFaqs
+     * @param document which should be used to find related documents for
      * @return hashmap of found documents in format [ faq:[...], article:[...], tutorial:[...] ]
      * @throws IllegalArgumentException
      */
@@ -155,9 +154,9 @@ class CategoryService {
 
     /**
      * This methods searchs for document (if needed of specific type) which are associated to all given subcategories
-     * @param subs argument CAN NOT be null
-     * @param docTypes argument can be null
-     * @return
+     * @param string array of subcategory-names, CAN NOT be null
+     * @param string array of doctype-names, can be null
+     * @return list of found documents
      * @throws IllegalArgumentException
      */
     List getAllDocsAssociatedToSubCategories(String[] subs, String[] docTypes) throws IllegalArgumentException {
@@ -185,8 +184,8 @@ class CategoryService {
     }
 
     /**
-     * Return all existing maincategories
-     * @return
+     * Return all existing categories that are not instance of subcategory
+     * @return list of all found categories
      */
     List getAllMainCats() {
         Category.findAll()?.findAll { !(it instanceof Subcategory) }
@@ -194,7 +193,7 @@ class CategoryService {
 
     /**
      * Getting all categories with all of its associated subcategories
-     * @param excludedCat
+     * @param list of excluded categories, can be null
      * @return Map of all found entries, where key is the category and the value the associated subcategories
      */
     HashMap getAllMaincatsWithSubcats(List<Category> excludedCat = null) {
@@ -212,8 +211,8 @@ class CategoryService {
     }
 
     /**
-     * Return all existing subcategories
-     * @return
+     * Returns all existing subcategories
+     * @return list of all found subcategories
      */
     List getAllSubCats() {
         Subcategory.findAll()?.toList()
@@ -221,7 +220,8 @@ class CategoryService {
 
     /**
      * Getting all associated subcategories for the given category
-     * @param catName
+     * @param name of the category from which you want all associated subcategories (depth: 1)
+     * @return list of all found subcategories
      * @throws IllegalArgumentException
      */
     List getAllSubCats(Category cat) throws IllegalArgumentException {
@@ -233,12 +233,11 @@ class CategoryService {
 
     /**
      * Getting a single category by the given name
-     * @param catName
+     * @param name of the subcategory
      * @return found main- or subcategory
      * @throws IllegalArgumentException
      * @throws NoSuchObjectFoundException
      */
-    //todo eigene Exception
     Category getCategory(String catName) throws IllegalArgumentException, NoSuchObjectFoundException {
         if (!catName || catName == '') { throw new IllegalArgumentException("Argument can not be null or empty") }
         def cat = Category.findByName(catName)?:null
@@ -248,7 +247,7 @@ class CategoryService {
 
     /**
      * Getting the document count of the given category
-     * @param catName
+     * @param name of the subcategory
      * @return number of associated categories, error-code if something went wrong
      * @throws IllegalArgumentException
      */
@@ -277,7 +276,7 @@ class CategoryService {
      * For every category there will be only the first five documents shown sorted by the view-count.
      * @param userPrincipals
      * @param request
-     * @return
+     * @return hashmap of found results. Format can be like [<os_name>:list<docs>, <groud_name>:list<docs>,...]
      * @throws IllegalArgumentException
      */
     HashMap getDocsOfInterest(def userPrincipals, def request) throws IllegalArgumentException {
@@ -413,8 +412,8 @@ class CategoryService {
 
     /**
      * This method will return iterative all associated subcategories to the given category (either Category or Subcategory)
-     * @param cat Category you want to search through
-     * @return
+     * @param category you want to search through
+     * @return ist of all found subcategories
      * @throws IllegalArgumentException
      * @throws NoSuchObjectFoundException
      */
@@ -435,10 +434,10 @@ class CategoryService {
     /**
      * This method will search for similar docs by checking the connection to the maincategories
      * You can exclude maincategories for a results. That means, if your first lookup didn't find anything, exclude less important maincategories and search again
-     * @param givenDoc
-     * @param excludedMainCats
-     * @param forFaqs
-     * @return
+     * @param document to look up for
+     * @param array-string for categories which should be excluded
+     * @param optional parameter
+     * @return list of found documents
      * @throws IllegalArgumentException
      */
     List getSameAssociatedDocs(Document givenDoc, String[] excludedMainCats, Boolean forTutorial=false) throws IllegalArgumentException {
@@ -469,9 +468,9 @@ class CategoryService {
     }
 
     /**
-     *
-     * @param catNames
-     * @return
+     * Getting all subcategories from a array of names
+     * @param string-array of given names
+     * @return list of found subcategories
      * @throws IllegalArgumentException
      */
     List<Subcategory> getSubcategories(String[] catNames) throws IllegalArgumentException {
@@ -485,10 +484,10 @@ class CategoryService {
 
     /**
      * Adding a new subcategory to the database
-     * @param catName
-     * @param mainCat
-     * @param subCats default null, or a list of subcategory which should be associated with
-     * @return
+     * @param name of the new subcategory
+     * @param parent of the new subcategory, can be a category or a subcategory
+     * @param default null, or a list of subcategory which should be associated with
+     * @return subcategory if successful
      * @throws IllegalArgumentException
      * @throws ValidationErrorException
      */
