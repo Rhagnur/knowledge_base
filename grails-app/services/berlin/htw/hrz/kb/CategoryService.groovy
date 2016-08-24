@@ -28,8 +28,8 @@ class CategoryService {
 
     /**
      * Adding the given doc to the given subcategories
-     * @param a single document to add to subcategories
-     * @param list of subcategories where the doc should be added
+     * @param doc single document to add to subcategories
+     * @param subCats of subcategories where the doc should be added
      * @return true if operation was successful
      * @throws IllegalArgumentException
      * @throws ValidationErrorException
@@ -50,8 +50,8 @@ class CategoryService {
 
     /**
      * Change the name of the given category
-     * @param subcategory which should be changed
-     * @param new name of the subcategory
+     * @param cat subcategory which should be changed
+     * @param newName new name of the subcategory
      * @return subcategory if successful
      * @throws IllegalArgumentException
      * @throws ValidationErrorException
@@ -69,8 +69,8 @@ class CategoryService {
 
     /**
      * Changes the parent of the given category
-     * @param subcategory which should be changed
-     * @param new parent for the subcategory
+     * @param cat subcategory which should be changed
+     * @param newParent new parent for the subcategory
      * @return subcategory if successful
      * @throws IllegalArgumentException
      * @throws ValidationErrorException
@@ -87,8 +87,8 @@ class CategoryService {
 
     /**
      * Change the associated subcategories for the given category
-     * @param subcategory which should be changed
-     * @param list of new subcategories which should be associated
+     * @param cat subcategory which should be changed
+     * @param newSubcats list of new subcategories which should be associated
      * @return subcategory if successful
      * @throws ValidationErrorException
      */
@@ -111,7 +111,7 @@ class CategoryService {
 
     /**
      * Delete given category from the database
-     * @param subcategory which should be deleted
+     * @param cat subcategory which should be deleted
      * @throws IllegalArgumentException
      */
     void deleteSubCategory(Subcategory cat) throws IllegalArgumentException {
@@ -125,7 +125,7 @@ class CategoryService {
     /**
      * This method will search für additional documents (if forFaqs = false) for the given document, so you get a set of other relevant documents
      * or a set of Faqs (if forFaqs = true) which share the same associated subcategories
-     * @param document which should be used to find related documents for
+     * @param doc document which should be used to find related documents for
      * @return hashmap of found documents in format [ faq:[...], article:[...], tutorial:[...] ]
      * @throws IllegalArgumentException
      */
@@ -154,8 +154,8 @@ class CategoryService {
 
     /**
      * This methods searchs for document (if needed of specific type) which are associated to all given subcategories
-     * @param string array of subcategory-names, CAN NOT be null
-     * @param string array of doctype-names, can be null
+     * @param subs string array of subcategory-names, CAN NOT be null
+     * @param docTypes string array of doctype-names, can be null
      * @return list of found documents
      * @throws IllegalArgumentException
      */
@@ -193,14 +193,14 @@ class CategoryService {
 
     /**
      * Getting all categories with all of its associated subcategories
-     * @param list of excluded categories, can be null
+     * @param excludedCats list of excluded categories, can be null
      * @return Map of all found entries, where key is the category and the value the associated subcategories
      */
-    HashMap getAllMaincatsWithSubcats(List<Category> excludedCat = null) {
+    HashMap getAllMaincatsWithSubcats(List<Category> excludedCats = null) {
         def all = [:]
         getAllMainCats().each { Category mainCat ->
             def temp = []
-            if (!excludedCat?.contains(mainCat)) {
+            if (!excludedCats?.contains(mainCat)) {
                 getIterativeAllSubCats(mainCat.name).each { cat ->
                     temp.add(cat.name as String)
                 }
@@ -220,7 +220,7 @@ class CategoryService {
 
     /**
      * Getting all associated subcategories for the given category
-     * @param name of the category from which you want all associated subcategories (depth: 1)
+     * @param cat name of the category from which you want all associated subcategories (depth: 1)
      * @return list of all found subcategories
      * @throws IllegalArgumentException
      */
@@ -233,7 +233,7 @@ class CategoryService {
 
     /**
      * Getting a single category by the given name
-     * @param name of the subcategory
+     * @param catName name of the subcategory
      * @return found main- or subcategory
      * @throws IllegalArgumentException
      * @throws NoSuchObjectFoundException
@@ -247,7 +247,7 @@ class CategoryService {
 
     /**
      * Getting the document count of the given category
-     * @param name of the subcategory
+     * @param cat name of the subcategory
      * @return number of associated categories, error-code if something went wrong
      * @throws IllegalArgumentException
      */
@@ -257,9 +257,9 @@ class CategoryService {
     }
 
     /**
-     * Getting all the associated docs from one subcategoy
-     * @param cat
-     * @return
+     * Getting all the associated docs from one subcategory
+     * @param cat subcategory for looking up for documents
+     * @return list of found documents
      * @throws IllegalArgumentException
      */
     List getDocs(Subcategory cat) throws IllegalArgumentException {
@@ -412,7 +412,7 @@ class CategoryService {
 
     /**
      * This method will return iterative all associated subcategories to the given category (either Category or Subcategory)
-     * @param category you want to search through
+     * @param catName category you want to search through
      * @return ist of all found subcategories
      * @throws IllegalArgumentException
      * @throws NoSuchObjectFoundException
@@ -434,9 +434,9 @@ class CategoryService {
     /**
      * This method will search for similar docs by checking the connection to the maincategories
      * You can exclude maincategories for a results. That means, if your first lookup didn't find anything, exclude less important maincategories and search again
-     * @param document to look up for
-     * @param array-string for categories which should be excluded
-     * @param optional parameter
+     * @param givenDoc document to look up for
+     * @param excludedMainCats array-string for categories which should be excluded
+     * @param forTutorial optional parameter
      * @return list of found documents
      * @throws IllegalArgumentException
      */
@@ -469,7 +469,7 @@ class CategoryService {
 
     /**
      * Getting all subcategories from a array of names
-     * @param string-array of given names
+     * @param catNames string-array of given names
      * @return list of found subcategories
      * @throws IllegalArgumentException
      */
@@ -484,9 +484,9 @@ class CategoryService {
 
     /**
      * Adding a new subcategory to the database
-     * @param name of the new subcategory
-     * @param parent of the new subcategory, can be a category or a subcategory
-     * @param default null, or a list of subcategory which should be associated with
+     * @param catName name of the new subcategory
+     * @param parentCat parent of the new subcategory, can be a category or a subcategory
+     * @param subCats optional, a list of subcategory which should be associated with
      * @return subcategory if successful
      * @throws IllegalArgumentException
      * @throws ValidationErrorException
