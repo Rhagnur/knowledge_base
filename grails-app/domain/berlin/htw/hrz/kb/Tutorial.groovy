@@ -9,7 +9,7 @@ package berlin.htw.hrz.kb
 class Tutorial extends Document {
 
     static constraints = {
-        steps nullable: true
+        steps nullable: false
     }
 
     /**

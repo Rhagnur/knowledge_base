@@ -35,11 +35,11 @@ class FaqSpec extends Specification {
             faq.answer == 'Testantwort'
     }
 
-    void "test faq nullable attrs = null"() {
+    void "test faq not nullable attrs = null"() {
         when:
             Faq faq = new Faq(docTitle: 'TestingFaqNullable', viewCount: 2, question: null, answer: null)
         then:
-            faq.validate() == true
+            faq.validate() == false
     }
 
     void "test inheritance"() {

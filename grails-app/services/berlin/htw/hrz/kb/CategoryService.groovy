@@ -82,7 +82,11 @@ class CategoryService {
         cat.parentCat = null
         newParent.addToSubCats(cat)
         if (cat.validate && newParent.validate && newParent.save(flush:true)) { cat }
-        else { throw new ValidationErrorException('Validation for category-data was not successful!') }
+        else {
+            cat.errors?.allErrors?.each { log.error(it) }
+            newParent.errors?.allErrors?.each { log.error(it) }
+            throw new ValidationErrorException('Validation for category-data was not successful!')
+        }
     }
 
     /**
@@ -105,8 +109,11 @@ class CategoryService {
             cat.addToSubCats(it)
         }
 
-        if (cat.validate()) { cat.save(flush: true) }
-        else { throw new ValidationErrorException('Validation for category-data was not successful!') }
+        if (!cat.validate()) {
+            cat.errors?.allErrors?.each { log.error(it) }
+            throw new ValidationErrorException('Validation for category-data was not successful!')
+        }
+        cat.save(flush: true)
     }
 
     /**
@@ -119,7 +126,7 @@ class CategoryService {
         cat.linker.collect().each { linker ->
             Linker.unlink(cat, linker.doc)
         }
-        cat.delete(flush: true)
+        cat.delete()
     }
 
     /**
@@ -509,7 +516,10 @@ class CategoryService {
             newSub.addToSubCats(sub)
         }
 
-        if (newSub.validate()) { newSub.save(flush: true) }
-        else { throw new ValidationErrorException('Validation for category-data was not successful!') }
+        if (!newSub.validate()) {
+            newSub.errors?.allErrors?.each { log.error(it) }
+            throw new ValidationErrorException('Validation for category-data was not successful!')
+        }
+        newSub.save(flush: true)
     }
 }

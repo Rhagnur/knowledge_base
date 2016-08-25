@@ -22,11 +22,11 @@ class ArticleSpec extends Specification {
     def cleanup() {
     }
 
-    void "test new article nullable attrs = null"() {
+    void "test new article not nullable attrs = null"() {
         when:
             Article article = new Article(docTitle: 'TestingNewArticleNullContent', docContent: null)
         then:
-            article.validate() == true
+            article.validate() == false
     }
 
     void "test new Article all"() {

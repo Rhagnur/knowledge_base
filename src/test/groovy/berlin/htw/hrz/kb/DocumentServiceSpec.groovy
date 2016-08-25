@@ -15,24 +15,13 @@ import spock.lang.Specification
  * See the API for {@link grails.test.mixin.services.ServiceUnitTestMixin} for usage instructions
  */
 @TestFor(DocumentService)
-@Mock([Document, Tutorial, Step])
+@Mock([Document, Tutorial, Step, Article, Faq])
 class DocumentServiceSpec extends Specification {
 
     def setup() {
     }
 
     def cleanup() {
-    }
-
-    void "test newTutorial with null steps"() {
-        when:
-            def doc = service.newTutorial('TestingServiceTutorialNullSteps',null , ['Test'] as String[])
-        then:
-            doc != null
-            doc?.docTitle == 'TestingServiceTutorialNullSteps'
-            doc?.tags?.contains('Test')
-            doc?.steps == null
-            notThrown ValidationErrorException
     }
 
     void "test newTutorial with steps"() {
@@ -69,7 +58,7 @@ class DocumentServiceSpec extends Specification {
         when:
             def doc = service.getDoc('Nonsens')
         then:
-            notThrown NoSuchObjectFoundException
+            thrown NoSuchObjectFoundException
     }
 
     void "test getDoc null"() {
@@ -96,13 +85,12 @@ class DocumentServiceSpec extends Specification {
 
 
     void "test delete doc"() {
-        given:
-            Document doc = new Document(docTitle: 'TestingServiceDeleteDoc', viewCount: 0).save()
-        expect:
-            doc instanceof Document
-        when:
+        setup:
+            Document doc = new Document(docTitle: 'TestingServiceDeleteDoc', viewCount: 0).save(flush:true)
             String title = doc.docTitle
+        and:
             service.deleteDoc(doc)
+        when:
             service.getDoc(title)
         then:
             thrown NoSuchObjectFoundException
@@ -153,10 +141,100 @@ class DocumentServiceSpec extends Specification {
             thrown IllegalArgumentException
     }
 
-    void "test export doc null"() {
+    void "test export doc with doc=null"() {
         when:
-            service.exportDoc('json', null)
+            def myJson = service.exportDoc('json')
+        then:
+            myJson instanceof JSON
+    }
+
+    void "test export doc with exportAs=null"() {
+        when:
+            service.exportDoc(null)
         then:
             thrown IllegalArgumentException
+    }
+
+    void "test changeTitle valid"() {
+        given:
+            Document doc = new Document(docTitle: 'TestingChangeDoc', viewCount: 0).save(flush:true)
+        when:
+            doc = service.changeDocTitle(doc, 'Hallo Welt')
+        then:
+            doc.docTitle == 'Hallo Welt'
+    }
+
+    void "test changeTitle IllArgEx"() {
+        when:
+            service.changeDocTitle(null, null)
+        then:
+            thrown IllegalArgumentException
+    }
+
+    void "test changeTags valid"() {
+        given:
+            Document doc = new Document(docTitle: 'TestingChangeDoc', viewCount: 0, tags: ['test1','test2'] as String[]).save(flush:true)
+        expect:
+            doc.tags.contains('test1')
+            doc.tags.contains('test2')
+        when:
+            doc = service.changeTags(doc, ['hallo','welt'] as String[])
+        then:
+            !doc.tags.contains('test1')
+            !doc.tags.contains('test2')
+            doc.tags.contains('hallo')
+            doc.tags.contains('welt')
+    }
+
+    void "test changeTags IllArgEx"() {
+        when:
+            service.changeTags(null, null)
+        then:
+            thrown IllegalArgumentException
+    }
+
+    void "test changeArticleContent"() {
+        given:
+            Article doc = new Article(docTitle: 'Test', viewCount: 0, docContent: 'TestTest').save(flush:true)
+        when:
+            doc = service.changeArticleContent(doc, 'Hallo Welt')
+        then:
+            doc.docContent == 'Hallo Welt'
+    }
+
+    void "test changeFaqAnswer"() {
+        given:
+            Faq doc = new Faq(docTitle: 'Test', viewCount: 0, question: 'Test?', answer: 'Test').save(flush:true)
+        when:
+            doc = service.changeFaqAnswer(doc, 'Hallo Welt')
+        then:
+            doc.answer == 'Hallo Welt'
+    }
+
+    void "test changeFaqQuestion"() {
+        given:
+            Faq doc = new Faq(docTitle: 'Test', viewCount: 0, question: 'Test?', answer: 'Test').save(flush:true)
+        when:
+            doc = service.changeFaqQuestion(doc, 'Hallo Welt?')
+        then:
+            doc.question == 'Hallo Welt?'
+    }
+
+    void "test changeLocked"() {
+        given:
+            Document doc = new Document(docTitle: 'Test', viewCount: 0, locked: false).save(flush:true)
+        when:
+            doc = service.changeLocked(doc, true)
+        then:
+            doc.locked
+    }
+
+    void "test changeTutorialSteps"() {
+        given:
+            Tutorial doc = new Tutorial(docTitle: 'test', viewCount: 0).addToSteps(new Step(stepTitle: 'Test', stepText: 'Hallo Welt', number: 1)).save(flush:true)
+        when:
+            doc = service.changeTutorialSteps(doc, [new Step(stepTitle: 'Test', stepText: 'Hallo Welt', number: 1), new Step(stepTitle: 'Test', stepText: 'Hallo Welt', number: 2)])
+        then:
+            doc.steps.size() == 2
     }
 }

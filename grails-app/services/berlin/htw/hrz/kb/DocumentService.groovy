@@ -16,12 +16,138 @@ import groovy.xml.MarkupBuilder
 @Transactional
 class DocumentService {
 
-    //todo: changeTitle, changeTags, changeContent, ...Steps,Faq..bla
+    //todo: changeTags, changeContent, ...Steps,Faq..bla
+
+    Document changeArticleContent(Article doc, String newContent) throws IllegalArgumentException, ValidationErrorException {
+        if (!doc) { throw new IllegalArgumentException("Atrribute 'doc' CAN NOT be null!") }
+        doc.docContent = newContent
+        doc.changeDate = new Date()
+        if (!doc.validate()) {
+            doc.errors?.allErrors?.each { log.error(it) }
+            throw new ValidationErrorException('Validation for document-data was not successful!')
+        }
+        doc.save(flush:true)
+    }
+
+    /**
+     *
+     * @param doc
+     * @param newDocTitle
+     * @return document
+     * @throws IllegalArgumentException
+     * @throws ValidationErrorException
+     */
+    Document changeDocTitle(Document doc, String newDocTitle) throws IllegalArgumentException, ValidationErrorException {
+        if (!doc || !newDocTitle) { throw new IllegalArgumentException("Atrribute 'doc' and 'newDocTitle' CAN NOT be null or empty!") }
+        doc.docTitle = newDocTitle
+        doc.changeDate = new Date()
+        if (!doc.validate()) {
+            doc.errors?.allErrors?.each { log.error(it) }
+            throw new ValidationErrorException('Validation for document-data was not successful!')
+        }
+        doc.save(flush:true)
+    }
+
+    /**
+     *
+     * @param doc
+     * @param answer
+     * @return document
+     * @throws IllegalArgumentException
+     * @throws ValidationErrorException
+     */
+    Document changeFaqAnswer(Faq doc, String answer) throws IllegalArgumentException, ValidationErrorException {
+        if (!doc) { throw new IllegalArgumentException("Atrribute 'doc' CAN NOT be null!") }
+        doc.answer = answer
+        doc.changeDate = new Date()
+        if (!doc.validate()) {
+            doc.errors?.allErrors?.each { log.error(it) }
+            throw new ValidationErrorException('Validation for document-data was not successful!')
+        }
+        doc.save(flush:true)
+    }
+
+    /**
+     *
+     * @param doc
+     * @param question
+     * @return document
+     * @throws IllegalArgumentException
+     * @throws ValidationErrorException
+     */
+    Document changeFaqQuestion(Faq doc, String question) throws IllegalArgumentException, ValidationErrorException {
+        if (!doc) { throw new IllegalArgumentException("Atrribute 'doc' CAN NOT be null!") }
+        doc.question = question
+        doc.changeDate = new Date()
+        if (!doc.validate()) {
+            doc.errors?.allErrors?.each { log.error(it) }
+            throw new ValidationErrorException('Validation for document-data was not successful!')
+        }
+        doc.save(flush:true)
+    }
+
+    /**
+     *
+     * @param doc
+     * @param newLocked
+     * @return document
+     * @throws IllegalArgumentException
+     * @throws ValidationErrorException
+     */
+    Document changeLocked(Document doc, Boolean newLocked) throws IllegalArgumentException, ValidationErrorException {
+        if (!doc || newLocked == null) { throw new IllegalArgumentException("Atrribute 'doc' and 'newLocked' CAN NOT be null!") }
+        doc.locked = newLocked
+        doc.changeDate = new Date()
+        if (!doc.validate()) {
+            doc.errors?.allErrors?.each { log.error(it) }
+            throw new ValidationErrorException('Validation for document-data was not successful!')
+        }
+        doc.save(flush:true)
+    }
+
+    /**
+     *
+     * @param doc
+     * @param newTags
+     * @return document
+     * @throws IllegalArgumentException
+     * @throws ValidationErrorException
+     */
+    Document changeTags(Document doc, String[] newTags) throws IllegalArgumentException, ValidationErrorException {
+        if (!doc) { throw new IllegalArgumentException("Atrribute 'doc' CAN NOT be null!") }
+        doc.tags = newTags
+        doc.changeDate = new Date()
+        if (!doc.validate()) {
+            doc.errors?.allErrors?.each { log.error(it) }
+            throw new ValidationErrorException('Validation for document-data was not successful!')
+        }
+        doc.save(flush:true)
+    }
+
+    /**
+     *
+     * @param doc
+     * @param newSteps
+     * @return document
+     * @throws IllegalArgumentException
+     * @throws ValidationErrorException
+     */
+    Document changeTutorialSteps(Tutorial doc, List<Step> newSteps) throws IllegalArgumentException, ValidationErrorException {
+        if (!doc && !newSteps) { throw new IllegalArgumentException("Atrribute 'doc' and 'newSteps' CAN NOT be null!") }
+        doc.steps.clear()
+        newSteps.each {Step step ->
+            doc.addToSteps(step)
+        }
+        if (!doc.validate()) {
+            doc.errors?.allErrors?.each { log.error(it) }
+            throw new ValidationErrorException('Validation for document-data was not successful!')
+        }
+        doc.save(flush:true)
+    }
 
     /**
      *
      * @param docTitle
-     * @return
      */
     void deleteDoc(Document doc) {
         if (doc instanceof Tutorial) {
@@ -43,7 +169,7 @@ class DocumentService {
      * If no document is given or the parameter is null it will return a list of all unlocked documents in the chosen format
      * @param exportAs Decides which format will be returned, use 'json' or 'xml' for either format
      * @param doc document which you want to get exported, can be null
-     * @return chosen document as JSON or XML Object
+     * @return output as JSON or XML Object
      * @throws IllegalArgumentException
      */
     def exportDoc(String exportAs, Document doc = null) throws IllegalArgumentException {

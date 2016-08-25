@@ -59,20 +59,18 @@ class CategoryServiceSpec extends Specification {
     }
 
     void "test deleteExistingCategory"() {
-        given:
-            Subcategory cat = new Subcategory(name: 'TestingDeleteCat', parentCat: new Category(name: 'Test')).save()
-        expect:
-            cat instanceof Subcategory
-            cat != null
-        when:
+        setup:
+            Subcategory cat = new Subcategory(name: 'TestingDeleteCat').save()
             String name = cat.name
+        and:
             service.deleteSubCategory(cat)
+        when:
+            service.getCategory(name)
         then:
-            service.getCategory(name) == null
-            //thrown NoSuchObjectFoundException
+            thrown NoSuchObjectFoundException
     }
 
-    void "test deleteNonExistingCategory"() {
+    void "test deleteSubcat attr = null"() {
         when:
             service.deleteSubCategory(null)
         then:
@@ -81,7 +79,7 @@ class CategoryServiceSpec extends Specification {
 
     void "test changeCatName valid"() {
         given:
-            Subcategory cat = new Subcategory(name: 'TestChangeCatName', parentCat: new Category(name: 'Test')).save()
+            Subcategory cat = new Subcategory(name: 'TestChangeCatName').save()
         expect:
             cat instanceof Subcategory
         when:
@@ -94,7 +92,7 @@ class CategoryServiceSpec extends Specification {
 
     void "test changeCatName null newName"() {
         given:
-            Subcategory cat = new Subcategory(name: 'TestChangeCatName', parentCat: new Category(name: 'Test')).save()
+            Subcategory cat = new Subcategory(name: 'TestChangeCatName').save()
         expect:
             cat instanceof Subcategory
         when:

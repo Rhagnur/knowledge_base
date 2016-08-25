@@ -29,11 +29,11 @@ class TutorialSpec extends Specification {
             tut.steps.size() == 2
     }
 
-    void "test tutorial nullable = null"() {
+    void "test tutorial not nullable = null"() {
         when:
             Tutorial tut = new Tutorial(docTitle: 'TestingTutNullable', viewCount: 2, steps: null)
         then:
-            tut.validate() == true
+            tut.validate() == false
     }
 
     void "test inheritance"() {
