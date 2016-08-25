@@ -9,13 +9,7 @@ import grails.converters.JSON
 import grails.converters.XML
 import grails.test.mixin.Mock
 import grails.test.mixin.TestFor
-import grails.test.mixin.integration.Integration
-import grails.transaction.Rollback
-import groovy.mock.interceptor.MockFor
-import org.neo4j.graphdb.NotFoundException
 import spock.lang.Specification
-
-import javax.print.Doc
 
 /**
  * See the API for {@link grails.test.mixin.services.ServiceUnitTestMixin} for usage instructions
@@ -121,7 +115,7 @@ class DocumentServiceSpec extends Specification {
             doc instanceof Document
             doc.docTitle == 'TestingServiceExportDocJson'
         when:
-            def myJson = service.exportDoc(doc, 'json')
+            def myJson = service.exportDoc('json', doc)
         then:
             myJson instanceof JSON
     }
@@ -131,9 +125,9 @@ class DocumentServiceSpec extends Specification {
             Document doc = new Document(docTitle: 'TestingServiceExportDocJson', viewCount: 0).save()
             DocumentService myMock = Mock(DocumentService)
         when:
-            myMock.exportDoc(doc, 'json')
+            myMock.exportDoc('json', doc)
         then:
-            1 * myMock.exportDoc(doc, 'json')
+            1 * myMock.exportDoc('json', doc)
             0 * myMock._
     }
 
@@ -143,7 +137,7 @@ class DocumentServiceSpec extends Specification {
         expect:
             doc instanceof Document
         when:
-            def myJson = service.exportDoc(doc, 'xml')
+            def myJson = service.exportDoc('xml', doc)
         then:
             myJson instanceof XML
     }
@@ -154,14 +148,14 @@ class DocumentServiceSpec extends Specification {
         expect:
             doc instanceof Document
         when:
-            service.exportDoc(doc, 'nonsense')
+            service.exportDoc('nonsense', doc)
         then:
             thrown IllegalArgumentException
     }
 
     void "test export doc null"() {
         when:
-            service.exportDoc(null, 'json')
+            service.exportDoc('json', null)
         then:
             thrown IllegalArgumentException
     }

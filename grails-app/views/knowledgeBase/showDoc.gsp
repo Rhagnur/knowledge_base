@@ -21,8 +21,8 @@
                 Edit:
                 <g:link controller="KnowledgeBase" action="deleteDoc"
                         params="[docTitle: document.docTitle]">delete</g:link>
-                <g:link controller="KnowledgeBase" action="editDoc"
-                        params="[docTitle: document.docTitle]">edit</g:link>
+                <g:link controller="KnowledgeBase" action="changeDoc"
+                        params="[docTitle: document.docTitle]">change</g:link>
             </p>
         </sec:ifAnyGranted>
 
@@ -63,13 +63,14 @@
         <br/>
 
         <hr/>
-        <p><g:message code="kb.view.showDoc.author"/> ${author}</p>
+        <p><g:message code="kb.view.showDoc.author"/> ${message(code:'kb.author.'+author)?:message(code:'kb.error.notFound')}</p>
+        <p><g:message code="kb.view.showDoc.language"/> ${message(code:'kb.lang.'+lang)?:message(code:'kb.error.notFound')}</p>
         <p><g:message code="kb.view.showDoc.createDate"/> ${document.createDate}</p>
         <p><g:message code="kb.view.showDoc.clickCount"/> ${document.viewCount}</p>
         <g:if test="${document.linker}">
             <p>
                 <g:message code="kb.view.showDoc.parents"/>
-                <g:each in="${document.linker}">
+                <g:each in="${document.linker.sort { it.subcat.name }}">
                     '${it.subcat.name}'
                 </g:each>
             </p>

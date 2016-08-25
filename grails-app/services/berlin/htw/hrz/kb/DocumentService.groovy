@@ -7,7 +7,7 @@ package berlin.htw.hrz.kb
 import grails.converters.JSON
 import grails.converters.XML
 import grails.transaction.Transactional
-
+import groovy.xml.MarkupBuilder
 
 
 /**
@@ -40,18 +40,51 @@ class DocumentService {
 
     /**
      * This method exports a specific doc in a machine-friendly output
-     * @param docTitle
+     * If no document is given or the parameter is null it will return a list of all unlocked documents in the chosen format
      * @param exportAs Decides which format will be returned, use 'json' or 'xml' for either format
+     * @param doc document which you want to get exported, can be null
      * @return chosen document as JSON or XML Object
      * @throws IllegalArgumentException
      */
-    def exportDoc(Document doc, String exportAs) throws IllegalArgumentException {
-        if (!doc) { throw new IllegalArgumentException("Argument 'doc' can not be null!") }
+    def exportDoc(String exportAs, Document doc = null) throws IllegalArgumentException {
         def output
         if (exportAs == 'json') {
-            output = doc as JSON
+            if (doc) { output = doc as JSON }
+            else {
+                def tempMap = [:]
+                def tempList = []
+                Document.findAllByLockedNotEqual(true).sort { it.docTitle }.each{ Document docIt ->
+                    def tempElementData = [:]
+                    tempElementData.put('docTitle', docIt.docTitle)
+                    tempElementData.put('docType', docIt.class.simpleName)
+                    tempElementData.put('author', getAuthor(docIt))
+                    tempElementData.put('viewCount', docIt.viewCount)
+                    tempList.add(tempElementData)
+                }
+                tempMap.put('info', 'This object represents a list of all documents that are not locked. You can get a json/xml object of a single document by using the subfix: /exportDoc?docTitle=(docTitle)&exportAs=(xml or json)')
+                tempMap.put('documents', tempList)
+                output = tempMap as JSON
+            }
         } else if (exportAs == 'xml') {
-            output = doc as XML
+            if (doc) { output = doc as XML }
+            else {
+                def writer = new StringWriter()
+                new MarkupBuilder(writer).list {
+                    info('This object represents a list of all documents that are not locked. You can get a json/xml object of a single document by using the subfix: /exportDoc?docTitle=(docTitle)&exportAs=(xml or json)')
+                    documents {
+                        Document.findAllByLockedNotEqual(true).sort { it.docTitle }.each{ Document docIt ->
+                            document {
+                                docTitle(docIt.docTitle)
+                                docType(docIt.class.simpleName)
+                                author(getAuthor(docIt))
+                                viewCount(docIt.viewCount)
+                            }
+                        }
+                    }
+                }
+                println(writer.toString())
+                output = writer.toString()
+            }
         } else {
             throw new IllegalArgumentException("No such 'exportAs' argument, please use 'json' or 'xml'!")
         }
@@ -59,9 +92,39 @@ class DocumentService {
     }
 
     /**
+     * Method for finding unlinked, unassociated documents.
+     * @return list all found documents
+     */
+    List findUnlinkedDocs() {
+        return Document.findAll().findAll { !it.linker } as List
+    }
+
+    /**
+     * Method for getting the associated author of a document
+     * @param doc
+     * @return author if found returns a string which represents the author. if not found null
+     * @throws IllegalArgumentException
+     */
+    String getAuthor(Document doc) throws IllegalArgumentException {
+        if (!doc) { throw new IllegalArgumentException("Argument 'doc' CAN NOT be null!") }
+        return (doc.linker.subcat.find{ it.parentCat.name == 'author' }.name as String)?:null
+    }
+
+    /**
+     * Method for getting the associated language of a document
+     * @param doc
+     * @return lang if found returns a string which represents the language. if not found null
+     * @throws IllegalArgumentException
+     */
+    String getLanguage(Document doc) throws IllegalArgumentException {
+        if (!doc) { throw new IllegalArgumentException("Argument 'doc' CAN NOT be null!") }
+        return (doc.linker.subcat.find{ it.parentCat.name == 'lang' }.name as String)?:null
+    }
+
+    /**
      *
      * @param docTitle
-     * @return
+     * @return document
      * @throws IllegalArgumentException
      * @throws NoSuchObjectFoundException
      */
@@ -75,7 +138,7 @@ class DocumentService {
     /**
      *
      * @param doc
-     * @return
+     * @return document
      * @throws IllegalArgumentException
      * @throws NoSuchObjectFoundException
      */
@@ -94,7 +157,7 @@ class DocumentService {
      * @param docTitle
      * @param tags
      * @param docContent
-     * @return
+     * @return article
      * @throws ValidationErrorException
      */
     Article newArticle(String docTitle, String docContent, String[] tags) throws ValidationErrorException {
@@ -111,7 +174,7 @@ class DocumentService {
      * @param docTitle
      * @param tags
      * @param faq
-     * @return
+     * @return faq
      * @throws ValidationErrorException
      */
     Faq newFaq(String question, String answer, String[] tags) throws ValidationErrorException {
@@ -128,7 +191,7 @@ class DocumentService {
      * @param docTitle
      * @param tags
      * @param steps
-     * @return
+     * @return tutorial
      * @throws ValidationErrorException
      */
     Tutorial newTutorial(String docTitle, Step[] steps, String[] tags) throws ValidationErrorException {

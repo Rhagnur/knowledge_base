@@ -103,14 +103,14 @@ class InitService {
 
                 //Abfrage mag seltsam anmuten, soll aber dabei helfen die Menge an Dokumenten wie folgt zu halten Anleitungen > FAQ > Artikel
                 if (magicNumber == 0 || magicNumber == 1 || magicNumber == 2) {
-                    doc = new Tutorial(docTitle: "Testanleitung${i}", viewCount: random.nextInt(3000), tags: ["Test"], createDate: new Date())
+                    doc = new Tutorial(docTitle: "Testanleitung${i}", locked: false, viewCount: random.nextInt(3000), tags: ["Test"], createDate: new Date())
                     for (int j = 0; j < (random.nextInt(10) + 1); j++) {
                         doc.addToSteps(new Step(number: (j + 1), stepTitle: 'Dies ist ein Titel', stepText: 'Dies ist ein Absatz<br/><ul><li>Punkt 1</li><li>Punkt 2</li></ul><br/><b>Test</b>', mediaLink: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Image_manquante_2.svg/320px-Image_manquante_2.svg.png'))
                     }
                 } else if (magicNumber == 3 || magicNumber == 4) {
-                    doc = new Faq(docTitle: "Testfrage${i}?", viewCount: random.nextInt(3000), tags: ["Test"], createDate: new Date(), question: "Testfrage${i}?", answer: 'Eine mögliche Lösung wäre <a href="#">Testantwort</a>!')
+                    doc = new Faq(docTitle: "Testfrage${i}?", locked: false, viewCount: random.nextInt(3000), tags: ["Test"], createDate: new Date(), question: "Testfrage${i}?", answer: 'Eine mögliche Lösung wäre <a href="#">Testantwort</a>!')
                 } else {
-                    doc = new Article(docTitle: "Testartikel${i}", viewCount: random.nextInt(3000), tags: ["Test"], createDate: new Date(), docContent: "Dies ist ein Absatz<br/><ul><li>Punkt 1</li><li>Punkt 2</li></ul><br/><b>Test</b><img src='https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Image_manquante_2.svg/320px-Image_manquante_2.svg.png' alt='Testbild' />")
+                    doc = new Article(docTitle: "Testartikel${i}", locked: false, viewCount: random.nextInt(3000), tags: ["Test"], createDate: new Date(), docContent: "Dies ist ein Absatz<br/><ul><li>Punkt 1</li><li>Punkt 2</li></ul><br/><b>Test</b><img src='https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Image_manquante_2.svg/320px-Image_manquante_2.svg.png' alt='Testbild' />")
                 }
                 myDocs.add(doc.save(flush: true))
                 session.flush()

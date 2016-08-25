@@ -62,8 +62,8 @@
                     <g:submitButton name="create" value="Neue Subkategorie anlegen"/>
                 </g:form>
 
-                <g:form controller="KnowledgeBase" action="findUnlinkedSubCats">
-                    <g:submitButton name="find" value="Unverlinkte Subkategorien finden"/>
+                <g:form controller="KnowledgeBase" action="findUnlinkedObjs">
+                    <g:submitButton name="find" value="Unverlinkte Elemente finden"/>
                 </g:form>
                 <br/>
             </sec:ifAnyGranted>

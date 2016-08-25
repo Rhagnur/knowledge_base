@@ -123,6 +123,14 @@ class CategoryService {
     }
 
     /**
+     * Method for getting all unassociated subcategories
+     * @return List all found subcategories
+     */
+    List findUnlinkedSubcats() {
+        return Subcategory.findAll().findAll { !it.parentCat } as List
+    }
+
+    /**
      * This method will search für additional documents (if forFaqs = false) for the given document, so you get a set of other relevant documents
      * or a set of Faqs (if forFaqs = true) which share the same associated subcategories
      * @param doc document which should be used to find related documents for
