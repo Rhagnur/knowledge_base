@@ -4,8 +4,12 @@
  */
 package berlin.htw.hrz.kb
 
+import grails.converters.JSON
 import grails.plugin.springsecurity.SpringSecurityService
 import grails.plugin.springsecurity.annotation.Secured
+
+import javax.ws.rs.GET
+import javax.ws.rs.Path
 
 /**
  * Controller class for handling the requests, redirects and processing data given from the views
@@ -244,18 +248,33 @@ class KnowledgeBaseController {
 
     /**
      * Controller method for either exporting a single document or a list of all unlocked documents
-     * Usage: use '/exportDoc?exportAs=(json/xml)' for getting the list or '/exportDoc?docTitle=(docTitle)&exportAs=(json/xml)' for getting a single document
+     * Usage: use '/document(.:format)' for getting the list or '/document/:docTitle(.:format)' for getting a single document
+     * if you don't use the format parameter this method will look for the accepted formats in the accept-header
      * @return object can be either a json or xml object
      */
     def exportDoc() {
-        if (!params.exportAs) { flash.error = message(code: 'kb.error.attrExportAsMissing') as String }
-        else if (params.exportAs != 'json' && params.exportAs != 'xml') { flash.error = message(code: 'kb.error.attrExportAsWrontInput') as String }
-
-        if (flash.error) {
-            redirect(view: 'index', model: [otherDocs: categoryService.getDocsOfInterest(springSecurityService.principal, request), principal: springSecurityService.principal])
-        } else {
-            render (text: documentService.exportDoc(params.exportAs as String, params.docTitle?documentService.getDoc(params.docTitle):null), encoding: 'UTF-8', contentType: "application/${params.exportAs}")
+        println(params)
+        String format = ''
+        if (!params.format) {
+            String[] acceptFormats = request.getHeader('Accept').toString().split(',')
+            for (String acceptFormat in acceptFormats) {
+                if (acceptFormat.contains('xml')) {
+                    format = 'xml'
+                    break
+                }
+                else if (acceptFormat.contains('json')) {
+                    format = 'json'
+                    break
+                }
+            }
         }
+        else if (params.format != 'json' && params.format != 'xml') {
+            response.status = 501
+            render([error: "Given format is unrecognized for this method. Please use 'json' or 'xml'!"] as JSON)
+        }
+        else { format = params.format }
+
+        render (text: documentService.exportDoc(format, params.docTitle?documentService.getDoc(params.docTitle):null), encoding: 'UTF-8', contentType: "application/${format}")
     }
 
     /**

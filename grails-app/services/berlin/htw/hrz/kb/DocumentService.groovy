@@ -187,7 +187,7 @@ class DocumentService {
                     tempElementData.put('viewCount', docIt.viewCount)
                     tempList.add(tempElementData)
                 }
-                tempMap.put('info', 'This object represents a list of all documents that are not locked. You can get a json/xml object of a single document by using the subfix: /exportDoc?docTitle=(docTitle)&exportAs=(xml or json)')
+                tempMap.put('info', 'This object represents a list of all documents that are not locked. You can get a json/xml object of a single document by using: /document/:docTitle(.:format). The format-parameter is optional, if not given the accept header will be used.')
                 tempMap.put('documents', tempList)
                 output = tempMap as JSON
             }
@@ -196,7 +196,7 @@ class DocumentService {
             else {
                 def writer = new StringWriter()
                 new MarkupBuilder(writer).list {
-                    info('This object represents a list of all documents that are not locked. You can get a json/xml object of a single document by using the subfix: /exportDoc?docTitle=(docTitle)&exportAs=(xml or json)')
+                    info('This object represents a list of all documents that are not locked. You can get a json/xml object of a single document by using: /document/:docTitle(.format). The format-parameter is optional, if not given the accept header will be used.')
                     documents {
                         Document.findAllByLockedNotEqual(true).sort { it.docTitle }.each{ Document docIt ->
                             document {
