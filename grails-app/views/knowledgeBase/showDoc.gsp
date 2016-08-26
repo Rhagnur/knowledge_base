@@ -41,10 +41,11 @@
                         <p>${raw(it.stepText)}</p>
                     </div>
 
-                    <div class="step-media">
-                        <a href="${it.mediaLink}"><g:img uri="${it.mediaLink}"/></a>
-                    </div>
-
+                    <g:if test="${it.mediaLink}">
+                        <div class="step-media">
+                            <a href="${it.mediaLink}"><g:img uri="${it.mediaLink}"/></a>
+                        </div>
+                    </g:if>
                     <div class="clear"></div>
                 </div>
             </g:each>
@@ -63,8 +64,8 @@
         <br/>
 
         <hr/>
-        <p><g:message code="kb.view.showDoc.author"/> ${message(code:'kb.author.'+author)?:message(code:'kb.error.notFound')}</p>
-        <p><g:message code="kb.view.showDoc.language"/> ${message(code:'kb.lang.'+lang)?:message(code:'kb.error.notFound')}</p>
+        <p><g:message code="kb.view.showDoc.author"/> ${author?message(code:'kb.author.'+author):message(code:'kb.error.notFound')}</p>
+        <p><g:message code="kb.view.showDoc.language"/> ${lang?message(code:'kb.lang.'+lang):message(code:'kb.error.notFound')}</p>
         <p><g:message code="kb.view.showDoc.createDate"/> ${document.createDate}</p>
         <p><g:message code="kb.view.showDoc.clickCount"/> ${document.viewCount}</p>
         <g:if test="${document.linker}">
