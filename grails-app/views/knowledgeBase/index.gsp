@@ -62,12 +62,6 @@
                     <g:submitButton name="createFaq" value="Neuen Artikel erstellen"/>
                 </g:form>
                 <br/><br/><br/>
-                <g:form controller="KnowledgeBase" action="createDoc" method="POST">
-                    <g:submitButton name="createTut" value="Neue Anleitung erstellen(old)"/>
-                </g:form>
-                <g:form controller="KnowledgeBase" action="createDoc" method="POST">
-                    <g:submitButton name="createFaq" value="Neues FAQ erstellen(old)"/>
-                </g:form>
                 <g:form controller="KnowledgeBase" action="createCat">
                     <g:submitButton name="create" value="Neue Subkategorie anlegen"/>
                 </g:form>

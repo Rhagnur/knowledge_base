@@ -218,7 +218,7 @@ class CategoryService {
         getAllMainCats().each { Category mainCat ->
             def temp = []
             if (!excludedCats?.contains(mainCat)) {
-                getIterativeAllSubCats(mainCat.name).each { cat ->
+                getIterativeAllSubCats(mainCat.name).each { Subcategory cat ->
                     temp.add(cat.name as String)
                 }
                 all.put(mainCat.name, temp.sort{ it })

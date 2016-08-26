@@ -21,8 +21,18 @@
                 Edit:
                 <g:link controller="KnowledgeBase" action="deleteDoc"
                         params="[docTitle: document.docTitle]">delete</g:link>
-                <g:link controller="KnowledgeBase" action="changeDoc"
-                        params="[docTitle: document.docTitle]">change</g:link>
+                <g:if test="${document instanceof berlin.htw.hrz.kb.Article}">
+                    <g:link controller="KnowledgeBase" action="changeArticle"
+                            params="[docTitle: document.docTitle]">change</g:link>
+                </g:if>
+                <g:elseif test="${document instanceof berlin.htw.hrz.kb.Faq}">
+                    <g:link controller="KnowledgeBase" action="changeFaq"
+                            params="[docTitle: document.docTitle]">change</g:link>
+                </g:elseif>
+                <g:elseif test="${document instanceof berlin.htw.hrz.kb.Tutorial}">
+                    <g:link controller="KnowledgeBase" action="changeTutorial"
+                            params="[docTitle: document.docTitle]">change</g:link>
+                </g:elseif>
             </p>
         </sec:ifAnyGranted>
 

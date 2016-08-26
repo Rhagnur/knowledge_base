@@ -19,7 +19,7 @@ class DocumentService {
     //todo: changeTags, changeContent, ...Steps,Faq..bla
 
     Document changeArticleContent(Article doc, String newContent) throws IllegalArgumentException, ValidationErrorException {
-        if (!doc) { throw new IllegalArgumentException("Atrribute 'doc' CAN NOT be null!") }
+        if (!doc) { throw new IllegalArgumentException("Attribute 'doc' CAN NOT be null!") }
         doc.docContent = newContent
         doc.changeDate = new Date()
         if (!doc.validate()) {
@@ -38,7 +38,7 @@ class DocumentService {
      * @throws ValidationErrorException
      */
     Document changeDocTitle(Document doc, String newDocTitle) throws IllegalArgumentException, ValidationErrorException {
-        if (!doc || !newDocTitle) { throw new IllegalArgumentException("Atrribute 'doc' and 'newDocTitle' CAN NOT be null or empty!") }
+        if (!doc || !newDocTitle) { throw new IllegalArgumentException("Attribute 'doc' and 'newDocTitle' CAN NOT be null or empty!") }
         doc.docTitle = newDocTitle
         doc.changeDate = new Date()
         if (!doc.validate()) {
@@ -46,6 +46,25 @@ class DocumentService {
             throw new ValidationErrorException('Validation for document-data was not successful!')
         }
         doc.save(flush:true)
+    }
+
+    Document changeDocParents(Document doc, List<Subcategory>newParents) throws IllegalArgumentException, ValidationErrorException {
+        if (!doc || !newParents) { throw new IllegalArgumentException("Attribute 'doc' and 'newParents' CAN NOT be null or empty!") }
+        else if ( !(newParents.find{ it.parentCat.name == 'lang'}) || !(newParents.find{ it.parentCat.name == 'author'}) ) {
+            throw new IllegalArgumentException("Attribute 'newParents' must contain a child element from 'lang' and 'author'!")
+        } else {
+            doc.linker.collect().each { Linker it ->
+                Linker.unlink(it.subcat, it.doc)
+            }
+            newParents.each {Subcategory cat->
+                Linker.link(cat, doc)
+            }
+            if (!doc.validate()) {
+                doc.errors?.allErrors?.each { log.error(it) }
+                throw new ValidationErrorException('Validation for document-data was not successful!')
+            }
+            doc.save(flush:true)
+        }
     }
 
     /**
@@ -57,7 +76,7 @@ class DocumentService {
      * @throws ValidationErrorException
      */
     Document changeFaqAnswer(Faq doc, String answer) throws IllegalArgumentException, ValidationErrorException {
-        if (!doc) { throw new IllegalArgumentException("Atrribute 'doc' CAN NOT be null!") }
+        if (!doc) { throw new IllegalArgumentException("Attribute 'doc' CAN NOT be null!") }
         doc.answer = answer
         doc.changeDate = new Date()
         if (!doc.validate()) {
@@ -76,7 +95,7 @@ class DocumentService {
      * @throws ValidationErrorException
      */
     Document changeFaqQuestion(Faq doc, String question) throws IllegalArgumentException, ValidationErrorException {
-        if (!doc) { throw new IllegalArgumentException("Atrribute 'doc' CAN NOT be null!") }
+        if (!doc) { throw new IllegalArgumentException("Attribute 'doc' CAN NOT be null!") }
         doc.question = question
         doc.changeDate = new Date()
         if (!doc.validate()) {
@@ -95,7 +114,7 @@ class DocumentService {
      * @throws ValidationErrorException
      */
     Document changeLocked(Document doc, Boolean newLocked) throws IllegalArgumentException, ValidationErrorException {
-        if (!doc || newLocked == null) { throw new IllegalArgumentException("Atrribute 'doc' and 'newLocked' CAN NOT be null!") }
+        if (!doc || newLocked == null) { throw new IllegalArgumentException("Attribute 'doc' and 'newLocked' CAN NOT be null!") }
         doc.locked = newLocked
         doc.changeDate = new Date()
         if (!doc.validate()) {
@@ -114,7 +133,7 @@ class DocumentService {
      * @throws ValidationErrorException
      */
     Document changeTags(Document doc, String[] newTags) throws IllegalArgumentException, ValidationErrorException {
-        if (!doc) { throw new IllegalArgumentException("Atrribute 'doc' CAN NOT be null!") }
+        if (!doc) { throw new IllegalArgumentException("Attribute 'doc' CAN NOT be null!") }
         doc.tags = newTags
         doc.changeDate = new Date()
         if (!doc.validate()) {
@@ -133,7 +152,7 @@ class DocumentService {
      * @throws ValidationErrorException
      */
     Document changeTutorialSteps(Tutorial doc, List<Step> newSteps) throws IllegalArgumentException, ValidationErrorException {
-        if (!doc && !newSteps) { throw new IllegalArgumentException("Atrribute 'doc' and 'newSteps' CAN NOT be null!") }
+        if (!doc && !newSteps) { throw new IllegalArgumentException("Attribute 'doc' and 'newSteps' CAN NOT be null!") }
         doc.steps.clear()
         newSteps.each {Step step ->
             doc.addToSteps(step)
@@ -313,6 +332,40 @@ class DocumentService {
     }
 
     /**
+     * This methods helps to create a new lift of steps from a raw data input
+     * IMPORTANT: For each number in the keyset you need a stepText AND stepTitle.
+     * Example: If there is a key-element stepTitle_1 with non-null value then there also MUST be a key-element stepText_1 with non-null value. The stepLink is optional.
+     * @param rawSteps raw data input. must have a format like [stepTitle_1:<String>, stepText_1:<String>, stepLink_1:<String>, stepTitle_2: ...]
+     * @return steps a list of new created steps. null if rawSteps where empty or the amount stepTitle_X didn't match stepText_X
+     */
+    List newSteps(Map<String, String> rawSteps) {
+        def steps = null
+
+        if (rawSteps) {
+            def allTitles = rawSteps.findAll { it.key =~ /stepTitle_[0-9]+/ && it.value } as Map
+            def allTexts = rawSteps.findAll { it.key =~ /stepText_[0-9]+/  && it.value } as Map
+            def allLinks = rawSteps.findAll { it.key =~ /stepLink_[0-9]+/ }
+            boolean stepsError = false
+
+            //Prüfe, ob es für jede StepTitelNummer auch eine StepTextNummer gibt, sprich ob jeder Step einen Titel und einen Text hat
+            for (String stepTitle in allTitles.keySet()) {
+                if (!allTexts.find { it.key =~ /stepText_${stepTitle.substring(stepTitle.indexOf('_') + 1)}/}) {
+                    stepsError = true
+                }
+            }
+
+            //Falls kein Fehler aufgetreten ist, verarbeite die Stepdaten und füge die Steps einer Liste hinzu
+            if(!stepsError) {
+                steps = []
+                for (int i = 1; i <= allTitles.size(); i++) {
+                    steps.add(new Step(number: i, stepTitle: allTitles.get(/stepTitle_/ + i), stepText: allTexts.get(/stepText_/ + i), mediaLink: allLinks.get(/stepLink_/ + i)))
+                }
+            }
+        }
+        steps
+    }
+
+    /**
      * This method helps you to create a new tutorial
      * @param docTitle
      * @param tags
@@ -320,7 +373,7 @@ class DocumentService {
      * @return tutorial
      * @throws ValidationErrorException
      */
-    Tutorial newTutorial(String docTitle, Step[] steps, String[] tags) throws ValidationErrorException {
+    Tutorial newTutorial(String docTitle, List<Step> steps, String[] tags) throws ValidationErrorException {
         def temp = new Tutorial(docTitle: docTitle, tags: tags, viewCount: 0, createDate: new Date())
         steps?.each { step ->
             temp.addToSteps(step)
