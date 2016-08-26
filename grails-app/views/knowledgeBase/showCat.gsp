@@ -46,7 +46,7 @@
                 <p>Anzahl: ${cat.linker?.size()}</p>
                 <p>Liste:
                 <ul>
-                    <g:each in="${cat.linker.doc.sort{ it.docTitle }}">
+                    <g:each in="${cat.linker?.doc?.findAll{ it }?.sort{ it?.docTitle }}">
                         <li>
                             <g:link controller="KnowledgeBase" action="showDoc" params="[docTitle: it.docTitle]">${it.docTitle}</g:link>
                         </li>

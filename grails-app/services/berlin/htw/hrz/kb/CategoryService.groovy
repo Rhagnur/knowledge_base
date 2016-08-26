@@ -40,8 +40,10 @@ class CategoryService {
         //save all the changes, save can't be made earlier, because otherwise it can happened that the doc will be associated with cats before a non-existing cat occurs and exception is thrown
         for (Subcategory cat in subCats) {
             if (cat.validate()) {
+                println('subCatname: ' + cat.name)
                 Linker.link(cat, doc)
-                cat.save(flush: true)
+                doc.save()
+                cat.save(flush:true)
             }
             else { throw new ValidationErrorException('Validation was not successful!') }
         }

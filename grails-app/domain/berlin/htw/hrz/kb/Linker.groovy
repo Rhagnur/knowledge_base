@@ -30,7 +30,7 @@ class Linker {
             linker = new Linker()
             sub?.addToLinker(linker)
             doc?.addToLinker(linker)
-            linker.save(flush: true)
+            linker.save()
         }
     }
 
@@ -39,7 +39,7 @@ class Linker {
         if (linker) {
             sub?.removeFromLinker(linker)
             doc?.removeFromLinker(linker)
-            linker.delete(flush: true)
+            linker.delete()
         }
     }
 }

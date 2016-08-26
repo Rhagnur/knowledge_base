@@ -52,11 +52,21 @@
         <section id="debug">
             <h2>Debug-/Test-Funktionen</h2>
             <sec:ifAnyGranted roles="ROLE_GP-STAFF,ROLE_GP-PROF">
-                <g:form controller="KnowledgeBase" action="createDoc" method="POST">
+                <g:form controller="KnowledgeBase" action="createTutorial" method="POST">
                     <g:submitButton name="createTut" value="Neue Anleitung erstellen"/>
                 </g:form>
+                <g:form controller="KnowledgeBase" action="createFaq" method="POST">
+                    <g:submitButton name="createFaq" value="Neues Faq erstellen"/>
+                </g:form>
+                <g:form controller="KnowledgeBase" action="createArticle" method="POST">
+                    <g:submitButton name="createFaq" value="Neuen Artikel erstellen"/>
+                </g:form>
+                <br/><br/><br/>
                 <g:form controller="KnowledgeBase" action="createDoc" method="POST">
-                    <g:submitButton name="createFaq" value="Neues FAQ erstellen"/>
+                    <g:submitButton name="createTut" value="Neue Anleitung erstellen(old)"/>
+                </g:form>
+                <g:form controller="KnowledgeBase" action="createDoc" method="POST">
+                    <g:submitButton name="createFaq" value="Neues FAQ erstellen(old)"/>
                 </g:form>
                 <g:form controller="KnowledgeBase" action="createCat">
                     <g:submitButton name="create" value="Neue Subkategorie anlegen"/>

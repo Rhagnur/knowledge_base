@@ -233,7 +233,7 @@ class DocumentService {
      */
     String getAuthor(Document doc) throws IllegalArgumentException {
         if (!doc) { throw new IllegalArgumentException("Argument 'doc' CAN NOT be null!") }
-        return (doc.linker.subcat.find{ it.parentCat.name == 'author' }.name as String)?:null
+        return (doc.linker?.subcat?.find{ it.parentCat.name == 'author' }?.name as String)?:null
     }
 
     /**
@@ -244,7 +244,7 @@ class DocumentService {
      */
     String getLanguage(Document doc) throws IllegalArgumentException {
         if (!doc) { throw new IllegalArgumentException("Argument 'doc' CAN NOT be null!") }
-        return (doc.linker.subcat.find{ it.parentCat.name == 'lang' }.name as String)?:null
+        return (doc.linker?.subcat?.find{ it.parentCat.name == 'lang' }?.name as String)?:null
     }
 
     /**

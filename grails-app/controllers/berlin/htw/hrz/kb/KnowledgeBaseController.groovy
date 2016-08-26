@@ -54,7 +54,8 @@ class KnowledgeBaseController {
      * @param ex
      */
     private void logException(final Exception ex) {
-        log.error("Exception thrown: ${ex?.message}")
+        log.error("Exception thrown: ${ex?.message}\n")
+        ex.printStackTrace()
     }
     //###### End global exception handling ######
 
@@ -116,6 +117,170 @@ class KnowledgeBaseController {
         [cat: params.name?categoryService.getCategory(params.name):null, allCatsByMainCats: categoryService.getAllMaincatsWithSubcats(), principal: springSecurityService.principal, origin: params.originName]
     }
 
+    def createArticle() {
+        println(params)
+        if (params.submit) {
+            def docSubs = []
+            String[] docTags
+            Article doc = null
+
+            //Hole und Verarbeite Tags
+            if (params.docTags) {
+                //Hole dir den tag-input und entferne alle 'space' Elemente (Leerzeichen, Tab, \n etc)
+                String tags = (params.docTags as String).replaceAll('\\s', '')
+                docTags = tags.split(',')
+            }
+
+            //Hole Subkategorien, repräsentiert durch Checkboxen und erzeuge eine Liste aus den ausgewählten
+            def clickedSubcats = params.list('checkbox') as List
+            if (!clickedSubcats) {
+                flash.error = message(code: 'kb.error.noSubCatGiven') as String
+            } else {
+                //Füge den Autor (eingeloggter User) des Dokuments an
+                docSubs.add(springSecurityService.principal.username)
+                //Füge Sprache hinzu
+                docSubs.add(params.language as String)
+                String[] cats = new String[params.list('checkbox').size()]
+                //Füge alle angeklickten Subkategorien an
+                docSubs.addAll(params.list('checkbox').toArray(cats))
+            }
+
+            //Verarbeite dokumentspezifische Daten (Tutorial: verarbeite einzelne Steps, FAQ: verarbeite Frage-Antwort)
+            if (!flash.error) {
+                if (params.docTitle && !params.docTitle.empty && params.docContent && !params.docContent.empty) {
+                    doc = documentService.newArticle(params.docTitle as String, params.docContent as String, docTags)
+                } else {
+                    flash.error = message(code: 'kb.error.fillOutAllFields') as String
+                }
+
+                if (!flash.error) {
+                    categoryService.addDoc(doc, categoryService.getSubcategories(docSubs as String[]))
+                    flash.info = message(code: 'kb.info.docCreated') as String
+                    redirect(view: 'index', model: [otherDocs: categoryService.getDocsOfInterest(springSecurityService.principal, request), principal: springSecurityService.principal])
+                }
+            }
+        }
+        [cats: categoryService.getAllMaincatsWithSubcats([categoryService.getCategory('author'), categoryService.getCategory('lang')] as List), lang:categoryService.getAllSubCats(categoryService.getCategory('lang')).sort{it.name}.name, principal: springSecurityService.principal]
+    }
+
+    def createFaq() {
+        println(params)
+        if (params.submit) {
+            def docSubs = []
+            String[] docTags
+            Faq doc = null
+
+            //Hole und Verarbeite Tags
+            if (params.docTags) {
+                //Hole dir den tag-input und entferne alle 'space' Elemente (Leerzeichen, Tab, \n etc)
+                String tags = (params.docTags as String).replaceAll('\\s', '')
+                docTags = tags.split(',')
+            }
+
+            //Hole Subkategorien, repräsentiert durch Checkboxen und erzeuge eine Liste aus den ausgewählten
+            def clickedSubcats = params.list('checkbox') as List
+            if (!clickedSubcats) {
+                flash.error = message(code: 'kb.error.noSubCatGiven') as String
+            } else {
+                //Füge den Autor (eingeloggter User) des Dokuments an
+                docSubs.add(springSecurityService.principal.username)
+                //Füge Sprache hinzu
+                docSubs.add(params.language as String)
+                String[] cats = new String[params.list('checkbox').size()]
+                //Füge alle angeklickten Subkategorien an
+                docSubs.addAll(params.list('checkbox').toArray(cats))
+            }
+
+            //Verarbeite dokumentspezifische Daten (Tutorial: verarbeite einzelne Steps, FAQ: verarbeite Frage-Antwort)
+            if (!flash.error) {
+                if (params.question && !params.question.empty && params.answer && !params.answer.empty) {
+                    doc = documentService.newFaq(params.question as String, params.answer as String, docTags)
+                } else {
+                    flash.error = message(code: 'kb.error.fillOutAllFields') as String
+                }
+
+                if (!flash.error) {
+                    categoryService.addDoc(doc, categoryService.getSubcategories(docSubs as String[]))
+                    flash.info = message(code: 'kb.info.docCreated') as String
+                    redirect(view: 'index', model: [otherDocs: categoryService.getDocsOfInterest(springSecurityService.principal, request), principal: springSecurityService.principal])
+                }
+            }
+        }
+        [cats: categoryService.getAllMaincatsWithSubcats([categoryService.getCategory('author'), categoryService.getCategory('lang')] as List), lang:categoryService.getAllSubCats(categoryService.getCategory('lang')).sort{it.name}.name, principal: springSecurityService.principal]
+    }
+
+    /**
+     * Controller method for creating a new tutorial
+     */
+    def createTutorial() {
+        println(params)
+        if (params.submit) {
+            def docSubs = []
+            String[] docTags
+            Tutorial doc = null
+            boolean stepsError = false
+
+            //Hole und Verarbeite Tags
+            if (params.docTags) {
+                //Hole dir den tag-input und entferne alle 'space' Elemente (Leerzeichen, Tab, \n etc)
+                String tags = (params.docTags as String).replaceAll('\\s','')
+                docTags = tags.split(',')
+            }
+            //Hole Subkategorien, repräsentiert durch Checkboxen und erzeuge eine Liste aus den ausgewählten
+            def clickedSubcats = params.list('checkbox') as List
+            if (!clickedSubcats) {
+                flash.error = message(code: 'kb.error.noSubCatGiven') as String
+            } else {
+                //Füge den Autor (eingeloggter User) des Dokuments an
+                docSubs.add(springSecurityService.principal.username)
+                //Füge Sprache hinzu
+                docSubs.add(params.language as String)
+                String[] cats = new String[params.list('checkbox').size()]
+                //Füge alle angeklickten Subkategorien an
+                docSubs.addAll(params.list('checkbox').toArray(cats))
+            }
+            println('docSubs: ' +docSubs)
+
+            //Verarbeite dokumentspezifische Daten (Tutorial: verarbeite einzelne Steps, FAQ: verarbeite Frage-Antwort)
+            if (!flash.error) {
+
+                //Finde alle Daten für die einzelnen Schritte
+                def allTitles = params.findAll { it.key =~ /stepTitle_[0-9]+/ && it.value } as Map
+                def allTexts = params.findAll { it.key =~ /stepText_[0-9]+/  && it.value } as Map
+                def allLinks = params.findAll { it.key =~ /stepLink_[0-9]+/ }
+                println('titles: '+allTitles)
+                println('texts: '+allTexts)
+
+                //Prüfe, ob es für jede StepTitelNummer auch eine StepTextNummer gibt, sprich ob jeder Step einen Titel und einen Text hat
+                for (String stepTitle in allTitles.keySet()) {
+                    if (!allTexts.find { it.key =~ /stepText_${stepTitle.substring(stepTitle.indexOf('_') + 1)}/}) {
+                        stepsError = true
+                    }
+                }
+
+                if (stepsError || !params.docTitle) {
+                    flash.error = message(code: 'kb.error.fillOutAllFields') as String
+                    params.createDoc = 'tutorial'
+                } else {
+                    def steps = []
+                    //Verarbeite einzelne Steps
+                    for (int i = 1; i <= allTitles.size(); i++) {
+                            steps.add(new Step(number: i, stepTitle: allTitles.get(/stepTitle_/ + i), stepText: allTexts.get(/stepText_/ + i), mediaLink: allLinks.get(/stepLink_/ + i)))
+                    }
+
+                    doc = documentService.newTutorial(params.docTitle as String, steps as Step[], docTags)
+                }
+                if (!flash.error) {
+                    categoryService.addDoc(doc, categoryService.getSubcategories(docSubs as String[]))
+                    flash.info = message(code: 'kb.info.docCreated') as String
+
+                    redirect(view: 'index', model: [otherDocs: categoryService.getDocsOfInterest(springSecurityService.principal, request), principal: springSecurityService.principal])
+                }
+            }
+        }
+        [cats: categoryService.getAllMaincatsWithSubcats([categoryService.getCategory('author'), categoryService.getCategory('lang')] as List), lang:categoryService.getAllSubCats(categoryService.getCategory('lang')).sort{it.name}.name, principal: springSecurityService.principal]
+    }
+
     /**
      * Controller method for creating a new document
      * @return
@@ -141,7 +306,7 @@ class KnowledgeBaseController {
             def clickedSubcats = params.list('checkbox') as List
             if (!clickedSubcats) {
                 flash.error = message(code: 'kb.error.noSubCatGiven') as String
-            } else if (!clickedSubcats.any { categoryService.getCategory('author').subCats.toList().contains( it ) }) {
+            } else if (!clickedSubcats.any { categoryService.getCategory('lang').subCats.name.toList().contains( it ) }) {
                 flash.error = message(code: 'kb.error.noLanguageChosen') as String
             } else {
                 String[] cats = new String[params.list('checkbox').size()]
@@ -154,14 +319,22 @@ class KnowledgeBaseController {
             //Verarbeite dokumentspezifische Daten (Tutorial: verarbeite einzelne Steps, FAQ: verarbeite Frage-Antwort)
             if (!flash.error) {
                 if (params.tutorial == 'create') {
+                    boolean stepsError = false
                     //Finde alle Daten für die einzelnen Schritte
-                    def allTitles = params.findAll{it.key =~ /stepTitle_[0-9]+/}
-                    def allTexts = params.findAll{it.key =~ /stepText_[0-9]+/}
-                    def allLinks = params.findAll{it.key =~ /stepLink_[0-9]+/}
+                    def allTitles = params.findAll { it.key =~ /stepTitle_[0-9]+/ && it.value } as Map
+                    def allTexts = params.findAll { it.key =~ /stepText_[0-9]+/  && it.value } as Map
+                    def allLinks = params.findAll { it.key =~ /stepLink_[0-9]+/ }
+
+                    //Prüfe, ob es für jede StepTitelNummer auch eine StepTextNummer gibt, sprich ob jeder Step einen Titel und einen Text hat
+                    for (String stepTitle in allTitles.keySet()) {
+                        if (!allTexts.find { it.key =~ /stepText_${stepTitle.substring(stepTitle.indexOf('_') + 1)}/}) {
+                            stepsError = true
+                        }
+                    }
 
                     //Prüfe ob die Anzahl der Titel-Daten der Anzahl der Text-Daten entspricht und ob ein Dokumententitel gesetzt wurde
                     //todo: Prüfe ob NICHT nur die Anzahl der Daten gleich ist, sondern ob es zu jeder TitelNummer auch eine TextNummer gibt
-                    if (allTitles && allTitles.size() != allTexts?.size() || !params.docTitle) {
+                    if (stepsError || !params.docTitle) {
                         flash.error = message(code: 'kb.error.fillOutAllFields') as String
                         params.createDoc = 'tutorial'
                     } else {
