@@ -23,7 +23,7 @@ class CategoryService {
     /**
      * Number of documents which should be returned, so that not all found docs will be returned
      */
-    // TODO[TR]: parametrisierung ?
+    // TODO[TR]: parametrisierung oder den user selbst entscheiden lassen?
     def NumDocsToShow = 5
 
     /**
@@ -34,10 +34,10 @@ class CategoryService {
      * @throws IllegalArgumentException
      * @throws ValidationErrorException
      */
+    //todo: vermutlich obsolet, man könnte auch docService.changeDocParents nutzen, sollte auch funktionieren
     boolean addDoc(Document doc, List<Subcategory> subCats) throws IllegalArgumentException, ValidationErrorException {
         if (!subCats) { throw new IllegalArgumentException("Argument 'subCats' cant be null") }
 
-        //save all the changes, save can't be made earlier, because otherwise it can happened that the doc will be associated with cats before a non-existing cat occurs and exception is thrown
         for (Subcategory cat in subCats) {
             if (cat.validate()) {
                 println('subCatname: ' + cat.name)
@@ -80,42 +80,15 @@ class CategoryService {
     Subcategory changeParent(Subcategory cat, Category newParent) throws IllegalArgumentException, ValidationErrorException {
         if (!cat || !newParent) { throw new IllegalArgumentException('Argument can not be null.') }
 
-        newParent.removeFromSubCats(cat)
+        //newParent.removeFromSubCats(cat)
         cat.parentCat = null
         newParent.addToSubCats(cat)
-        if (cat.validate && newParent.validate && newParent.save(flush:true)) { cat }
+        if (cat.validate() && newParent.validate() && newParent.save(flush:true)) { cat }
         else {
             cat.errors?.allErrors?.each { log.error(it) }
             newParent.errors?.allErrors?.each { log.error(it) }
             throw new ValidationErrorException('Validation for category-data was not successful!')
         }
-    }
-
-    /**
-     * Change the associated subcategories for the given category
-     * @param cat subcategory which should be changed
-     * @param newSubcats list of new subcategories which should be associated
-     * @return subcategory if successful
-     * @throws ValidationErrorException
-     */
-    Category changeSubCats(Category cat, List<Subcategory> newSubcats) throws ValidationErrorException {
-        //räume alte Verweise auf
-        cat.subCats.each {
-            it.parentCat = null
-            it.save(flush: true)
-        }
-        cat.subCats.clear()
-
-        //setze neue Beziehungen
-        newSubcats.each {
-            cat.addToSubCats(it)
-        }
-
-        if (!cat.validate()) {
-            cat.errors?.allErrors?.each { log.error(it) }
-            throw new ValidationErrorException('Validation for category-data was not successful!')
-        }
-        cat.save(flush: true)
     }
 
     /**
@@ -218,7 +191,7 @@ class CategoryService {
         getAllMainCats().each { Category mainCat ->
             def temp = []
             if (!excludedCats?.contains(mainCat)) {
-                getIterativeAllSubCats(mainCat.name).each { Subcategory cat ->
+                getIterativeAllSubCats(mainCat).each { Subcategory cat ->
                     temp.add(cat.name as String)
                 }
                 all.put(mainCat.name, temp.sort{ it })
@@ -260,17 +233,6 @@ class CategoryService {
         def cat = Category.findByName(catName)?:null
         if (!cat) { throw new NoSuchObjectFoundException("Can not find a category with the name: '${catName}'") }
         cat
-    }
-
-    /**
-     * Getting the document count of the given category
-     * @param cat name of the subcategory
-     * @return number of associated categories, error-code if something went wrong
-     * @throws IllegalArgumentException
-     */
-    Integer getDocCount(Subcategory cat) throws IllegalArgumentException {
-        if (!cat) { throw new IllegalArgumentException('Argument can not be null') }
-        cat.linker?.doc?.size()
     }
 
     /**
@@ -434,18 +396,18 @@ class CategoryService {
      * @throws IllegalArgumentException
      * @throws NoSuchObjectFoundException
      */
-    List getIterativeAllSubCats(String catName) throws IllegalArgumentException, NoSuchObjectFoundException {
+    List getIterativeAllSubCats(Category cat) throws IllegalArgumentException, NoSuchObjectFoundException {
         def subs = []
-        Category cat = getCategory(catName)
         if (cat) {
             if (cat instanceof Subcategory) {
                 subs += cat
             }
             cat.subCats?.each { child ->
-                subs += getIterativeAllSubCats(child.name)
+                subs += getIterativeAllSubCats(child)
             }
             subs.unique()
         }
+        else { throw new IllegalArgumentException("Argument 'cat' CAN NOT be null!") }
     }
 
     /**
@@ -489,8 +451,9 @@ class CategoryService {
      * @param catNames string-array of given names
      * @return list of found subcategories
      * @throws IllegalArgumentException
+     * @throws NoSuchObjectFoundException
      */
-    List<Subcategory> getSubcategories(String[] catNames) throws IllegalArgumentException {
+    List<Subcategory> getSubcategories(String[] catNames) throws IllegalArgumentException, NoSuchObjectFoundException {
         if (!catNames) { throw new IllegalArgumentException("Argument 'catNames' can not be null") }
         List subCats = []
         catNames.each { catName ->

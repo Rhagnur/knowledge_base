@@ -27,7 +27,7 @@ class StepSpec extends Specification {
             step.number == 22
             step.stepTitle == 'TestingStep'
             step.stepText == 'Testing'
-            step.mediaLink == 'http://testing.test/testimg.jpg'
+            step.stepLink == 'http://testing.test/testimg.jpg'
     }
 
     void "test step nullable attrs = null"() {
@@ -39,7 +39,7 @@ class StepSpec extends Specification {
 
     void "test step not-nullable attrs = null"() {
         when:
-            Step step = new Step(number: null, stepTitle: null, stepText: null, stepLink: null, doc: null)
+            Step step = new Step(number: null, stepTitle: null, stepText: null, doc: null)
         then:
             step.validate() == false
     }

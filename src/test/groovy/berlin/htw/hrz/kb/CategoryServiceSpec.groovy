@@ -60,9 +60,8 @@ class CategoryServiceSpec extends Specification {
 
     void "test deleteExistingCategory"() {
         setup:
-            Subcategory cat = new Subcategory(name: 'TestingDeleteCat').save()
+            Subcategory cat = new Subcategory(name: 'TestingDeleteCat').save(flush: true)
             String name = cat.name
-        and:
             service.deleteSubCategory(cat)
         when:
             service.getCategory(name)
@@ -130,31 +129,6 @@ class CategoryServiceSpec extends Specification {
             thrown IllegalArgumentException
     }
 
-    void "test getDocCount SubCat with existing Docs"() {
-        given:
-            Subcategory cat = new Subcategory(name: 'TestingDocCount', parentCat: new Category(name: 'Test')).save()
-            Document doc = new Document(docTitle: 'TestDoc1').save()
-            Document doc2 = new Document(docTitle: 'TestDoc2').save()
-            Linker.link(cat, doc)
-            Linker.link(cat, doc2)
-        expect:
-            cat instanceof Subcategory
-            cat != null
-            cat.linker?.size() > 0
-        when:
-            def count = service.getDocCount(cat)
-        then:
-            count instanceof Integer
-            count == 2
-    }
-
-    void "test getDocCount null SubCat"() {
-        when:
-            def count = service.getDocCount(null)
-        then:
-            thrown IllegalArgumentException
-    }
-
     void "test getAllSubCats existing Cat"() {
         given:
             Subcategory cat = new Subcategory(name: 'TestingGetSubCats', parentCat: new Category(name: 'Test'))
@@ -190,9 +164,134 @@ class CategoryServiceSpec extends Specification {
             cat instanceof Category
             cat.subCats?.size() > 0
         when:
-            def subCats = service.getIterativeAllSubCats(cat.name)
+            def subCats = service.getIterativeAllSubCats(cat)
         then:
             subCats.size() == 8
+    }
+
+    void "test getIterativeAllSubCats IllArgEx"() {
+        when:
+            service.getIterativeAllSubCats(null)
+        then:
+            thrown IllegalArgumentException
+    }
+
+    void "test changeParent"() {
+        setup:
+            Subcategory sub = new Subcategory(name:'Test').save(flush:true)
+            new Category(name:'Old').addToSubCats(sub).save(flush: true)
+            Category newParent = new Category(name: 'New').save(flush:true)
+        when:
+            sub = service.changeParent(sub, newParent)
+        then:
+            sub.parentCat
+            sub.parentCat.name == 'New'
+    }
+
+    void "test changeParent IllArgEx"() {
+        when:
+            service.changeParent(null, null)
+        then:
+            thrown IllegalArgumentException
+    }
+
+    void "test getDocs"() {
+        setup:
+            Subcategory sub = new Subcategory(name:'Test').save()
+            Document doc = new Document(docTitle: 'Testing', viewCount: 0).save()
+            Linker.link(sub, doc)
+        when:
+            List<Document> docs = service.getDocs(sub)
+        then:
+            docs.size() == 1
+            docs.docTitle.contains('Testing')
+    }
+
+    void "test getDocs IllArgEx"() {
+        when:
+            service.getDocs(null)
+        then:
+            thrown IllegalArgumentException
+    }
+
+    void "test findUnlinked Subcats"() {
+        setup:
+            new Subcategory(name: 'Test').save()
+            new Subcategory(name: 'Test2').save()
+        when:
+            List<Subcategory> subs = service.findUnlinkedSubcats()
+        then:
+            subs.size() == 2
+            subs.name.containsAll(['Test', 'Test2'])
+    }
+
+    void "test getAllMainCats"() {
+        setup:
+            new Category(name: 'Test').save()
+            new Category(name: 'Test2').save()
+        when:
+            List<Category> cats = service.getAllMainCats()
+        then:
+            Category.findAll() as List == cats
+    }
+
+    void "test getAllMaincatsWithSubcats"() {
+        setup:
+            new Category(name: 'Test').addToSubCats(new Subcategory(name: 'Test-1')).addToSubCats(new Subcategory(name: 'Test-2')).save()
+            new Category(name: 'Test2').addToSubCats(new Subcategory(name: 'Test2-1').addToSubCats(new Subcategory(name: 'Test2-11'))).save()
+        when:
+            HashMap cats = service.getAllMaincatsWithSubcats()
+        then:
+            cats.size() == 2
+            cats.Test.size() == 2
+            cats.Test2.size() == 2
+    }
+
+    void "test getAllMaincatsWithSubcats with excluded"() {
+        setup:
+            new Category(name: 'Test').addToSubCats(new Subcategory(name: 'Test-1')).addToSubCats(new Subcategory(name: 'Test-2')).save()
+            Category exCat = new Category(name: 'Test2').addToSubCats(new Subcategory(name: 'Test2-1').addToSubCats(new Subcategory(name: 'Test2-11'))).save()
+        when:
+            HashMap cats = service.getAllMaincatsWithSubcats([exCat] as List)
+        then:
+            cats.size() == 1
+            cats.Test.size() == 2
+    }
+
+    void "test getAllSubCats"() {
+        setup:
+            new Subcategory(name: 'Test').save()
+            new Subcategory(name: 'Test2').save()
+        when:
+            List<Subcategory> subs = service.getAllSubCats()
+        then:
+            subs.size() == 2
+            subs.name.containsAll(['Test', 'Test2'])
+    }
+
+    void "test getSubcategories"() {
+        setup:
+            new Subcategory(name: 'Test').save()
+            new Subcategory(name: 'Test2').save()
+        when:
+            List<Subcategory> subs = service.getSubcategories(['Test', 'Test2'] as String[])
+        then:
+            subs.size() == 2
+            subs.name.containsAll(['Test', 'Test2'])
+    }
+
+    void "test getSubcategories IllArgEx 1"() {
+        when:
+            service.getSubcategories(null)
+        then:
+            thrown IllegalArgumentException
+    }
+
+    void "test getSubcategories IllArgEx 2"() {
+        when:
+            service.getSubcategories(['Test'] as String[])
+        then:
+            thrown NoSuchObjectFoundException
     }
 
 
