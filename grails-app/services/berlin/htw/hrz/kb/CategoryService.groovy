@@ -154,9 +154,9 @@ class CategoryService {
         def query = ""
         def queryParams = [:]
         subs.eachWithIndex { String sub, i ->
-            query += "MATCH (sub${i}:Subcategory) WHERE sub${i}.name='{sub${i}}'\n" +
+            query += "MATCH (sub${i}:Subcategory) WHERE sub${i}.name={${i}}\n" +
                     "MATCH (sub${i})-[*..2]-(doc:Document)\n"
-            queryParams.put("sub${i}" as String, sub)
+            queryParams.put(i as String, sub)
         }
         docTypes.eachWithIndex{ String docType,  i ->
             //Muss leider so umständlich gemacht werden, da das Label nicht parametrisiert werden kann, execute() wirft sonst einen Fehler
@@ -167,8 +167,6 @@ class CategoryService {
         }
 
         query += "\nRETURN doc ORDER BY doc.viewCount DESC LIMIT ${NumDocsToShow}"
-        //println(query)
-        //println(queryParams)
         Result result = graphDatabaseService.execute(query, queryParams)
         result.toList(Document)
     }
@@ -374,7 +372,9 @@ class CategoryService {
         println('5 Suggestion')
         start = new Date()
         //4 Get suggestions, sugg are associated to OS and the user-groups
+        println('subs: ' + subCatNames)
         while (subCatNames && !subCatNames.empty) {
+            println('subs: ' + subCatNames)
             def docs = getAllDocsAssociatedToSubCategories(subCatNames as String[], ['Tutorial', 'Article'] as String[])
             if (docs && !docs.empty) {
                 docMap.put('suggestion', docs)
@@ -422,7 +422,7 @@ class CategoryService {
     List getSameAssociatedDocs(Document givenDoc, String[] excludedMainCats, Boolean forTutorial=false) throws IllegalArgumentException {
         if (!excludedMainCats) { throw new IllegalArgumentException("Argument 'excludedMainCats' can not be null") }
         //prepare query
-        def start, end
+        def start, end, start1, end1, start2, end2
         def queryParams = [:]
         start = new Date()
         def query = "MATCH (doc:Document) WHERE doc.docTitle='${givenDoc.docTitle}' WITH doc\n"
@@ -436,10 +436,9 @@ class CategoryService {
         else { query += "WHERE ((otherDoc:Article) OR (otherDoc:Faq)) AND otherDoc.docTitle<>'${givenDoc.docTitle}'\n"}
         query += "RETURN distinct otherDoc ORDER BY otherDoc.docTitle"
 
-        //fire query
+        //fire query, verbraucht am meisten Zeit
         //println(query)
         //println(queryParams)
-        //Result myResult = Subcategory.cypherStatic(query)
         Result myResult = graphDatabaseService.execute(query, queryParams)
         end = new Date()
         println('Queryzeit: ' + TimeCategory.minus(end, start))
