@@ -28,7 +28,7 @@ class BootStrap {
 
                 def temp = []
                 for (s in doc.steps.sort{ it.number }) {
-                    temp.add([number: s.number, stepTitle: s.stepTitle, stepText: s.stepText, mediaLink: s.mediaLink])
+                    temp.add([number: s.number, stepTitle: s.stepTitle, stepText: s.stepText, stepLink: s.stepLink])
                 }
                 output.steps = temp
             }
@@ -60,7 +60,7 @@ class BootStrap {
                                 number(s.number)
                                 stepTitle(s.stepTitle)
                                 stepText(s.stepText)
-                                if (s.mediaLink) mediaLink(s.mediaLink)
+                                stepLink(s.stepLink)
                             }
                         }
                     }

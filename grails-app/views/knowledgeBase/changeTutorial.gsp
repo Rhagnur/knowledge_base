@@ -5,17 +5,27 @@
 
 <g:applyLayout name="main">
     <head>
-        <title>Artikel verändern</title>
+        <title>Tutorial verändern</title>
     </head>
 
     <content tag="main">
-        <g:form controller="KnowledgeBase" action="changeArticle">
+        <g:form controller="KnowledgeBase" action="changeTutorial">
             <g:hiddenField name="docTitle" value="${doc.docTitle}"/>
             <label for="docTitleNew">Dokumenttitel</label><br/>
             <g:textField name="docTitleNew" value="${doc.docTitle}"/>
             <br/><br/>
-            <label for="docContent">Dokumentinhalt</label><br/>
-            <g:textArea name="docContent" value="${doc.docContent}"/>
+
+            <g:each in="${doc.steps.sort{ it.number }}">
+                <label for="stepTitle_${it.number}">Schritt ${it.number} Titel</label><br/>
+                <g:textField name="stepTitle_${it.number}" value="${it.stepTitle}"/>
+                <br/>
+                <label for="stepText_${it.number}">Schritt ${it.number} Text</label><br/>
+                <g:textArea name="stepText_${it.number}" value="${it.stepText}"/>
+                <br/>
+                <label for="stepLink_${it.number}">Schritt ${it.number} Link</label><br/>
+                <g:textField name="stepLink_${it.number}" value="${it.stepLink}"/>
+                <br/><br/>
+            </g:each>
             <br/><br/>
 
             <label for="docTags">Schlagworte*</label><br/>

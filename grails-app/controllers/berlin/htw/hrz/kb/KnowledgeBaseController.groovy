@@ -8,9 +8,6 @@ import grails.converters.JSON
 import grails.plugin.springsecurity.SpringSecurityService
 import grails.plugin.springsecurity.annotation.Secured
 
-import javax.ws.rs.GET
-import javax.ws.rs.Path
-
 /**
  * Controller class for handling the requests, redirects and processing data given from the views
  */
@@ -105,7 +102,7 @@ class KnowledgeBaseController {
                     //Parents ändern, aber nur, wenn sich etwas geändert hat
                     List newParents = categoryService.getSubcategories(docSubs as String[])
                     List oldParents = doc.linker.subcat as List
-                    if (oldParents.size() != newParents.size() && !newParents.containsAll(oldParents)) {
+                    if (oldParents.size() != newParents.size() || !newParents.containsAll(oldParents)) {
                         println('Ändere Parents')
                         doc = documentService.changeDocParents(doc, categoryService.getSubcategories(docSubs as String[]))
                     }
@@ -121,6 +118,39 @@ class KnowledgeBaseController {
             }
         }
         [cats: categoryService.getAllMaincatsWithSubcats([categoryService.getCategory('author'), categoryService.getCategory('lang')] as List), lang:categoryService.getAllSubCats(categoryService.getCategory('lang')).sort{it.name}.name, author:categoryService.getAllSubCats(categoryService.getCategory('author')).sort{it.name}.name, principal: springSecurityService.principal, doc:documentService.getDoc(params.docTitle)]
+    }
+
+    /**
+     * Controller method for changing a category.
+     * In the given states it is only allowed the change a subcategory.
+     * @return
+     */
+    @Secured(["hasAuthority('ROLE_GP-STAFF')", "hasAuthority('ROLE_GP-PROF')"])
+    def changeCat() {
+        if (params.submit) {
+            if (!params.catName) { flash.error = message(code: 'kb.error.attrNameCantBeNull') as String }
+            else {
+                Category myCat = categoryService.getCategory(params.name)
+
+                if (myCat instanceof Subcategory){
+                    if(params.parentCat && myCat.parentCat.name != params.parentCat) {
+                        Category newParent = categoryService.getCategory(params.parentCat)
+                        myCat = categoryService.changeParent(myCat, newParent)
+                    }
+                    if (params.catName && params.catName != myCat.name) {
+                        myCat = categoryService.changeCategoryName(myCat, params.catName)
+                    }
+
+                    if (myCat) {
+                        flash.info = message(code: 'kb.info.catChanged') as String
+                    }
+                    else { flash.error = message(code: 'kb.error.somethingWentWrong') as String }
+                }
+                else { flash.error = message(code: 'kb.error.cantDeleteOrChangeMainCat') as String }
+                redirect(view: 'index', model: [otherDocs: categoryService.getDocsOfInterest(springSecurityService.principal, request), principal: springSecurityService.principal])
+            }
+        }
+        [cat: params.name?categoryService.getCategory(params.name):null, allCatsByMainCats: categoryService.getAllMaincatsWithSubcats(), principal: springSecurityService.principal]
     }
 
     @Secured(["hasAuthority('ROLE_GP-STAFF')", "hasAuthority('ROLE_GP-PROF')"])
@@ -162,6 +192,13 @@ class KnowledgeBaseController {
                     doc = documentService.changeFaqAnswer(doc, params.answer)
                     //Tags ändern
                     doc = documentService.changeTags(doc, docTags)
+                    //Parents ändern, aber nur, wenn sich etwas geändert hat
+                    List newParents = categoryService.getSubcategories(docSubs as String[])
+                    List oldParents = doc.linker.subcat as List
+                    if (oldParents.size() != newParents.size() || !newParents.containsAll(oldParents)) {
+                        println('Ändere Parents')
+                        doc = documentService.changeDocParents(doc, categoryService.getSubcategories(docSubs as String[]))
+                    }
                 } else {
                     flash.error = message(code: 'kb.error.fillOutAllFields') as String
                 }
@@ -175,37 +212,68 @@ class KnowledgeBaseController {
         [cats: categoryService.getAllMaincatsWithSubcats([categoryService.getCategory('author'), categoryService.getCategory('lang')] as List), lang:categoryService.getAllSubCats(categoryService.getCategory('lang')).sort{it.name}.name, author:categoryService.getAllSubCats(categoryService.getCategory('author')).sort{it.name}.name, principal: springSecurityService.principal, doc:documentService.getDoc(params.docTitle)]
     }
 
-    /**
-     * Controller method for changing a category.
-     * In the given states it is only allowed the change a subcategory.
-     * @return
-     */
-    @Secured(["hasAuthority('ROLE_GP-STAFF')", "hasAuthority('ROLE_GP-PROF')"])
-    def changeCat() {
+    def changeTutorial() {
+        println(params)
         if (params.submit) {
-            if (!params.catName) { flash.error = message(code: 'kb.error.attrNameCantBeNull') as String }
-            else {
-                Category myCat = categoryService.getCategory(params.name)
+            def docSubs = []
+            String[] docTags
+            def doc = documentService.getDoc(params.docTitle)
 
-                if (myCat instanceof Subcategory){
-                    if(params.parentCat && myCat.parentCat.name != params.parentCat) {
-                        Category newParent = categoryService.getCategory(params.parentCat)
-                        myCat = categoryService.changeParent(myCat, newParent)
-                    }
-                    if (params.catName && params.catName != myCat.name) {
-                        myCat = categoryService.changeCategoryName(myCat, params.catName)
-                    }
+            //Hole und Verarbeite Tags
+            if (params.docTags) {
+                //Hole dir den tag-input und entferne alle 'space' Elemente (Leerzeichen, Tab, \n etc)
+                docTags = (params.docTags as String)?.replaceAll('\\s', '')?.split(',')
+            }
 
-                    if (myCat) {
-                        flash.info = message(code: 'kb.info.catChanged') as String
+            //Hole Subkategorien, repräsentiert durch Checkboxen und erzeuge eine Liste aus den ausgewählten
+            def clickedSubcats = params.list('checkbox') as String[]
+            if (!clickedSubcats) {
+                flash.error = message(code: 'kb.error.noSubCatGiven') as String
+            } else {
+                //Füge den Autor (eingeloggter User) des Dokuments an
+                docSubs.add(params.authorNew)
+                //Füge Sprache hinzu
+                docSubs.add(params.languageNew)
+                //Füge alle angeklickten Subkategorien an
+                docSubs.addAll(clickedSubcats)
+            }
+
+            //Verarbeite dokumentspezifische Daten (Tutorial: verarbeite einzelne Steps, FAQ: verarbeite Frage-Antwort)
+            if (!flash.error) {
+                //Finde alle Daten für die einzelnen Schritte und verarbeite sie
+                def stepData = [:]
+                List steps
+                stepData << params.findAll { it.key =~ /stepTitle_[0-9]+/ && it.value } << params.findAll { it.key =~ /stepText_[0-9]+/  && it.value } << params.findAll { it.key =~ /stepLink_[0-9]+/ }
+                println('stepDate: ' +stepData)
+                steps = documentService.newSteps(stepData as Map)
+
+                if (steps && params.docTitleNew) {
+                    //Title und Frage ändern
+                    if (params.docTitle != params.docTitleNew) {
+                        doc = documentService.changeDocTitle(doc, params.docTitleNew)
                     }
-                    else { flash.error = message(code: 'kb.error.somethingWentWrong') as String }
+                    //Steps ändern
+                    doc = documentService.changeTutorialSteps(doc, steps)
+                    //Tags ändern
+                    doc = documentService.changeTags(doc, docTags)
+                    //Parents ändern, aber nur, wenn sich etwas geändert hat
+                    List newParents = categoryService.getSubcategories(docSubs as String[])
+                    List oldParents = doc.linker.subcat as List
+                    if (oldParents.size() != newParents.size() || !newParents.containsAll(oldParents)) {
+                        println('Ändere Parents')
+                        doc = documentService.changeDocParents(doc, categoryService.getSubcategories(docSubs as String[]))
+                    }
+                } else {
+                    flash.error = message(code: 'kb.error.fillOutAllFields') as String
                 }
-                else { flash.error = message(code: 'kb.error.cantDeleteOrChangeMainCat') as String }
-                redirect(view: 'index', model: [otherDocs: categoryService.getDocsOfInterest(springSecurityService.principal, request), principal: springSecurityService.principal])
+
+                if (!flash.error) {
+                    flash.info = message(code: 'kb.info.docChanged') as String
+                    redirect(view: 'showDoc', model: [document: doc, author: params.authorNew, lang: params.languageNew, principal: springSecurityService.principal])
+                }
             }
         }
-        [cat: params.name?categoryService.getCategory(params.name):null, allCatsByMainCats: categoryService.getAllMaincatsWithSubcats(), principal: springSecurityService.principal]
+        [cats: categoryService.getAllMaincatsWithSubcats([categoryService.getCategory('author'), categoryService.getCategory('lang')] as List), lang:categoryService.getAllSubCats(categoryService.getCategory('lang')).sort{it.name}.name, author:categoryService.getAllSubCats(categoryService.getCategory('author')).sort{it.name}.name, principal: springSecurityService.principal, doc:documentService.getDoc(params.docTitle)]
     }
 
     /**
@@ -479,10 +547,6 @@ class KnowledgeBaseController {
         doc.linker.each {
             println('Noch da')
         }*/
-
-        println(documentService.findUnlinkedDocs())
-        println(categoryService.findUnlinkedSubcats())
-
         [otherDocs: categoryService.getDocsOfInterest(springSecurityService.principal, request), principal: springSecurityService.principal];
     }
 

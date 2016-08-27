@@ -26,7 +26,7 @@ class DocumentServiceSpec extends Specification {
 
     void "test newTutorial with steps"() {
         when:
-            def doc = service.newTutorial('TestingServiceTutorialNullSteps',[new Step(number: 1, stepTitle: 'TestTitel1', stepText: 'TestTitel2', mediaLink: 'TestLink1'), new Step(number: 2, stepTitle: 'TestTitel2', stepText: 'TestTitel2', mediaLink: 'TestLink2')] as Step[], ['Test'] as String[])
+            def doc = service.newTutorial('TestingServiceTutorialNullSteps',[new Step(number: 1, stepTitle: 'TestTitel1', stepText: 'TestTitel2', stepLink: 'TestLink1'), new Step(number: 2, stepTitle: 'TestTitel2', stepText: 'TestTitel2', stepLink: 'TestLink2')] as Step[], ['Test'] as String[])
         then:
             doc instanceof Document
             doc?.docTitle == 'TestingServiceTutorialNullSteps'

@@ -153,7 +153,9 @@ class DocumentService {
      */
     Document changeTutorialSteps(Tutorial doc, List<Step> newSteps) throws IllegalArgumentException, ValidationErrorException {
         if (!doc && !newSteps) { throw new IllegalArgumentException("Attribute 'doc' and 'newSteps' CAN NOT be null!") }
+        doc.steps.collect().each { it.delete() }
         doc.steps.clear()
+
         newSteps.each {Step step ->
             doc.addToSteps(step)
         }
@@ -186,14 +188,14 @@ class DocumentService {
     /**
      * This method exports a specific doc in a machine-friendly output
      * If no document is given or the parameter is null it will return a list of all unlocked documents in the chosen format
-     * @param exportAs Decides which format will be returned, use 'json' or 'xml' for either format
+     * @param format Decides which format will be returned, use 'json' or 'xml' for either format
      * @param doc document which you want to get exported, can be null
      * @return output as JSON or XML Object
      * @throws IllegalArgumentException
      */
-    def exportDoc(String exportAs, Document doc = null) throws IllegalArgumentException {
+    def exportDoc(String format, Document doc = null) throws IllegalArgumentException {
         def output
-        if (exportAs == 'json') {
+        if (format == 'json') {
             if (doc) { output = doc as JSON }
             else {
                 def tempMap = [:]
@@ -210,7 +212,7 @@ class DocumentService {
                 tempMap.put('documents', tempList)
                 output = tempMap as JSON
             }
-        } else if (exportAs == 'xml') {
+        } else if (format == 'xml') {
             if (doc) { output = doc as XML }
             else {
                 def writer = new StringWriter()
@@ -231,7 +233,7 @@ class DocumentService {
                 output = writer.toString()
             }
         } else {
-            throw new IllegalArgumentException("No such 'exportAs' argument, please use 'json' or 'xml'!")
+            throw new IllegalArgumentException("No such 'format' argument, please use 'json' or 'xml'!")
         }
         output
     }
@@ -358,7 +360,7 @@ class DocumentService {
             if(!stepsError) {
                 steps = []
                 for (int i = 1; i <= allTitles.size(); i++) {
-                    steps.add(new Step(number: i, stepTitle: allTitles.get(/stepTitle_/ + i), stepText: allTexts.get(/stepText_/ + i), mediaLink: allLinks.get(/stepLink_/ + i)))
+                    steps.add(new Step(number: i, stepTitle: allTitles.get(/stepTitle_/ + i), stepText: allTexts.get(/stepText_/ + i), stepLink: allLinks.get(/stepLink_/ + i)))
                 }
             }
         }

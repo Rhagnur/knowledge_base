@@ -16,7 +16,7 @@ class Step {
     }
 
     static constraints = {
-        mediaLink nullable: true
+        stepLink nullable: true
     }
     /**
      * reference to the parent-document
@@ -38,5 +38,5 @@ class Step {
     /**
      * optional, can be null
      */
-    String mediaLink;
+    String stepLink;
 }

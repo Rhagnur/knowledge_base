@@ -19,7 +19,7 @@ class StepSpec extends Specification {
 
     void "test step all"() {
         when:
-            Step step = new Step(number: 22, stepTitle: 'TestingStep', stepText: 'Testing', mediaLink: 'http://testing.test/testimg.jpg', doc: new Document(docTitle: 'Test', viewCount: 1)).save()
+            Step step = new Step(number: 22, stepTitle: 'TestingStep', stepText: 'Testing', stepLink: 'http://testing.test/testimg.jpg', doc: new Document(docTitle: 'Test', viewCount: 1)).save()
         then:
             step.validate() == true
             step.doc instanceof Document
@@ -32,14 +32,14 @@ class StepSpec extends Specification {
 
     void "test step nullable attrs = null"() {
         when:
-            Step step = new Step(number: 22, stepTitle: 'TestingStep', stepText: 'Testing', mediaLink: null, doc: new Document(docTitle: 'Test', viewCount: 1))
+            Step step = new Step(number: 22, stepTitle: 'TestingStep', stepText: 'Testing', stepLink: null, doc: new Document(docTitle: 'Test', viewCount: 1))
         then:
             step.validate() == true
     }
 
     void "test step not-nullable attrs = null"() {
         when:
-            Step step = new Step(number: null, stepTitle: null, stepText: null, mediaLink: null, doc: null)
+            Step step = new Step(number: null, stepTitle: null, stepText: null, stepLink: null, doc: null)
         then:
             step.validate() == false
     }

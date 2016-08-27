@@ -19,7 +19,7 @@
             <br/><br/>
 
             <label for="docTags">Schlagworte*</label><br/>
-            <g:textArea name="docTags" value="${doc.tags?.toString()}"/><br/>
+            <g:textArea name="docTags" value="${doc.tags?.toString()?.replaceAll('[\\[\\]]', '')}"/><br/>
 
             <p><i>*Trennen mit ','</i></p>
             <br/><br/>
