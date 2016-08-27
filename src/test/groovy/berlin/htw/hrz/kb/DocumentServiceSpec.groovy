@@ -15,7 +15,7 @@ import spock.lang.Specification
  * See the API for {@link grails.test.mixin.services.ServiceUnitTestMixin} for usage instructions
  */
 @TestFor(DocumentService)
-@Mock([Document, Tutorial, Step, Article, Faq])
+@Mock([Document, Tutorial, Step, Article, Faq, Subcategory, Linker, Category])
 class DocumentServiceSpec extends Specification {
 
     def setup() {
@@ -26,9 +26,9 @@ class DocumentServiceSpec extends Specification {
 
     void "test newTutorial with steps"() {
         when:
-            def doc = service.newTutorial('TestingServiceTutorialNullSteps',[new Step(number: 1, stepTitle: 'TestTitel1', stepText: 'TestTitel2', stepLink: 'TestLink1'), new Step(number: 2, stepTitle: 'TestTitel2', stepText: 'TestTitel2', stepLink: 'TestLink2')] as Step[], ['Test'] as String[])
+            Tutorial doc = service.newTutorial('TestingServiceTutorialNullSteps',[new Step(number: 1, stepTitle: 'TestTitel1', stepText: 'TestTitel2', stepLink: 'TestLink1'), new Step(number: 2, stepTitle: 'TestTitel2', stepText: 'TestTitel2', stepLink: 'TestLink2')] as List, ['Test'] as String[])
         then:
-            doc instanceof Document
+            doc instanceof Tutorial
             doc?.docTitle == 'TestingServiceTutorialNullSteps'
             doc?.tags?.contains('Test')
             doc?.steps != null
@@ -39,7 +39,7 @@ class DocumentServiceSpec extends Specification {
 
     void "test newTutorial validation error"() {
         when:
-            def doc = service.newTutorial(null, null, null)
+            service.newTutorial(null, null, null)
         then:
             thrown ValidationErrorException
     }
@@ -56,14 +56,14 @@ class DocumentServiceSpec extends Specification {
 
     void "test getDoc not-existing"() {
         when:
-            def doc = service.getDoc('Nonsens')
+            service.getDoc('Nonsens')
         then:
             thrown NoSuchObjectFoundException
     }
 
     void "test getDoc null"() {
         when:
-            def doc = service.getDoc(null)
+            service.getDoc(null)
         then:
             thrown IllegalArgumentException
     }
@@ -81,6 +81,13 @@ class DocumentServiceSpec extends Specification {
             doc instanceof Document
             doc != null
             doc.viewCount == 43
+    }
+
+    void "test increaseViewCount IllArgEx"() {
+        when:
+            service.increaseCounter(null)
+        then:
+            thrown IllegalArgumentException
     }
 
 
@@ -178,7 +185,7 @@ class DocumentServiceSpec extends Specification {
             doc.tags.contains('test1')
             doc.tags.contains('test2')
         when:
-            doc = service.changeTags(doc, ['hallo','welt'] as String[])
+            doc = service.changeDocTags(doc, ['hallo', 'welt'] as String[])
         then:
             !doc.tags.contains('test1')
             !doc.tags.contains('test2')
@@ -188,7 +195,7 @@ class DocumentServiceSpec extends Specification {
 
     void "test changeTags IllArgEx"() {
         when:
-            service.changeTags(null, null)
+            service.changeDocTags(null, null)
         then:
             thrown IllegalArgumentException
     }
@@ -202,6 +209,13 @@ class DocumentServiceSpec extends Specification {
             doc.docContent == 'Hallo Welt'
     }
 
+    void "test changeArticleContent IllArgEx"() {
+        when:
+            service.changeArticleContent(null, null)
+        then:
+            thrown IllegalArgumentException
+    }
+
     void "test changeFaqAnswer"() {
         given:
             Faq doc = new Faq(docTitle: 'Test', viewCount: 0, question: 'Test?', answer: 'Test').save(flush:true)
@@ -209,6 +223,13 @@ class DocumentServiceSpec extends Specification {
             doc = service.changeFaqAnswer(doc, 'Hallo Welt')
         then:
             doc.answer == 'Hallo Welt'
+    }
+
+    void "test changeFaqAnswer IllArgEx"() {
+        when:
+            service.changeFaqAnswer(null, null)
+        then:
+            thrown IllegalArgumentException
     }
 
     void "test changeFaqQuestion"() {
@@ -220,13 +241,27 @@ class DocumentServiceSpec extends Specification {
             doc.question == 'Hallo Welt?'
     }
 
+    void "test changeFaqQuestion IllArgEx"() {
+        when:
+            service.changeFaqQuestion(null, null)
+        then:
+            thrown IllegalArgumentException
+    }
+
     void "test changeLocked"() {
         given:
             Document doc = new Document(docTitle: 'Test', viewCount: 0, locked: false).save(flush:true)
         when:
-            doc = service.changeLocked(doc, true)
+            doc = service.changeDocLocked(doc, true)
         then:
             doc.locked
+    }
+
+    void "test changeLocked IllArgEx"() {
+        when:
+            service.changeDocLocked(null, null)
+        then:
+            thrown IllegalArgumentException
     }
 
     void "test changeTutorialSteps"() {
@@ -236,5 +271,122 @@ class DocumentServiceSpec extends Specification {
             doc = service.changeTutorialSteps(doc, [new Step(stepTitle: 'Test', stepText: 'Hallo Welt', number: 1), new Step(stepTitle: 'Test', stepText: 'Hallo Welt', number: 2)])
         then:
             doc.steps.size() == 2
+    }
+
+    void "test changeTutorialSteps IllArgEx"() {
+        when:
+            service.changeTutorialSteps(null, null)
+        then:
+            thrown IllegalArgumentException
+    }
+
+    void "test changeDocParents"() {
+        given:
+            Document doc = new Document(docTitle: 'Test', viewCount: 0, locked: false).save(flush:true)
+            new Category(name: 'lang').addToSubCats(new Subcategory(name: 'Hallo')).save()
+            new Category(name: 'author').addToSubCats(new Subcategory(name: 'Welt')).save()
+        expect:
+            doc.linker == null
+        when:
+            doc = service.changeDocParents(doc, [Subcategory.findByName('Hallo'), Subcategory.findByName('Welt')] as List<Subcategory>)
+        then:
+            doc instanceof Document
+            doc.linker.size() == 2
+            doc.linker.subcat.name.containsAll(['Hallo', 'Welt'])
+    }
+
+    void "test changeDocParents IllArgEx null"() {
+        when:
+            service.changeDocParents(null,null)
+        then:
+            IllegalArgumentException ex = thrown()
+            ex.getMessage() == "Attribute 'doc' and 'newParents' CAN NOT be null or empty!"
+    }
+
+    void "test changeDocParents IllArgEx missingCats"() {
+        setup:
+            Document doc = new Document(docTitle: 'Test', viewCount: 0, locked: false).save(flush:true)
+        when:
+            service.changeDocParents(doc, [new Subcategory(name: 'Hallo').save()] as List<Subcategory>)
+        then:
+            IllegalArgumentException ex = thrown()
+            ex.getMessage() == "Attribute 'newParents' must contain a child element from 'lang' and 'author'!"
+
+    }
+
+    void "test changeDocParents IllArgEx"() {
+        when:
+            service.changeDocParents(null, null)
+        then:
+            thrown IllegalArgumentException
+    }
+
+    void "test findUnlinkedDocs"() {
+        setup:
+            new Document(docTitle: 'Test', viewCount: 0, locked: false).save(flush:true)
+            new Document(docTitle: 'Test2', viewCount: 0, locked: false).save(flush:true)
+        when:
+            List<Document> docs = service.findUnlinkedDocs()
+        then:
+            docs.size() == 2
+            docs.docTitle.containsAll(['Test','Test2'])
+
+    }
+
+    void "test newArticle"() {
+        when:
+            Article doc = service.newArticle('Test', 'Testing', null)
+        then:
+            notThrown Exception
+            doc instanceof Article
+            doc.docTitle == 'Test'
+            doc.docContent == 'Testing'
+    }
+
+    void "test newArticle ValiErrEx"() {
+        when:
+            service.newArticle(null, null, null)
+        then:
+            thrown ValidationErrorException
+    }
+
+    void "test newFaq"() {
+        when:
+            Faq doc = service.newFaq('Test', 'Testing', null)
+        then:
+            notThrown Exception
+            doc instanceof Faq
+            doc.question == 'Test'
+            doc.docTitle == doc.question
+            doc.answer == 'Testing'
+    }
+
+    void "test newFaq ValiErrEx"() {
+        when:
+            service.newFaq(null, null, null)
+        then:
+            thrown ValidationErrorException
+    }
+
+    void "test newSteps"() {
+        when:
+            List<Step> steps = service.newSteps([stepTitle_1:'Test', stepText_1:'Testing', steptTitle_2:'Test2', stepText_2:'Testing2'])
+        then:
+            steps != null
+            steps instanceof List<Step>
+    }
+
+    void "test newSteps null returns null"() {
+        when:
+            List<Step> steps = service.newSteps(null)
+        then:
+            steps == null
+    }
+
+    void "test newSteps stepText not match stepTitle"() {
+        when:
+            List<Step> steps = service.newSteps([stepTitle_1:'Test', stepText_2:'Testing2'])
+        then:
+            steps == null
     }
 }

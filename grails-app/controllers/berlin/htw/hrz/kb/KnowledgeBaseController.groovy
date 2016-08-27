@@ -98,7 +98,7 @@ class KnowledgeBaseController {
                     //Content ändern
                     doc = documentService.changeArticleContent(doc, params.docContent)
                     //Tags ändern
-                    doc = documentService.changeTags(doc, docTags)
+                    doc = documentService.changeDocTags(doc, docTags)
                     //Parents ändern, aber nur, wenn sich etwas geändert hat
                     List newParents = categoryService.getSubcategories(docSubs as String[])
                     List oldParents = doc.linker.subcat as List
@@ -191,7 +191,7 @@ class KnowledgeBaseController {
                     //Antwort ändern
                     doc = documentService.changeFaqAnswer(doc, params.answer)
                     //Tags ändern
-                    doc = documentService.changeTags(doc, docTags)
+                    doc = documentService.changeDocTags(doc, docTags)
                     //Parents ändern, aber nur, wenn sich etwas geändert hat
                     List newParents = categoryService.getSubcategories(docSubs as String[])
                     List oldParents = doc.linker.subcat as List
@@ -255,7 +255,7 @@ class KnowledgeBaseController {
                     //Steps ändern
                     doc = documentService.changeTutorialSteps(doc, steps)
                     //Tags ändern
-                    doc = documentService.changeTags(doc, docTags)
+                    doc = documentService.changeDocTags(doc, docTags)
                     //Parents ändern, aber nur, wenn sich etwas geändert hat
                     List newParents = categoryService.getSubcategories(docSubs as String[])
                     List oldParents = doc.linker.subcat as List

@@ -16,11 +16,76 @@ import groovy.xml.MarkupBuilder
 @Transactional
 class DocumentService {
 
-    //todo: changeTags, changeContent, ...Steps,Faq..bla
+    //todo: changeDocTags, changeContent, ...Steps,Faq..bla
 
     Document changeArticleContent(Article doc, String newContent) throws IllegalArgumentException, ValidationErrorException {
         if (!doc) { throw new IllegalArgumentException("Attribute 'doc' CAN NOT be null!") }
         doc.docContent = newContent
+        doc.changeDate = new Date()
+        if (!doc.validate()) {
+            doc.errors?.allErrors?.each { log.error(it) }
+            throw new ValidationErrorException('Validation for document-data was not successful!')
+        }
+        doc.save(flush:true)
+    }
+
+    /**
+     *
+     * @param doc
+     * @param newLocked
+     * @return document
+     * @throws IllegalArgumentException
+     * @throws ValidationErrorException
+     */
+    Document changeDocLocked(Document doc, Boolean newLocked) throws IllegalArgumentException, ValidationErrorException {
+        if (!doc || newLocked == null) { throw new IllegalArgumentException("Attribute 'doc' and 'newLocked' CAN NOT be null!") }
+        doc.locked = newLocked
+        doc.changeDate = new Date()
+        if (!doc.validate()) {
+            doc.errors?.allErrors?.each { log.error(it) }
+            throw new ValidationErrorException('Validation for document-data was not successful!')
+        }
+        doc.save(flush:true)
+    }
+
+    /**
+     *
+     * @param doc
+     * @param newParents
+     * @return document
+     * @throws IllegalArgumentException
+     * @throws ValidationErrorException
+     */
+    Document changeDocParents(Document doc, List<Subcategory>newParents) throws IllegalArgumentException, ValidationErrorException {
+        if (!doc || !newParents) { throw new IllegalArgumentException("Attribute 'doc' and 'newParents' CAN NOT be null or empty!") }
+        else if ( !(newParents.find{ it.parentCat?.name == 'lang'}) || !(newParents.find{ it.parentCat?.name == 'author'}) ) {
+            throw new IllegalArgumentException("Attribute 'newParents' must contain a child element from 'lang' and 'author'!")
+        } else {
+            doc.linker.collect().each { Linker it ->
+                Linker.unlink(it.subcat, it.doc)
+            }
+            newParents.each {Subcategory cat->
+                Linker.link(cat, doc)
+            }
+            if (!doc.validate()) {
+                doc.errors?.allErrors?.each { log.error(it) }
+                throw new ValidationErrorException('Validation for document-data was not successful!')
+            }
+            doc.save(flush:true)
+        }
+    }
+
+    /**
+     *
+     * @param doc
+     * @param newTags
+     * @return document
+     * @throws IllegalArgumentException
+     * @throws ValidationErrorException
+     */
+    Document changeDocTags(Document doc, String[] newTags) throws IllegalArgumentException, ValidationErrorException {
+        if (!doc) { throw new IllegalArgumentException("Attribute 'doc' CAN NOT be null!") }
+        doc.tags = newTags
         doc.changeDate = new Date()
         if (!doc.validate()) {
             doc.errors?.allErrors?.each { log.error(it) }
@@ -46,25 +111,6 @@ class DocumentService {
             throw new ValidationErrorException('Validation for document-data was not successful!')
         }
         doc.save(flush:true)
-    }
-
-    Document changeDocParents(Document doc, List<Subcategory>newParents) throws IllegalArgumentException, ValidationErrorException {
-        if (!doc || !newParents) { throw new IllegalArgumentException("Attribute 'doc' and 'newParents' CAN NOT be null or empty!") }
-        else if ( !(newParents.find{ it.parentCat.name == 'lang'}) || !(newParents.find{ it.parentCat.name == 'author'}) ) {
-            throw new IllegalArgumentException("Attribute 'newParents' must contain a child element from 'lang' and 'author'!")
-        } else {
-            doc.linker.collect().each { Linker it ->
-                Linker.unlink(it.subcat, it.doc)
-            }
-            newParents.each {Subcategory cat->
-                Linker.link(cat, doc)
-            }
-            if (!doc.validate()) {
-                doc.errors?.allErrors?.each { log.error(it) }
-                throw new ValidationErrorException('Validation for document-data was not successful!')
-            }
-            doc.save(flush:true)
-        }
     }
 
     /**
@@ -97,44 +143,6 @@ class DocumentService {
     Document changeFaqQuestion(Faq doc, String question) throws IllegalArgumentException, ValidationErrorException {
         if (!doc) { throw new IllegalArgumentException("Attribute 'doc' CAN NOT be null!") }
         doc.question = question
-        doc.changeDate = new Date()
-        if (!doc.validate()) {
-            doc.errors?.allErrors?.each { log.error(it) }
-            throw new ValidationErrorException('Validation for document-data was not successful!')
-        }
-        doc.save(flush:true)
-    }
-
-    /**
-     *
-     * @param doc
-     * @param newLocked
-     * @return document
-     * @throws IllegalArgumentException
-     * @throws ValidationErrorException
-     */
-    Document changeLocked(Document doc, Boolean newLocked) throws IllegalArgumentException, ValidationErrorException {
-        if (!doc || newLocked == null) { throw new IllegalArgumentException("Attribute 'doc' and 'newLocked' CAN NOT be null!") }
-        doc.locked = newLocked
-        doc.changeDate = new Date()
-        if (!doc.validate()) {
-            doc.errors?.allErrors?.each { log.error(it) }
-            throw new ValidationErrorException('Validation for document-data was not successful!')
-        }
-        doc.save(flush:true)
-    }
-
-    /**
-     *
-     * @param doc
-     * @param newTags
-     * @return document
-     * @throws IllegalArgumentException
-     * @throws ValidationErrorException
-     */
-    Document changeTags(Document doc, String[] newTags) throws IllegalArgumentException, ValidationErrorException {
-        if (!doc) { throw new IllegalArgumentException("Attribute 'doc' CAN NOT be null!") }
-        doc.tags = newTags
         doc.changeDate = new Date()
         if (!doc.validate()) {
             doc.errors?.allErrors?.each { log.error(it) }
