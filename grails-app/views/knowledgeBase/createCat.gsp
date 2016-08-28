@@ -10,7 +10,7 @@
 
     <content tag="main">
         <h1><g:message code="kb.view.createCat.title"/></h1>
-        <g:form controller="KnowledgeBase" action="createCat">
+        <g:form controller="KnowledgeBase" action="createCat" class="catForm">
             <label for="catName"><g:message code="kb.view.createCat.name"/></label><br/>
             <g:textField name="catName"/><br/><br/><br/>
 

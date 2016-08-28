@@ -14,7 +14,7 @@
             <g:link controller="KnowledgeBase" action="exportDoc"
                     params="[docTitle: document.docTitle, format: 'json']"><g:message code="kb.view.json"/></g:link>
             <g:link controller="KnowledgeBase" action="exportDoc"
-                    params="[docTitle: document.docTitle, format: 'xml']"><g:message code="kb.view.json"/></g:link>
+                    params="[docTitle: document.docTitle, format: 'xml']"><g:message code="kb.view.xml"/></g:link>
         </p>
         <sec:ifAnyGranted roles="ROLE_GP-STAFF,ROLE_GP-PROF">
             <p>

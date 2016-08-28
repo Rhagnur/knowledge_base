@@ -9,8 +9,8 @@
     </head>
 
     <content tag="main">
+        <h1><g:message code="kb.view.createFaq.title"/></h1>
         <g:form controller="KnowledgeBase" action="createFaq" class="docForm">
-            <h1><g:message code="kb.view.createFaq.title"/></h1>
             <label for="question"><g:message code="kb.view.createFaq.question"/></label><br/>
             <g:textField name="question"/>
             <br/><br/>

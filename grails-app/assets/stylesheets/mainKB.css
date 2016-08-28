@@ -180,7 +180,7 @@ a {
 a:hover {
     color: #31b0d5;
 }
-.docForm {
+.docForm, .catForm {
     border: 1px solid rgba(0,0,0,0.2);
     border-radius: 1em;
     margin-bottom: 2em;

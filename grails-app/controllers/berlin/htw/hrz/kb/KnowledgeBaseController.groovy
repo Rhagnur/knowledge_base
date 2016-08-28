@@ -86,34 +86,38 @@ class KnowledgeBaseController {
             }
 
             //Verarbeite dokumentspezifische Daten (Tutorial: verarbeite einzelne Steps, FAQ: verarbeite Frage-Antwort)
-            if (!flash.error) {
+            if (!flash.error && doc) {
                 if (params.docTitleNew && !params.docTitleNew.empty && params.docContent && !params.docContent.empty) {
                     //Titel ändern
                     if (params.docTitle != params.docTitleNew) {
+                        println('Title ändern')
                         doc = documentService.changeDocTitle(doc, params.docTitleNew)
+                        println('Titel geändert')
                     }
                     //Content ändern
+                    println("title: $doc.docTitle")
                     doc = documentService.changeArticleContent(doc, params.docContent)
                     //Tags ändern
+                    println('Tags ändern')
                     doc = documentService.changeDocTags(doc, docTags)
                     //Parents ändern, aber nur, wenn sich etwas geändert hat
                     List newParents = categoryService.getSubcategories(docSubs as String[])
                     List oldParents = doc.linker.subcat as List
                     if (oldParents.size() != newParents.size() || !newParents.containsAll(oldParents)) {
+                        println('Parents ändern')
                         doc = documentService.changeDocParents(doc, categoryService.getSubcategories(docSubs as String[]))
                     }
                 } else {
                     flash.error = message(code: 'kb.error.fillOutAllFields') as String
                 }
 
-                if (!flash.error) {
-                    flash.info = message(code: 'kb.info.docChanged') as String
-
-                    redirect(view: 'showDoc', model: [document: doc, author: params.authorNew, lang: params.languageNew, similarDocs: categoryService.getAdditionalDocs(doc), principal: springSecurityService.principal])
-                }
+                if (!flash.error) { flash.info = message(code: 'kb.info.docChanged') as String }
+                else { flash.error = message(code: 'kb.error.somethingWentWrong') as String }
+                redirect(view: 'index', model: [otherDocs: categoryService.getDocsOfInterest(springSecurityService.principal, request), principal: springSecurityService.principal])
             }
+        } else {
+            [cats: categoryService.getAllMaincatsWithSubcats([categoryService.getCategory('author'), categoryService.getCategory('lang')] as List), lang:categoryService.getAllSubCats(categoryService.getCategory('lang')).sort{it.name}.name, author:categoryService.getAllSubCats(categoryService.getCategory('author')).sort{it.name}.name, principal: springSecurityService.principal, doc:documentService.getDoc(params.docTitle)]
         }
-        [cats: categoryService.getAllMaincatsWithSubcats([categoryService.getCategory('author'), categoryService.getCategory('lang')] as List), lang:categoryService.getAllSubCats(categoryService.getCategory('lang')).sort{it.name}.name, author:categoryService.getAllSubCats(categoryService.getCategory('author')).sort{it.name}.name, principal: springSecurityService.principal, doc:documentService.getDoc(params.docTitle)]
     }
 
     /**
@@ -176,7 +180,7 @@ class KnowledgeBaseController {
             }
 
             //Verarbeite dokumentspezifische Daten (Tutorial: verarbeite einzelne Steps, FAQ: verarbeite Frage-Antwort)
-            if (!flash.error) {
+            if (!flash.error && doc) {
                 if (params.question && params.question.replaceAll('\\s', '') != '' && params.answer && params.answer.replaceAll('\\s', '') != '' ) {
                     //Title und Frage ändern
                     if (params.docTitle != params.question) {
@@ -197,13 +201,13 @@ class KnowledgeBaseController {
                     flash.error = message(code: 'kb.error.fillOutAllFields') as String
                 }
 
-                if (!flash.error) {
-                    flash.info = message(code: 'kb.info.docChanged') as String
-                    redirect(view: 'showDoc', model: [document: doc, author: params.authorNew, lang: params.languageNew, principal: springSecurityService.principal])
-                }
+                if (!flash.error) { flash.info = message(code: 'kb.info.docChanged') as String }
+                else { flash.error = message(code: 'kb.error.somethingWentWrong') as String }
+                redirect(view: 'index', model: [otherDocs: categoryService.getDocsOfInterest(springSecurityService.principal, request), principal: springSecurityService.principal])
             }
+        } else {
+            [cats: categoryService.getAllMaincatsWithSubcats([categoryService.getCategory('author'), categoryService.getCategory('lang')] as List), lang:categoryService.getAllSubCats(categoryService.getCategory('lang')).sort{it.name}.name, author:categoryService.getAllSubCats(categoryService.getCategory('author')).sort{it.name}.name, principal: springSecurityService.principal, doc:documentService.getDoc(params.docTitle)]
         }
-        [cats: categoryService.getAllMaincatsWithSubcats([categoryService.getCategory('author'), categoryService.getCategory('lang')] as List), lang:categoryService.getAllSubCats(categoryService.getCategory('lang')).sort{it.name}.name, author:categoryService.getAllSubCats(categoryService.getCategory('author')).sort{it.name}.name, principal: springSecurityService.principal, doc:documentService.getDoc(params.docTitle)]
     }
 
     def changeTutorial() {
@@ -232,7 +236,7 @@ class KnowledgeBaseController {
             }
 
             //Verarbeite dokumentspezifische Daten (Tutorial: verarbeite einzelne Steps, FAQ: verarbeite Frage-Antwort)
-            if (!flash.error) {
+            if (!flash.error && doc) {
                 //Finde alle Daten für die einzelnen Schritte und verarbeite sie
                 def stepData = [:]
                 List steps
@@ -258,13 +262,13 @@ class KnowledgeBaseController {
                     flash.error = message(code: 'kb.error.fillOutAllFields') as String
                 }
 
-                if (!flash.error) {
-                    flash.info = message(code: 'kb.info.docChanged') as String
-                    redirect(view: 'showDoc', model: [document: doc, author: params.authorNew, lang: params.languageNew, principal: springSecurityService.principal])
-                }
+                if (!flash.error) { flash.info = message(code: 'kb.info.docChanged') as String }
+                else { flash.error = message(code: 'kb.error.somethingWentWrong') as String }
+                redirect(view: 'index', model: [otherDocs: categoryService.getDocsOfInterest(springSecurityService.principal, request), principal: springSecurityService.principal])
             }
+        } else {
+            [cats: categoryService.getAllMaincatsWithSubcats([categoryService.getCategory('author'), categoryService.getCategory('lang')] as List), lang:categoryService.getAllSubCats(categoryService.getCategory('lang')).sort{it.name}.name, author:categoryService.getAllSubCats(categoryService.getCategory('author')).sort{it.name}.name, principal: springSecurityService.principal, doc:documentService.getDoc(params.docTitle)]
         }
-        [cats: categoryService.getAllMaincatsWithSubcats([categoryService.getCategory('author'), categoryService.getCategory('lang')] as List), lang:categoryService.getAllSubCats(categoryService.getCategory('lang')).sort{it.name}.name, author:categoryService.getAllSubCats(categoryService.getCategory('author')).sort{it.name}.name, principal: springSecurityService.principal, doc:documentService.getDoc(params.docTitle)]
     }
 
     /**

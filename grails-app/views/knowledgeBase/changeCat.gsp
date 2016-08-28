@@ -9,8 +9,8 @@
     </head>
 
     <content tag="main">
-        <g:form controller="KnowledgeBase" action="changeCat">
-            <h1><g:message code="kb.view.changeCat.title"/></h1>
+        <h1><g:message code="kb.view.changeCat.title"/></h1>
+        <g:form controller="KnowledgeBase" action="changeCat" class="catForm">
             <g:hiddenField name="name" value="${cat.name}"/>
 
             <label for="catName"><g:message code="kb.view.createCat.name"/></label><br/>
