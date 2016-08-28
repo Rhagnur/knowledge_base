@@ -61,7 +61,6 @@ class KnowledgeBaseController {
      */
     @Secured(["hasAuthority('ROLE_GP-STAFF')", "hasAuthority('ROLE_GP-PROF')"])
     def changeArticle(){
-        println(params)
         if (params.submit) {
             def docSubs = []
             String[] docTags
@@ -91,7 +90,6 @@ class KnowledgeBaseController {
                 if (params.docTitleNew && !params.docTitleNew.empty && params.docContent && !params.docContent.empty) {
                     //Titel ändern
                     if (params.docTitle != params.docTitleNew) {
-                        println('Titel nicht gleich')
                         doc = documentService.changeDocTitle(doc, params.docTitleNew)
                     }
                     //Content ändern
@@ -102,7 +100,6 @@ class KnowledgeBaseController {
                     List newParents = categoryService.getSubcategories(docSubs as String[])
                     List oldParents = doc.linker.subcat as List
                     if (oldParents.size() != newParents.size() || !newParents.containsAll(oldParents)) {
-                        println('Ändere Parents')
                         doc = documentService.changeDocParents(doc, categoryService.getSubcategories(docSubs as String[]))
                     }
                 } else {
@@ -154,7 +151,6 @@ class KnowledgeBaseController {
 
     @Secured(["hasAuthority('ROLE_GP-STAFF')", "hasAuthority('ROLE_GP-PROF')"])
     def changeFaq() {
-        println(params)
         if (params.submit) {
             def docSubs = []
             String[] docTags
@@ -195,7 +191,6 @@ class KnowledgeBaseController {
                     List newParents = categoryService.getSubcategories(docSubs as String[])
                     List oldParents = doc.linker.subcat as List
                     if (oldParents.size() != newParents.size() || !newParents.containsAll(oldParents)) {
-                        println('Ändere Parents')
                         doc = documentService.changeDocParents(doc, categoryService.getSubcategories(docSubs as String[]))
                     }
                 } else {
@@ -212,7 +207,6 @@ class KnowledgeBaseController {
     }
 
     def changeTutorial() {
-        println(params)
         if (params.submit) {
             def docSubs = []
             String[] docTags
@@ -243,7 +237,6 @@ class KnowledgeBaseController {
                 def stepData = [:]
                 List steps
                 stepData << params.findAll { it.key =~ /stepTitle_[0-9]+/ && it.value } << params.findAll { it.key =~ /stepText_[0-9]+/  && it.value } << params.findAll { it.key =~ /stepLink_[0-9]+/ }
-                println('stepDate: ' +stepData)
                 steps = documentService.newSteps(stepData as Map)
 
                 if (steps && params.docTitleNew) {
@@ -259,7 +252,6 @@ class KnowledgeBaseController {
                     List newParents = categoryService.getSubcategories(docSubs as String[])
                     List oldParents = doc.linker.subcat as List
                     if (oldParents.size() != newParents.size() || !newParents.containsAll(oldParents)) {
-                        println('Ändere Parents')
                         doc = documentService.changeDocParents(doc, categoryService.getSubcategories(docSubs as String[]))
                     }
                 } else {
@@ -302,7 +294,6 @@ class KnowledgeBaseController {
 
     @Secured(["hasAuthority('ROLE_GP-STAFF')", "hasAuthority('ROLE_GP-PROF')"])
     def createArticle() {
-        println(params)
         if (params.submit) {
             def docSubs = []
             String[] docTags
@@ -349,7 +340,6 @@ class KnowledgeBaseController {
 
     @Secured(["hasAuthority('ROLE_GP-STAFF')", "hasAuthority('ROLE_GP-PROF')"])
     def createFaq() {
-        println(params)
         if (params.submit) {
             def docSubs = []
             String[] docTags
@@ -399,7 +389,6 @@ class KnowledgeBaseController {
      */
     @Secured(["hasAuthority('ROLE_GP-STAFF')", "hasAuthority('ROLE_GP-PROF')"])
     def createTutorial() {
-        println(params)
         if (params.submit) {
             def docSubs = []
             String[] docTags = null
@@ -422,17 +411,14 @@ class KnowledgeBaseController {
                 //Füge alle angeklickten Subkategorien an
                 docSubs.addAll(clickedSubcats)
             }
-            println('docSubs: ' +docSubs)
 
             if (!flash.error) {
                 //Finde alle Daten für die einzelnen Schritte und verarbeite sie
                 def stepData = [:]
                 List steps
                 stepData << params.findAll { it.key =~ /stepTitle_[0-9]+/ && it.value } << params.findAll { it.key =~ /stepText_[0-9]+/  && it.value } << params.findAll { it.key =~ /stepLink_[0-9]+/ }
-                println('stepDate: ' +stepData)
                 steps = documentService.newSteps(stepData as Map)
 
-                println('steps: '+steps)
                 if (!steps || !params.docTitle) {
                     flash.error = message(code: 'kb.error.fillOutAllFields') as String
                     params.createDoc = 'tutorial'
@@ -491,10 +477,10 @@ class KnowledgeBaseController {
      * Controller method for either exporting a single document or a list of all unlocked documents
      * Usage: use '/document(.:format)' for getting the list or '/document/:docTitle(.:format)' for getting a single document
      * if you don't use the format parameter this method will look for the accepted formats in the accept-header
-     * @return object can be either a json or xml object
+     * INFORMATION: Only method which is configured and optimized as a REST method
+     * @return object can be either a json or xml object. The Object represents either a list of documents or a single document
      */
     def exportDoc() {
-        println(params)
         String format = ''
         if (!params.format) {
             String[] acceptFormats = request.getHeader('Accept').toString().split(',')
@@ -537,14 +523,6 @@ class KnowledgeBaseController {
             initService.initTestModell()
             flash.info = message(code: 'kb.info.testStructureAndDataCreated') as String
         }
-/*        Document doc = Document.findByDocTitle('Testartikel5')
-        doc.linker.collect().each { Linker linker ->
-            Linker.unlink(linker.subcat, linker.doc)
-        }
-        doc = doc.save(flush:true)
-        doc.linker.each {
-            println('Noch da')
-        }*/
         [otherDocs: categoryService.getDocsOfInterest(springSecurityService.principal, request), principal: springSecurityService.principal];
     }
 

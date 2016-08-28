@@ -4,7 +4,6 @@
 package berlin.htw.hrz.kb
 
 import grails.transaction.Transactional
-import groovy.time.TimeCategory
 import org.neo4j.graphdb.GraphDatabaseService
 import org.neo4j.graphdb.Result
 
@@ -27,21 +26,20 @@ class CategoryService {
     //todo: Vll auch, dass später der User selbst die Einstellung setzen kann.
     def NumDocsToShow = 5
 
-    /**
+    /*
      * Adding the given doc to the given subcategories
      * @param doc single document to add to subcategories
      * @param subCats of subcategories where the doc should be added
      * @return true if operation was successful
      * @throws IllegalArgumentException
      * @throws ValidationErrorException
-     */
-    //todo: vermutlich obsolet, man könnte auch docService.changeDocParents nutzen, sollte auch funktionieren
+
+    //todo: Noch drin gelassen um zu verstehen, warum diese Methode alle Subkategorien zuordnet, die Methode docService.changeParents aber die letzte verliert?
     boolean addDoc(Document doc, List<Subcategory> subCats) throws IllegalArgumentException, ValidationErrorException {
         if (!subCats) { throw new IllegalArgumentException("Argument 'subCats' cant be null") }
 
         for (Subcategory cat in subCats) {
             if (cat.validate()) {
-                println('subCatname: ' + cat.name)
                 Linker.link(cat, doc)
                 doc.save()
                 cat.save(flush:true)
@@ -49,7 +47,7 @@ class CategoryService {
             else { throw new ValidationErrorException('Validation was not successful!') }
         }
         true
-    }
+    }*/
 
     /**
      * Change the name of the given category
@@ -93,7 +91,7 @@ class CategoryService {
     }
 
     /**
-     * Delete given category from the database
+     * Method will delete given category from the database
      * @param cat subcategory which should be deleted
      * @throws IllegalArgumentException
      */
@@ -109,37 +107,27 @@ class CategoryService {
      * Method for getting all unassociated subcategories
      * @return List all found subcategories
      */
-    List findUnlinkedSubcats() {
-        return Subcategory.findAll().findAll { !it.parentCat } as List
+    List<Subcategory> findUnlinkedSubcats() {
+        return Subcategory.findAll().findAll { !it.parentCat } as List<Subcategory>
     }
 
     /**
      * This method will search für additional documents (if forFaqs = false) for the given document, so you get a set of other relevant documents
      * or a set of Faqs (if forFaqs = true) which share the same associated subcategories
      * @param doc document which should be used to find related documents for
-     * @return hashmap of found documents in format [ faq:[...], article:[...], tutorial:[...] ]
+     * @return Map of found documents
      * @throws IllegalArgumentException
      */
-    HashMap getAdditionalDocs(Document doc) throws IllegalArgumentException {
+    Map<String, List<Document>> getAdditionalDocs(Document doc) throws IllegalArgumentException {
         def myDocs = [:]
-        def start, stop
 
-        println('FAQ und Artikel')
-        start = new Date()
         def temp = getSameAssociatedDocs(doc, ['theme', 'os'] as String[])
         if (temp) {
             myDocs.faq = temp.findAll { it instanceof Faq }
             myDocs.article = temp.findAll { it instanceof Article }
         }
-        stop = new Date()
-        println('Benötigte Zeit: ' + TimeCategory.minus(stop, start))
 
-
-        println('Anleitungen')
-        start = new Date()
         myDocs.tutorial = getSameAssociatedDocs(doc, ['os', 'lang'] as String[], true)
-        stop = new Date()
-        println('Benötigte Zeit: ' + TimeCategory.minus(stop, start))
         return myDocs
     }
 
@@ -150,13 +138,14 @@ class CategoryService {
      * @return list of found documents
      * @throws IllegalArgumentException
      */
-    List getAllDocsAssociatedToSubCategories(String[] subs, String[] docTypes) throws IllegalArgumentException {
+    List<Document> getAllDocsAssociatedToSubCategories(String[] subs, String[] docTypes) throws IllegalArgumentException {
         if (!subs) throw new IllegalArgumentException("Argument 'subs' can not be null.")
         def query = ""
         def queryParams = [:]
+        //Baue die Query, sieht etwas umständlich aus, beugt aber 'cartesian product' vor und verbessert damit Performance
         subs.eachWithIndex { String sub, i ->
             query += "MATCH (sub${i}:Subcategory) WHERE sub${i}.name={${i}}\n" +
-                    "MATCH (sub${i})-[*..2]-(doc:Document)\n"
+                     "MATCH (sub${i})-[*..2]-(doc:Document)\n"
             queryParams.put(i as String, sub)
         }
         docTypes.eachWithIndex{ String docType,  i ->
@@ -168,24 +157,25 @@ class CategoryService {
         }
 
         query += "\nRETURN doc ORDER BY doc.viewCount DESC LIMIT ${NumDocsToShow}"
+        //Feuer die Query, durch parametrisierung, sollte Injection vorgebeugt werden
         Result result = graphDatabaseService.execute(query, queryParams)
         result.toList(Document)
     }
 
     /**
-     * Return all existing categories that are not instance of subcategory
+     * Returns all existing categories that are not instance of subcategory
      * @return list of all found categories
      */
-    List getAllMainCats() {
+    List<Category> getAllMainCats() {
         Category.findAll()?.findAll { !(it instanceof Subcategory) }
     }
 
     /**
-     * Getting all categories with all of its associated subcategories
+     * Gets all categories with all of its associated subcategories
      * @param excludedCats list of excluded categories, can be null
      * @return Map of all found entries, where key is the category and the value the associated subcategories
      */
-    HashMap getAllMaincatsWithSubcats(List<Category> excludedCats = null) {
+    Map<String, List<String>> getAllMaincatsWithSubcats(List<Category> excludedCats = null) {
         def all = [:]
         getAllMainCats().each { Category mainCat ->
             def temp = []
@@ -193,7 +183,7 @@ class CategoryService {
                 getIterativeAllSubCats(mainCat).each { Subcategory cat ->
                     temp.add(cat.name as String)
                 }
-                all.put(mainCat.name, temp.sort{ it })
+                all.put(mainCat.name, temp.sort{ it } as List<String>)
             }
         }
         all
@@ -203,17 +193,17 @@ class CategoryService {
      * Returns all existing subcategories
      * @return list of all found subcategories
      */
-    List getAllSubCats() {
+    List<Subcategory> getAllSubCats() {
         Subcategory.findAll()?.toList()
     }
 
     /**
-     * Getting all associated subcategories for the given category
+     * Gets all associated subcategories for the given category
      * @param cat name of the category from which you want all associated subcategories (depth: 1)
      * @return list of all found subcategories
      * @throws IllegalArgumentException
      */
-    List getAllSubCats(Category cat) throws IllegalArgumentException {
+    List<Subcategory> getAllSubCats(Category cat) throws IllegalArgumentException {
         if (!cat) { throw new IllegalArgumentException('Argument can not be null') }
         cat.subCats?.findAll()?.toList()
     }
@@ -221,32 +211,30 @@ class CategoryService {
 
 
     /**
-     * Getting a single category by the given name
+     * Gets a single category by the given name
      * @param catName name of the subcategory
      * @return found main- or subcategory
      * @throws IllegalArgumentException
      * @throws NoSuchObjectFoundException
      */
     Category getCategory(String catName) throws IllegalArgumentException, NoSuchObjectFoundException {
-        if (!catName || catName == '') { throw new IllegalArgumentException("Argument can not be null or empty") }
+        if (!catName) { throw new IllegalArgumentException("Argument 'catName' CAN NOT be null!") }
         def cat = Category.findByName(catName)?:null
         if (!cat) { throw new NoSuchObjectFoundException("Can not find a category with the name: '${catName}'") }
         cat
     }
 
     /**
-     * Getting all the associated docs from one subcategory
+     * Gets all the associated docs from one subcategory
      * @param cat subcategory for looking up for documents
      * @return list of found documents
      * @throws IllegalArgumentException
      */
-    List getDocs(Subcategory cat) throws IllegalArgumentException {
-        if (!cat) { throw new IllegalArgumentException('Argument can not be null') }
+    List<Document> getDocs(Subcategory cat) throws IllegalArgumentException {
+        if (!cat) { throw new IllegalArgumentException("Argument 'cat' CAN NOT be null!") }
         cat.linker.doc.toList()
     }
 
-    //todo: anstatt Pincipal zu übergeben vll direkt hier im Service injecten und nutzen
-    //todo: optimieren
     /**
      * This method will look up for documents which could be interesting for the user.
      * The category for the 'Docs of interest' are separated in 'operating system', 'group', 'popular', 'newest' and 'suggestion'.
@@ -257,15 +245,11 @@ class CategoryService {
      * @return hashmap of found results. Format can be like [<os_name>:list<docs>, <groud_name>:list<docs>,...]
      * @throws IllegalArgumentException
      */
-    HashMap getDocsOfInterest(def userPrincipals, def request) throws IllegalArgumentException {
+    Map<String, List<Document>> getDocsOfInterest(def userPrincipals, def request) throws IllegalArgumentException {
         def subCatNames = []
         HashMap docMap = [:]
         def start, stop, temp
 
-        println(userPrincipals.authorities)
-
-        println('1 Os')
-        start = new Date()
         //1 Get docs from associated OS []
         String osName = ''
         //process the os information from the request header
@@ -303,22 +287,18 @@ class CategoryService {
         if (osName && osName != '') {
             temp = getDocs(getCategory(osName) as Subcategory).findAll { it instanceof Tutorial || it instanceof Article }.sort { -it.viewCount }
             if (temp.size() > NumDocsToShow) {
-                temp = temp.subList(0, NumDocsToShow)
+                temp = temp.subList(0, NumDocsToShow) as List<Document>
             }
 
             docMap.put(osName, temp)
             subCatNames.add(osName)
         }
-        stop = new Date()
-        println('Benötigte Zeit: ' + TimeCategory.minus(stop, start))
 
-        println('2 Group')
-        start = new Date()
         //2 Get the documents of the associated groups [ROLE_GP-STAFF, ROLE_GP-STUD]
         if (userPrincipals.authorities.any { it.authority == ("ROLE_GP-PROF" || "ROLE_GP-LBA") }) {
             temp = getDocs(getCategory('faculty') as Subcategory).findAll { it instanceof Tutorial || it instanceof Article }.sort { -it.viewCount }
             if (temp.size() > NumDocsToShow) {
-                temp = temp.subList(0, NumDocsToShow)
+                temp = temp.subList(0, NumDocsToShow) as List<Document>
             }
 
             docMap.put('faculty', temp)
@@ -327,7 +307,7 @@ class CategoryService {
         if (userPrincipals.authorities.any { it.authority == "ROLE_GP-STAFF" }) {
             temp = getDocs(getCategory('staff') as Subcategory).findAll { it instanceof Tutorial || it instanceof Article }.sort { -it.viewCount }
             if (temp.size() > NumDocsToShow) {
-                temp = temp.subList(0, NumDocsToShow)
+                temp = temp.subList(0, NumDocsToShow) as List<Document>
             }
 
             docMap.put('staff', temp)
@@ -336,7 +316,7 @@ class CategoryService {
         if (userPrincipals.authorities.any { it.authority == "ROLE_GP-STUD" }) {
             temp = getDocs(getCategory('student') as Subcategory).findAll { it instanceof Tutorial || it instanceof Article }.sort { -it.viewCount }
             if (temp.size() > NumDocsToShow) {
-                temp = temp.subList(0, NumDocsToShow)
+                temp = temp.subList(0, NumDocsToShow) as List<Document>
             }
 
             docMap.put('student', temp)
@@ -345,49 +325,33 @@ class CategoryService {
         if (userPrincipals.authorities.any { it.authority == "ROLE_ANONYMOUS" }) {
             temp = getDocs(getCategory('anonym') as Subcategory).findAll { it instanceof Tutorial || it instanceof Article }.sort { -it.viewCount }
             if (temp.size() > NumDocsToShow) {
-                temp = temp.subList(0, NumDocsToShow)
+                temp = temp.subList(0, NumDocsToShow) as List<Document>
             }
 
             docMap.put('anonym', temp)
             subCatNames.add('anonym')
         }
-        stop = new Date()
-        println('Benötigte Zeit: ' + TimeCategory.minus(stop, start))
 
-        println('3 Popular')
-        start = new Date()
         //3 Get the popularest docs
         temp = Document.findAll(max: NumDocsToShow, sort: 'viewCount', order: 'desc')
-        docMap.put('popular', temp)
-        stop = new Date()
-        println('Benötigte Zeit: ' + TimeCategory.minus(stop, start))
+        docMap.put('popular', temp as List<Document>)
 
-        println('4 Neuste')
-        start = new Date()
         //3 Get the popularest docs
         temp = Document.findAll(max: NumDocsToShow, sort: 'createDate', order: 'desc')
-        docMap.put('newest', temp)
-        stop = new Date()
-        println('Benötigte Zeit: ' + TimeCategory.minus(stop, start))
+        docMap.put('newest', temp as List<Document>)
 
-        println('5 Suggestion')
-        start = new Date()
         //4 Get suggestions, sugg are associated to OS and the user-groups
-        println('subs: ' + subCatNames)
         while (subCatNames && !subCatNames.empty) {
-            println('subs: ' + subCatNames)
             def docs = getAllDocsAssociatedToSubCategories(subCatNames as String[], ['Tutorial', 'Article'] as String[])
-            if (docs && !docs.empty) {
-                docMap.put('suggestion', docs)
+            if (docs) {
+                docMap.put('suggestion', docs as List<Document>)
                 break
             } else {
                 subCatNames.remove(subCatNames.last())
             }
         }
-        stop = new Date()
-        println('Benötigte Zeit: ' + TimeCategory.minus(stop, start))
 
-        docMap.sort { -(it.value.size()) } as HashMap
+        docMap.sort { -(it.value.size()) }
     }
 
     /**
@@ -397,7 +361,7 @@ class CategoryService {
      * @throws IllegalArgumentException
      * @throws NoSuchObjectFoundException
      */
-    List getIterativeAllSubCats(Category cat) throws IllegalArgumentException, NoSuchObjectFoundException {
+    List<Subcategory> getIterativeAllSubCats(Category cat) throws IllegalArgumentException, NoSuchObjectFoundException {
         def subs = []
         if (cat) {
             if (cat instanceof Subcategory) {
@@ -420,12 +384,10 @@ class CategoryService {
      * @return list of found documents
      * @throws IllegalArgumentException
      */
-    List getSameAssociatedDocs(Document givenDoc, String[] importantMainCats, Boolean forTutorial=false) throws IllegalArgumentException {
+    List<Document> getSameAssociatedDocs(Document givenDoc, String[] importantMainCats, Boolean forTutorial=false) throws IllegalArgumentException {
         if (!importantMainCats) { throw new IllegalArgumentException("Argument 'importantMainCats' can not be null") }
-        //prepare query
-        def start, end
         def queryParams = [:]
-        start = new Date()
+
         def query = "MATCH (doc:Document) WHERE doc.docTitle='${givenDoc.docTitle}' WITH doc\n"
         importantMainCats.eachWithIndex { String catName, i ->
             query += "MATCH (doc)-[*..2]-(sub${i}:Subcategory)\n" +
@@ -437,17 +399,12 @@ class CategoryService {
         else { query += "WHERE otherDoc.docTitle<>'${givenDoc.docTitle}' AND ((otherDoc:Article) OR (otherDoc:Faq))\n"}
         query += "RETURN distinct otherDoc ORDER BY otherDoc.docTitle"
 
-        //fire query, verbraucht am meisten Zeit
-        //println(query)
-        //println(queryParams)
         Result myResult = graphDatabaseService.execute(query, queryParams)
-        end = new Date()
-        println('Queryzeit: ' + TimeCategory.minus(end, start))
         myResult.toList(Document)
     }
 
     /**
-     * Getting all subcategories from a array of names
+     * Gets all subcategories from a array of names
      * @param catNames string-array of given names
      * @return list of found subcategories
      * @throws IllegalArgumentException
@@ -463,7 +420,7 @@ class CategoryService {
     }
 
     /**
-     * Adding a new subcategory to the database
+     * Adds a new subcategory to the database
      * @param catName name of the new subcategory
      * @param parentCat parent of the new subcategory, can be a category or a subcategory
      * @param subCats optional, a list of subcategory which should be associated with
@@ -475,10 +432,6 @@ class CategoryService {
         if (!catName) { throw new IllegalArgumentException("Argument 'catName' can not be null or empty") }
 
         Subcategory newSub = new Subcategory(name: catName, parentCat: parentCat)
-
-        for (Subcategory sub in subCats) {
-            newSub.addToSubCats(sub)
-        }
 
         if (!newSub.validate()) {
             newSub.errors?.allErrors?.each { log.error(it) }

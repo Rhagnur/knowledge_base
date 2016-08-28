@@ -108,8 +108,6 @@ class CategoryServiceSpec extends Specification {
             sub instanceof Subcategory
             sub.parentCat instanceof Category
             sub.parentCat.name == 'TestMain'
-            sub.subCats instanceof Set<Subcategory>
-            sub.subCats.size() == 2
     }
 
     void "test newSubCategory IllArgEx"() {

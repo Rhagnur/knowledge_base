@@ -90,7 +90,7 @@ class InitService {
         Random random = new Random()
         def start, stop
         def myDocs = []
-        int numberOfDocs = 20
+        int numberOfDocs = 200
 
         //init docs
         start = new Date()

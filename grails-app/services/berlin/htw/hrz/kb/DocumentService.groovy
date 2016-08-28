@@ -16,8 +16,16 @@ import groovy.xml.MarkupBuilder
 @Transactional
 class DocumentService {
 
+    /**
+     * Changes the content of the article-document
+     * @param doc can't be null
+     * @param newContent can't be null
+     * @return document
+     * @throws IllegalArgumentException
+     * @throws ValidationErrorException
+     */
     Document changeArticleContent(Article doc, String newContent) throws IllegalArgumentException, ValidationErrorException {
-        if (!doc) { throw new IllegalArgumentException("Attribute 'doc' CAN NOT be null!") }
+        if (!doc || !newContent) { throw new IllegalArgumentException("Attribute 'doc' and 'newContent' CAN NOT be null!") }
         doc.docContent = newContent
         doc.changeDate = new Date()
         if (!doc.validate()) {
@@ -28,9 +36,9 @@ class DocumentService {
     }
 
     /**
-     *
-     * @param doc
-     * @param newLocked
+     * Changes the locked attribute of a given document
+     * @param doc can't be null
+     * @param newLocked new status for locked, can't be null
      * @return document
      * @throws IllegalArgumentException
      * @throws ValidationErrorException
@@ -47,9 +55,9 @@ class DocumentService {
     }
 
     /**
-     *
-     * @param doc
-     * @param newParents
+     * Changes the parent of a given document
+     * @param doc can't be null
+     * @param newParents can't be null
      * @return document
      * @throws IllegalArgumentException
      * @throws ValidationErrorException
@@ -78,8 +86,8 @@ class DocumentService {
     }
 
     /**
-     *
-     * @param doc
+     * Changes the tags for a given document
+     * @param doc can't be null
      * @param newTags
      * @return document
      * @throws IllegalArgumentException
@@ -97,9 +105,9 @@ class DocumentService {
     }
 
     /**
-     *
-     * @param doc
-     * @param newDocTitle
+     * Changes the title for a given document
+     * @param doc can't be null
+     * @param newDocTitle can't be null and must be unique. You will get a ValidationErrorException if it isn't
      * @return document
      * @throws IllegalArgumentException
      * @throws ValidationErrorException
@@ -116,15 +124,15 @@ class DocumentService {
     }
 
     /**
-     *
-     * @param doc
-     * @param answer
+     * Changes the answer of a faq-document
+     * @param doc can't be null
+     * @param answer can't be null
      * @return document
      * @throws IllegalArgumentException
      * @throws ValidationErrorException
      */
     Document changeFaqAnswer(Faq doc, String answer) throws IllegalArgumentException, ValidationErrorException {
-        if (!doc) { throw new IllegalArgumentException("Attribute 'doc' CAN NOT be null!") }
+        if (!doc || !answer) { throw new IllegalArgumentException("Attribute 'doc' and 'answer' CAN NOT be null!") }
         doc.answer = answer
         doc.changeDate = new Date()
         if (!doc.validate()) {
@@ -135,15 +143,15 @@ class DocumentService {
     }
 
     /**
-     *
-     * @param doc
-     * @param question
+     * Changes the question of a faq-document
+     * @param doc can't be null
+     * @param question can't be null
      * @return document
      * @throws IllegalArgumentException
      * @throws ValidationErrorException
      */
     Document changeFaqQuestion(Faq doc, String question) throws IllegalArgumentException, ValidationErrorException {
-        if (!doc) { throw new IllegalArgumentException("Attribute 'doc' CAN NOT be null!") }
+        if (!doc || !question) { throw new IllegalArgumentException("Attribute 'doc' and 'question' CAN NOT be null!") }
         doc.question = question
         doc.changeDate = new Date()
         if (!doc.validate()) {
@@ -154,9 +162,9 @@ class DocumentService {
     }
 
     /**
-     *
-     * @param doc
-     * @param newSteps
+     * Changes the steps for a tutorial-document
+     * @param doc can't be null
+     * @param newSteps can't be null
      * @return document
      * @throws IllegalArgumentException
      * @throws ValidationErrorException
@@ -177,14 +185,18 @@ class DocumentService {
     }
 
     /**
-     *
-     * @param docTitle
+     * Deletes a document from the database
+     * @param docTitle can't be null
+     * @throws IllegalArgumentException
      */
-    void deleteDoc(Document doc) {
+    void deleteDoc(Document doc) throws IllegalArgumentException {
+        if (!doc) { throw new IllegalArgumentException("Argument 'doc' CAN NOT be null!") }
+        //Falls das Dokument vom Typ Tutorial ist, lösche alle Steps
         if (doc instanceof Tutorial) {
             doc.steps?.collect()?.each { step ->
                 step.delete()
             }
+            doc.steps?.clear()
         }
 
         //Vorsichtshalber Prüfung ob noch Linker gefunden werden, falls ja diese unlinken und löschen
@@ -239,7 +251,6 @@ class DocumentService {
                         }
                     }
                 }
-                println(writer.toString())
                 output = writer.toString()
             }
         } else {
@@ -252,8 +263,8 @@ class DocumentService {
      * Method for finding unlinked, unassociated documents.
      * @return list all found documents
      */
-    List findUnlinkedDocs() {
-        return Document.findAll().findAll { !it.linker } as List
+    List<Document> findUnlinkedDocs() {
+        return Document.findAll().findAll { !it.linker } as List<Document>
     }
 
     /**
@@ -279,22 +290,22 @@ class DocumentService {
     }
 
     /**
-     *
-     * @param docTitle
+     * Gets a document by given title
+     * @param docTitle can't be null
      * @return document
      * @throws IllegalArgumentException
      * @throws NoSuchObjectFoundException
      */
     Document getDoc(String docTitle) throws IllegalArgumentException, NoSuchObjectFoundException {
-        if (!docTitle || docTitle == '') { throw new IllegalArgumentException() }
+        if (!docTitle) { throw new IllegalArgumentException() }
         Document myDoc = Document.findByDocTitle(docTitle)
         if (!myDoc) { throw new NoSuchObjectFoundException("No Object 'document' with docTitle '${docTitle}' found!") }
         myDoc
     }
 
     /**
-     *
-     * @param doc
+     * Increases the view-counter of a given document
+     * @param doc can't be null
      * @return document
      * @throws IllegalArgumentException
      * @throws NoSuchObjectFoundException
@@ -350,7 +361,7 @@ class DocumentService {
      * @param rawSteps raw data input. must have a format like [stepTitle_1:<String>, stepText_1:<String>, stepLink_1:<String>, stepTitle_2: ...]
      * @return steps a list of new created steps. null if rawSteps where empty or the amount stepTitle_X didn't match stepText_X
      */
-    List newSteps(Map<String, String> rawSteps) {
+    List<Step> newSteps(Map<String, String> rawSteps) {
         def steps = null
 
         if (rawSteps) {
@@ -374,7 +385,7 @@ class DocumentService {
                 }
             }
         }
-        steps
+        steps as List<Step>
     }
 
     /**
