@@ -4,12 +4,12 @@
 --%>
 <g:applyLayout name="main">
     <head>
-        <title>Knowledge Base</title>
+        <title><g:message code="kb.view.index.title"/></title>
     </head>
 
     <content tag="main">
         <section id="search">
-            <h2><g:message code="kb.view.index.search.headline"/></h2>
+            <h1><g:message code="kb.view.index.search.headline"/></h1>
             <p><g:message code="kb.view.index.search.introText"/></p>
             <g:form controller="knowledgeBase" action="search" method="POST">
                 <g:textField name="searchBar" id="searchBar" placeholder="${message(code: 'kb.view.index.search.placeholder')}"/>
@@ -17,7 +17,7 @@
             </g:form>
         </section>
         <section id="document-of-interest">
-            <h2><g:message code="kb.view.index.doi.headline"/></h2>
+            <h1><g:message code="kb.view.index.doi.headline"/></h1>
             <g:if test="${otherDocs && otherDocs.size() == 0}">
                 <p><g:message code="kb.view.index.doi.noDocsFound"/></p>
             </g:if>
@@ -50,7 +50,7 @@
             <div class="clear"></div>
         </section>
         <section id="debug">
-            <h2>Debug-/Test-Funktionen</h2>
+            <h1>Debug-/Test-Funktionen</h1>
             <sec:ifAnyGranted roles="ROLE_GP-STAFF,ROLE_GP-PROF">
                 <g:form controller="KnowledgeBase" action="createCat">
                     <g:submitButton name="create" value="Neue Subkategorie anlegen"/>

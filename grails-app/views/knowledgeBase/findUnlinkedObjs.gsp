@@ -5,28 +5,28 @@
 
 <g:applyLayout name="main">
     <head>
-        <title>Nicht zugewiesene Kategorien anzeigen</title>
+        <title><g:message code="kb.view.findUnlinked.title"/></title>
     </head>
 
     <content tag="main">
         <section>
-            <h1>Unverlinkte Elemente</h1>
+            <h1><g:message code="kb.view.findUnlinked.title"/></h1>
             <g:if test="${!subCats && !docs}">
-                <p>Keine Elemente gefunden</p>
+                <p><g:message code="kb.view.findUnlinked.nothingFound"/></p>
             </g:if>
             <g:if test="${subCats}">
-                <p>Folgende Subkategorien haben keinen Elternknoten:</p>
+                <p><g:message code="kb.view.findUnlinked.foundSubs"/></p>
                 <ul>
                     <g:each var="cat" in="${subCats}">
-                        <li>${cat.name} <sec:link controller="KnowledgeBase" action="changeCat" params="[name:cat.name]">bearbeiten</sec:link></li>
+                        <li>${cat.name} <sec:link controller="KnowledgeBase" action="changeCat" params="[name:cat.name]"><g:message code="kb.view.edit"/></sec:link></li>
                     </g:each>
                 </ul>
             </g:if>
             <g:if test="${docs}">
-                <p>Folgende Dokumente besitzen keine Zuweisung:</p>
+                <p><g:message code="kb.view.findUnlinked.foundDocs"/></p>
                 <ul>
                     <g:each var="doc" in="${docs}">
-                        <li>${doc.docTitle} <sec:link controller="KnowledgeBase" action="changeDoc" params="[docTitle:doc.docTitle]">bearbeiten</sec:link></li>
+                        <li>${doc.docTitle} <sec:link controller="KnowledgeBase" action="changeDoc" params="[docTitle:doc.docTitle]"><g:message code="kb.view.edit"/></sec:link></li>
                     </g:each>
                 </ul>
             </g:if>
@@ -34,6 +34,6 @@
         </section>
         <div class="clear"></div>
 
-        <g:link controller="KnowledgeBase" action="index">Zur Startseite</g:link>
+        <g:link controller="KnowledgeBase" action="index"><g:message code="kb.view.backToHome"/></g:link>
     </content>
 </g:applyLayout>

@@ -10,28 +10,28 @@
 
     <content tag="main">
         <h1><g:message code="kb.view.showDoc.headline"/></h1>
-        <p> Export:
+        <p> <g:message code="kb.view.export"/>
             <g:link controller="KnowledgeBase" action="exportDoc"
-                    params="[docTitle: document.docTitle, format: 'json']">JSON</g:link>
+                    params="[docTitle: document.docTitle, format: 'json']"><g:message code="kb.view.json"/></g:link>
             <g:link controller="KnowledgeBase" action="exportDoc"
-                    params="[docTitle: document.docTitle, format: 'xml']">XML</g:link>
+                    params="[docTitle: document.docTitle, format: 'xml']"><g:message code="kb.view.json"/></g:link>
         </p>
         <sec:ifAnyGranted roles="ROLE_GP-STAFF,ROLE_GP-PROF">
             <p>
-                Edit:
+                <g:message code="kb.view.options"/>
                 <g:link controller="KnowledgeBase" action="deleteDoc"
-                        params="[docTitle: document.docTitle]">delete</g:link>
+                        params="[docTitle: document.docTitle]"><g:message code="kb.view.delete"/></g:link>
                 <g:if test="${document instanceof berlin.htw.hrz.kb.Article}">
                     <g:link controller="KnowledgeBase" action="changeArticle"
-                            params="[docTitle: document.docTitle]">change</g:link>
+                            params="[docTitle: document.docTitle]"><g:message code="kb.view.edit"/></g:link>
                 </g:if>
                 <g:elseif test="${document instanceof berlin.htw.hrz.kb.Faq}">
                     <g:link controller="KnowledgeBase" action="changeFaq"
-                            params="[docTitle: document.docTitle]">change</g:link>
+                            params="[docTitle: document.docTitle]"><g:message code="kb.view.edit"/></g:link>
                 </g:elseif>
                 <g:elseif test="${document instanceof berlin.htw.hrz.kb.Tutorial}">
                     <g:link controller="KnowledgeBase" action="changeTutorial"
-                            params="[docTitle: document.docTitle]">change</g:link>
+                            params="[docTitle: document.docTitle]"><g:message code="kb.view.edit"/></g:link>
                 </g:elseif>
             </p>
         </sec:ifAnyGranted>
@@ -130,6 +130,6 @@
         </g:if>
         <br/><br/>
 
-        <g:link controller="KnowledgeBase" action="index">Zur Startseite</g:link>
+        <g:link controller="KnowledgeBase" action="index"><g:message code="kb.view.backToHome"/></g:link>
     </content>
 </g:applyLayout>
