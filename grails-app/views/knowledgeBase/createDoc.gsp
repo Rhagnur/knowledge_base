@@ -9,7 +9,7 @@
     </head>
 
     <content tag="main">
-        <g:form controller="KnowledgeBase" action="createDoc">
+        <g:form controller="KnowledgeBase" action="createDoc" class="docForm">
             <g:if test="${docType == 'tutorial'}">
                 <g:hiddenField name="tutorial" value="create"/>
                 <label for="docTitle">Dokumenttitel</label><br/>

@@ -14,7 +14,6 @@ import grails.plugin.springsecurity.annotation.Secured
 @Secured("IS_AUTHENTICATED_ANONYMOUSLY")
 class KnowledgeBaseController {
 
-    //todo: Logik der Formularauswertung und grober Datenbearbeitung hier oder in Service???
     DocumentService documentService
     CategoryService categoryService
     InitService initService
@@ -338,9 +337,10 @@ class KnowledgeBaseController {
                 }
 
                 if (!flash.error) {
-                    categoryService.addDoc(doc, categoryService.getSubcategories(docSubs as String[]))
-                    flash.info = message(code: 'kb.info.docCreated') as String
-                    redirect(view: 'index', model: [otherDocs: categoryService.getDocsOfInterest(springSecurityService.principal, request), principal: springSecurityService.principal])
+                    if (documentService.changeDocParents(doc, categoryService.getSubcategories(docSubs as String[]))) {
+                        flash.info = message(code: 'kb.info.docCreated') as String
+                        redirect(view: 'index', model: [otherDocs: categoryService.getDocsOfInterest(springSecurityService.principal, request), principal: springSecurityService.principal])
+                    }
                 }
             }
         }
@@ -384,9 +384,10 @@ class KnowledgeBaseController {
                 }
 
                 if (!flash.error) {
-                    categoryService.addDoc(doc, categoryService.getSubcategories(docSubs as String[]))
-                    flash.info = message(code: 'kb.info.docCreated') as String
-                    redirect(view: 'index', model: [otherDocs: categoryService.getDocsOfInterest(springSecurityService.principal, request), principal: springSecurityService.principal])
+                    if (documentService.changeDocParents(doc, categoryService.getSubcategories(docSubs as String[]))) {
+                        flash.info = message(code: 'kb.info.docCreated') as String
+                        redirect(view: 'index', model: [otherDocs: categoryService.getDocsOfInterest(springSecurityService.principal, request), principal: springSecurityService.principal])
+                    }
                 }
             }
         }
@@ -439,13 +440,10 @@ class KnowledgeBaseController {
                     doc = documentService.newTutorial(params.docTitle as String, steps, docTags)
                 }
                 if (!flash.error) {
-                    categoryService.addDoc(doc, categoryService.getSubcategories(docSubs as String[]))
-                    flash.info = message(code: 'kb.info.docCreated') as String
-
-                    doc.linker.each {
-                        println("$it.subcat.name # $it.doc.docTitle")
+                    if (documentService.changeDocParents(doc, categoryService.getSubcategories(docSubs as String[]))) {
+                        flash.info = message(code: 'kb.info.docCreated') as String
+                        redirect(view: 'index', model: [otherDocs: categoryService.getDocsOfInterest(springSecurityService.principal, request), principal: springSecurityService.principal])
                     }
-                    redirect(view: 'index', model: [otherDocs: categoryService.getDocsOfInterest(springSecurityService.principal, request), principal: springSecurityService.principal])
                 }
             }
         }

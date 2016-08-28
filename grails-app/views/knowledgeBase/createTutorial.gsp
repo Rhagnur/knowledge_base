@@ -9,7 +9,7 @@
     </head>
 
     <content tag="main">
-        <g:form controller="KnowledgeBase" action="createTutorial">
+        <g:form controller="KnowledgeBase" action="createTutorial" class="docForm">
             <label for="docTitle">Dokumenttitel</label><br/>
             <g:textField name="docTitle"/>
             <br/><br/><br/>

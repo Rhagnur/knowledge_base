@@ -9,8 +9,6 @@ import grails.test.mixin.Mock
 import grails.test.mixin.TestFor
 import spock.lang.Specification
 
-import java.rmi.NoSuchObjectException
-
 /**
  * See the API for {@link grails.test.mixin.services.ServiceUnitTestMixin} for usage instructions
  */
@@ -101,10 +99,9 @@ class CategoryServiceSpec extends Specification {
 
     }
 
-    // todo addSubcat anlegen btw Test anpassen, wird hier eher newSubcat getestet als explizit addSubCat
-    void "test addSubCategory with valid arguments"() {
+    void "test newSubCategory with valid arguments"() {
         when:
-            Subcategory sub = service.newSubCategory('Testing', new Category(name: 'TestMain'), [new Subcategory(name: 'TestSub1'), new Subcategory(name: 'TestSub2')] as Subcategory[])
+            Subcategory sub = service.newSubCategory('Testing', new Category(name: 'TestMain'))
         then:
             notThrown Exception
             sub.validate() == true
@@ -114,17 +111,10 @@ class CategoryServiceSpec extends Specification {
             sub.subCats instanceof Set<Subcategory>
             sub.subCats.size() == 2
     }
-// todo addSubcat anlegen btw Test anpassen, wird hier eher newSubcat getestet als explizit addSubCat
-    void "test addSubCategory null name"() {
+
+    void "test newSubCategory IllArgEx"() {
         when:
-            Subcategory sub = service.newSubCategory(null, new Category(name: 'TestMain'), null)
-        then:
-            thrown IllegalArgumentException
-    }
-// todo addSubcat anlegen btw Test anpassen, wird hier eher newSubcat getestet als explizit addSubCat
-    void "test addSubCategory null parent"() {
-        when:
-            Subcategory sub = service.newSubCategory('Test', null as Category, null)
+            service.newSubCategory(null, null)
         then:
             thrown IllegalArgumentException
     }

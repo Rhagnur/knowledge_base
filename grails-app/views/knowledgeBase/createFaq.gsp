@@ -9,7 +9,7 @@
     </head>
 
     <content tag="main">
-        <g:form controller="KnowledgeBase" action="createFaq">
+        <g:form controller="KnowledgeBase" action="createFaq" class="docForm">
             <label for="question">Frage</label><br/>
             <g:textField name="question"/>
             <br/><br/>

@@ -35,7 +35,7 @@
         <sec:ifLoggedIn>
             <p>Sie sind angemeldet als <b>${principal.fullname}</b>!</p>
             <form action="/logout">
-                <g:submitButton name="submit" value="Ausloggen"/>
+                <div class="logout-button"><g:submitButton name="submit" value="Ausloggen"/></div>
             </form>
         </sec:ifLoggedIn>
         <sec:ifNotLoggedIn>
@@ -44,7 +44,7 @@
                 <g:textField name="username"/><br/><br/>
                 <label for="password">Passwort:</label><br/>
                 <g:passwordField name="password"/><br/><br/>
-                <g:submitButton name="submit" value="Einloggen"/>
+                <div class="logout-button"><g:submitButton name="submit" value="Einloggen"/></div>
             </form>
         </sec:ifNotLoggedIn>
     </div>

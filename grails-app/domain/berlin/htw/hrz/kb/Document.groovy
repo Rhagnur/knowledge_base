@@ -10,6 +10,10 @@ class Document {
 
     static mapWith = "neo4j"
 
+    static mapping = {
+        docTitle index: true
+    }
+
     static constraints = {
         tags nullable: true
         changedBy nullable: true

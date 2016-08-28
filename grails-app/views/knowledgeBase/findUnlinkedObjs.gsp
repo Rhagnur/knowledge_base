@@ -11,7 +11,7 @@
     <content tag="main">
         <section>
             <h1>Unverlinkte Elemente</h1>
-            <g:if test="${!subcats && !docs}">
+            <g:if test="${!subCats && !docs}">
                 <p>Keine Elemente gefunden</p>
             </g:if>
             <g:if test="${subCats}">
@@ -22,7 +22,7 @@
                     </g:each>
                 </ul>
             </g:if>
-            <g:if test="${subCats}">
+            <g:if test="${docs}">
                 <p>Folgende Dokumente besitzen keine Zuweisung:</p>
                 <ul>
                     <g:each var="doc" in="${docs}">

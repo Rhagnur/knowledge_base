@@ -16,8 +16,6 @@ import groovy.xml.MarkupBuilder
 @Transactional
 class DocumentService {
 
-    //todo: changeDocTags, changeContent, ...Steps,Faq..bla
-
     Document changeArticleContent(Article doc, String newContent) throws IllegalArgumentException, ValidationErrorException {
         if (!doc) { throw new IllegalArgumentException("Attribute 'doc' CAN NOT be null!") }
         doc.docContent = newContent
@@ -61,11 +59,15 @@ class DocumentService {
         else if ( !(newParents.find{ it.parentCat?.name == 'lang'}) || !(newParents.find{ it.parentCat?.name == 'author'}) ) {
             throw new IllegalArgumentException("Attribute 'newParents' must contain a child element from 'lang' and 'author'!")
         } else {
-            doc.linker.collect().each { Linker it ->
-                Linker.unlink(it.subcat, it.doc)
+            if (doc.linker) {
+                doc.linker.collect().each { Linker it ->
+                    Linker.unlink(it.subcat, it.doc)
+                }
             }
-            newParents.each {Subcategory cat->
-                Linker.link(cat, doc)
+
+            for (Subcategory parent in newParents) {
+                Linker.link(parent, doc)
+                parent.save(flush:true)
             }
             if (!doc.validate()) {
                 doc.errors?.allErrors?.each { log.error(it) }

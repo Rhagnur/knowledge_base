@@ -23,7 +23,8 @@ class CategoryService {
     /**
      * Number of documents which should be returned, so that not all found docs will be returned
      */
-    // TODO[TR]: parametrisierung oder den user selbst entscheiden lassen?
+    // TODO[TR]: parametrisierung?
+    //todo: Vll auch, dass später der User selbst die Einstellung setzen kann.
     def NumDocsToShow = 5
 
     /**
@@ -412,28 +413,28 @@ class CategoryService {
 
     /**
      * This method will search for similar docs by checking the connection to the maincategories
-     * You can exclude maincategories for a results. That means, if your first lookup didn't find anything, exclude less important maincategories and search again
+     * You can choose which maincategories are important for a results. That means, if your first lookup didn't find anything, exclude some less important maincategories and search again
      * @param givenDoc document to look up for
-     * @param excludedMainCats array-string for categories which should be excluded
+     * @param importantMainCats array-string for 'important' categories
      * @param forTutorial optional parameter
      * @return list of found documents
      * @throws IllegalArgumentException
      */
-    List getSameAssociatedDocs(Document givenDoc, String[] excludedMainCats, Boolean forTutorial=false) throws IllegalArgumentException {
-        if (!excludedMainCats) { throw new IllegalArgumentException("Argument 'excludedMainCats' can not be null") }
+    List getSameAssociatedDocs(Document givenDoc, String[] importantMainCats, Boolean forTutorial=false) throws IllegalArgumentException {
+        if (!importantMainCats) { throw new IllegalArgumentException("Argument 'importantMainCats' can not be null") }
         //prepare query
-        def start, end, start1, end1, start2, end2
+        def start, end
         def queryParams = [:]
         start = new Date()
         def query = "MATCH (doc:Document) WHERE doc.docTitle='${givenDoc.docTitle}' WITH doc\n"
-        excludedMainCats.eachWithIndex { String catName, i ->
+        importantMainCats.eachWithIndex { String catName, i ->
             query += "MATCH (doc)-[*..2]-(sub${i}:Subcategory)\n" +
                      "MATCH (sub${i})-[*]->(main${i}:Category{name:{catName${i}}})\n" +
                      "MATCH (sub${i})-[*..2]-(otherDoc:Document)\n"
             queryParams.put("catName${i}" as String, catName)
         }
-        if (forTutorial) { query += "WHERE (otherDoc:Tutorial) AND otherDoc.docTitle<>'${givenDoc.docTitle}'\n"}
-        else { query += "WHERE ((otherDoc:Article) OR (otherDoc:Faq)) AND otherDoc.docTitle<>'${givenDoc.docTitle}'\n"}
+        if (forTutorial) { query += "WHERE otherDoc.docTitle<>'${givenDoc.docTitle}' AND (otherDoc:Tutorial) \n"}
+        else { query += "WHERE otherDoc.docTitle<>'${givenDoc.docTitle}' AND ((otherDoc:Article) OR (otherDoc:Faq))\n"}
         query += "RETURN distinct otherDoc ORDER BY otherDoc.docTitle"
 
         //fire query, verbraucht am meisten Zeit
@@ -470,9 +471,8 @@ class CategoryService {
      * @throws IllegalArgumentException
      * @throws ValidationErrorException
      */
-    Subcategory newSubCategory(String catName, Category parentCat, Subcategory[] subCats = null) throws IllegalArgumentException, ValidationErrorException {
-        if (!catName || catName.empty) { throw new IllegalArgumentException("Argument 'catName' can not be null or empty") }
-        if (!parentCat) { throw new IllegalArgumentException("Argument 'mainCat' can not be null") }
+    Subcategory newSubCategory(String catName, Category parentCat) throws IllegalArgumentException, ValidationErrorException {
+        if (!catName) { throw new IllegalArgumentException("Argument 'catName' can not be null or empty") }
 
         Subcategory newSub = new Subcategory(name: catName, parentCat: parentCat)
 

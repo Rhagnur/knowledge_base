@@ -10,6 +10,10 @@ class Category {
 
     static mapWith = "neo4j"
 
+    static mapping = {
+        name index: true
+    }
+
     static constraints = {
         name nullable: false
         subCats nullable: true
