@@ -115,6 +115,8 @@ class DocumentServiceSpec extends Specification {
             myJson instanceof JSON
     }
 
+    //Nur ein Test, hat nicht funktioniert wie es sollte, daher nicht für andere Methoden übernommen
+    //Hoffnung war, zu prüfen welche äußere UND welche innere Funktion aufgerufen wurde.
     void "test exportDoc as JSON functionCalls"() {
         setup:
             Document doc = new Document(docTitle: 'TestingServiceExportDocJson', viewCount: 0).save()
@@ -312,13 +314,6 @@ class DocumentServiceSpec extends Specification {
             IllegalArgumentException ex = thrown()
             ex.getMessage() == "Attribute 'newParents' must contain a child element from 'lang' and 'author'!"
 
-    }
-
-    void "test changeDocParents IllArgEx"() {
-        when:
-            service.changeDocParents(null, null)
-        then:
-            thrown IllegalArgumentException
     }
 
     void "test findUnlinkedDocs"() {

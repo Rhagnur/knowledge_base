@@ -10,6 +10,8 @@ package berlin.htw.hrz.kb
  */
 class Linker {
 
+    static mapWith = "neo4j"
+
     static constraints = {
         doc nullable: true
         subcat nullable: true

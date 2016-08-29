@@ -64,6 +64,7 @@ dependencies {
     compile ('org.springframework.data:spring-data-neo4j-rest:3.4.0.RELEASE') {
         exclude group:'org.neo4j.test', module:'neo4j-harness'
     }
+    compile 'org.grails:grails-datastore-rest-client:5.0.0.RC2'
     //Ende
 
     profile "org.grails.profiles:web"

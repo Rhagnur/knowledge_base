@@ -90,7 +90,7 @@ class InitService {
         Random random = new Random()
         def start, stop
         def myDocs = []
-        int numberOfDocs = 200
+        int numberOfDocs = 10
 
         //init docs
         start = new Date()
@@ -121,6 +121,8 @@ class InitService {
            }
 
         }
+        //Dokumente für Integrationtest
+        myDocs.add(new Faq(docTitle: 'Did integration-test work?', question: 'Did integration-test work?', answer: 'Seems like it!<br/><br/>Pleeeeease <b>DO NOT</b> change me for the sake of the integration-test!', viewCount: 1337, locked: false, tags: ['Integration Testing'] as String[], createDate: new Date()).save(flush:true))
         stop = new Date()
         println('Zeit-InitDocs: ' + TimeCategory.minus(stop, start))
 

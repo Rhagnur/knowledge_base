@@ -8,9 +8,7 @@ package berlin.htw.hrz.kb
  */
 class Article extends Document {
 
-    static mapping = {
-        docContent type: "text"
-    }
+    static mapWith = "neo4j"
 
     static constraints = {
         docContent nullable: false

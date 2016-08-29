@@ -7,10 +7,10 @@ class UrlMappings {
 
     static mappings = {
         //URL Mappings für sinnvolle REST-Schnittstelle, um Dokumente als JSON/XML zu exportieren
-        "/document.$format?"(controller: 'knowledgeBase') {
+        "/document(.$format)?"(controller: 'knowledgeBase') {
             action = [GET:'exportDoc']
         }
-        "/document/$docTitle?.$format?"(controller: 'knowledgeBase') {
+        "/document/$docTitle(.$format)?"(controller: 'knowledgeBase') {
             action = [GET:'exportDoc']
         }
 

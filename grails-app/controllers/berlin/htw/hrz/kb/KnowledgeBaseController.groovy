@@ -478,14 +478,17 @@ class KnowledgeBaseController {
     }
 
     /**
-     * Controller method for either exporting a single document or a list of all unlocked documents
-     * Usage: use '/document(.:format)' for getting the list or '/document/:docTitle(.:format)' for getting a single document
-     * if you don't use the format parameter this method will look for the accepted formats in the accept-header
+     * Controller method for either exporting a single document or a list of all unlocked documents.
+     * Usage: use '/document(.:format)' for getting the list or '/document/:docTitle(.:format)' for getting a single document.
+     * If you don't use the format parameter this method will look for the accepted formats in the accept-header if no fitting found xml will be used as a standard.
+     * Only JSON and XML format are declared, if you try this method with another format you will get an 501 error with a json text message!
      * INFORMATION: Only method which is configured and optimized as a REST method
      * @return object can be either a json or xml object. The Object represents either a list of documents or a single document
      */
     def exportDoc() {
         String format = ''
+        String myError = null
+        Document doc = null
         if (!params.format) {
             String[] acceptFormats = request.getHeader('Accept').toString().split(',')
             for (String acceptFormat in acceptFormats) {
@@ -498,14 +501,30 @@ class KnowledgeBaseController {
                     break
                 }
             }
+            //Falls kein unterstütztes gefunden wurde, setztes es automatisch auf XML
+            if (!format) { format = 'xml' }
         }
         else if (params.format != 'json' && params.format != 'xml') {
             response.status = 501
-            render([error: "Given format is unrecognized for this method. Please use 'json' or 'xml'!"] as JSON)
+            myError = "Given format is unrecognized for this method. Please use 'json' or 'xml'!"
         }
         else { format = params.format }
 
-        render (text: documentService.exportDoc(format, params.docTitle?documentService.getDoc(params.docTitle):null), encoding: 'UTF-8', contentType: "application/${format}")
+        if (params.docTitle) {
+            try {
+                doc = documentService.getDoc(params.docTitle)
+            }
+            catch (Exception ex) {
+                response.status = 500
+                myError =   "Short:$ex.message; Long:$ex.stackTrace"
+            }
+        }
+
+        if (!myError) {
+            render (text: documentService.exportDoc(format, doc?doc:null), encoding: 'UTF-8', contentType: "application/${format}")
+        } else {
+            render([error: myError] as JSON)
+        }
     }
 
     /**

@@ -238,8 +238,8 @@ class DocumentService {
             if (doc) { output = doc as XML }
             else {
                 def writer = new StringWriter()
-                new MarkupBuilder(writer).list {
-                    info('This object represents a list of all documents that are not locked. You can get a json/xml object of a single document by using: /document/:docTitle(.format). The format-parameter is optional, if not given the accept header will be used.')
+                new MarkupBuilder(writer).root {
+                    info('This object represents a list of all documents that are not locked. You can get a json/xml object of a single document by using: /document/:docTitle(.:format). The format-parameter is optional, if not given the accept header will be used.')
                     documents {
                         Document.findAllByLockedNotEqual(true).sort { it.docTitle }.each{ Document docIt ->
                             document {
@@ -297,7 +297,7 @@ class DocumentService {
      * @throws NoSuchObjectFoundException
      */
     Document getDoc(String docTitle) throws IllegalArgumentException, NoSuchObjectFoundException {
-        if (!docTitle) { throw new IllegalArgumentException() }
+        if (!docTitle) { throw new IllegalArgumentException("Argument 'docTitle' CAN NOT be null!") }
         Document myDoc = Document.findByDocTitle(docTitle)
         if (!myDoc) { throw new NoSuchObjectFoundException("No Object 'document' with docTitle '${docTitle}' found!") }
         myDoc

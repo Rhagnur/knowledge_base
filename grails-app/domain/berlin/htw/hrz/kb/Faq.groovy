@@ -15,10 +15,6 @@ class Faq extends Document {
         answer nullable: false
     }
 
-    static mapping = {
-        answer type: "text"
-    }
-
     /**
      * Not optional
      */

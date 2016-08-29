@@ -8,6 +8,8 @@ package berlin.htw.hrz.kb
  */
 class Tutorial extends Document {
 
+    static mapWith = "neo4j"
+
     static constraints = {
         steps nullable: false
     }
