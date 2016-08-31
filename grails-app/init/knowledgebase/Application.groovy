@@ -17,7 +17,7 @@ class Application extends GrailsAutoConfiguration implements EnvironmentAware {
 
     /*
     * Edited by didschu
-    * Laden einer externen config-Datei
+    * Laden einer externen config-Datei, einem anderen Projekt entnommen
     */
     @Override
     void setEnvironment(Environment environment) {

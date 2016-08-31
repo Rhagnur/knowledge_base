@@ -1,19 +1,12 @@
-/**
- * Created by didschu on 30.06.16.
- */
-
 grails.resources.debug = true
 
 //grails.plugin.springsecurity.useBasicAuth = true
 //grails.plugin.springsecurity.basic.realmName = "HRZ Knowledge Base"
 grails.plugin.springsecurity.logout.postOnly = false
 grails.plugin.springsecurity.controllerAnnotations.staticRules = [
-        //[pattern: '/login/impersonate', access:['hasAuthority("OU_ZE_HRZ")', 'IS_AUTHENTICATED_FULLY' ]],
-        //[pattern: '/logout/impersonate', access: ['permitAll']],
         [pattern: '/',               access: ['permitAll']],
         [pattern: '/error',          access: ['permitAll']],
         [pattern: '/index',          access: ['permitAll']],
-        //[pattern: '/account',        access: ['isFullyAuthenticated()']],
         [pattern: '/index.gsp',      access: ['permitAll']],
         [pattern: '/shutdown',       access: ['permitAll']],
         [pattern: '/assets/**',      access: ['permitAll']],

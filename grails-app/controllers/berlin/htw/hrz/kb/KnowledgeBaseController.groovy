@@ -14,6 +14,7 @@ import grails.plugin.springsecurity.annotation.Secured
 @Secured("IS_AUTHENTICATED_ANONYMOUSLY")
 class KnowledgeBaseController {
 
+    //Injection der benötigten Serviceklassen
     DocumentService documentService
     CategoryService categoryService
     InitService initService
@@ -487,7 +488,7 @@ class KnowledgeBaseController {
      */
     def exportDoc() {
         String format = ''
-        String myError = null
+        String myErrorMessage = null
         Document doc = null
         if (!params.format) {
             String[] acceptFormats = request.getHeader('Accept').toString().split(',')
@@ -506,7 +507,7 @@ class KnowledgeBaseController {
         }
         else if (params.format != 'json' && params.format != 'xml') {
             response.status = 501
-            myError = "Given format is unrecognized for this method. Please use 'json' or 'xml'!"
+            myErrorMessage = "Given format is unrecognized for this method. Please use 'json' or 'xml'!"
         }
         else { format = params.format }
 
@@ -516,14 +517,14 @@ class KnowledgeBaseController {
             }
             catch (Exception ex) {
                 response.status = 500
-                myError =   "Short:$ex.message; Long:$ex.stackTrace"
+                myErrorMessage =   "Short:$ex.message; Long:$ex.stackTrace"
             }
         }
 
-        if (!myError) {
+        if (!myErrorMessage) {
             render (text: documentService.exportDoc(format, doc?doc:null), encoding: 'UTF-8', contentType: "application/${format}")
         } else {
-            render([error: myError] as JSON)
+            render([error: myErrorMessage] as JSON)
         }
     }
 
