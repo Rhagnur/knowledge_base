@@ -11,7 +11,7 @@ class Faq extends Document {
     static mapWith = "neo4j"
 
     static constraints = {
-        question nullable: false
+        question nullable: false, matches: /[\w \t\-&.,:?!()'"]+/
         answer nullable: false
     }
 

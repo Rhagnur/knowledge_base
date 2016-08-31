@@ -15,9 +15,8 @@ class Category {
     }
 
     static constraints = {
-        name nullable: false
         subCats nullable: true
-        name unique: true
+        name unique: true, matches: /[\w]+/
     }
     /**
      * Optional, list of associated subcategories which can be null

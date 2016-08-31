@@ -145,7 +145,7 @@ class CategoryService {
         //Baue die Query, sieht etwas umständlich aus, beugt aber 'cartesian product' vor und verbessert damit Performance
         subs.eachWithIndex { String sub, i ->
             query += "MATCH (sub${i}:Subcategory) WHERE sub${i}.name={${i}}\n" +
-                     "MATCH (sub${i})-[*..2]-(doc:Document)\n"
+                     "MATCH (sub${i})<-[:SUBCAT]-(:Linker)-[:DOC]->(doc:Document)\n"
             queryParams.put(i as String, sub)
         }
         docTypes.eachWithIndex{ String docType,  i ->
@@ -390,9 +390,8 @@ class CategoryService {
 
         def query = "MATCH (doc:Document) WHERE doc.docTitle='${givenDoc.docTitle}' WITH doc\n"
         importantMainCats.eachWithIndex { String catName, i ->
-            query += "MATCH (doc)-[*..2]-(sub${i}:Subcategory)\n" +
-                     "MATCH (sub${i})-[*]->(main${i}:Category{name:{catName${i}}})\n" +
-                     "MATCH (sub${i})-[*..2]-(otherDoc:Document)\n"
+            query += "MATCH (doc)<-[:DOC]-(:Linker)-[:SUBCAT]->(sub${i}:Subcategory)-[*..5]->(main${i}:Category{name:{catName${i}}})\n" +
+                     "MATCH (sub${i})<-[:SUBCAT]-(:Linker)-[:DOC]->(otherDoc:Document)\n"
             queryParams.put("catName${i}" as String, catName)
         }
         if (forTutorial) { query += "WHERE otherDoc.docTitle<>'${givenDoc.docTitle}' AND (otherDoc:Tutorial) \n"}

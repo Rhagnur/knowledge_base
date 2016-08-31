@@ -11,7 +11,8 @@ class Step {
     static mapWith = "neo4j"
 
     static constraints = {
-        stepLink nullable: true
+        stepLink nullable: true, url: true
+        stepTitle matches: /[\w \t\-&.,:?!()'"]+/
     }
     /**
      * reference to the parent-document

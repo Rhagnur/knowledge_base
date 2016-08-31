@@ -15,13 +15,13 @@ class Document {
     }
 
     static constraints = {
-        tags nullable: true
+        tags nullable: true, matches: /[\w]+/
         changedBy nullable: true
         createDate nullable: true
         changeDate nullable: true
         locked nullable: true
         linker nullable: true
-        docTitle unique: true
+        docTitle unique: true, matches: /[\w \t\-&.,:?!()'"]+/
     }
 
     /**
