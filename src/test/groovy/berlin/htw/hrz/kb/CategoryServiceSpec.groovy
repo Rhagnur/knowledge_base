@@ -225,8 +225,8 @@ class CategoryServiceSpec extends Specification {
 
     void "test getAllMaincatsWithSubcats"() {
         setup:
-            new Category(name: 'Test').addToSubCats(new Subcategory(name: 'Test-1')).addToSubCats(new Subcategory(name: 'Test-2')).save()
-            new Category(name: 'Test2').addToSubCats(new Subcategory(name: 'Test2-1').addToSubCats(new Subcategory(name: 'Test2-11'))).save()
+            new Category(name: 'Test').addToSubCats(new Subcategory(name: 'Test_1')).addToSubCats(new Subcategory(name: 'Test_2')).save()
+            new Category(name: 'Test2').addToSubCats(new Subcategory(name: 'Test2_1').addToSubCats(new Subcategory(name: 'Test2_11'))).save()
         when:
             HashMap cats = service.getAllMaincatsWithSubcats()
         then:
@@ -237,8 +237,8 @@ class CategoryServiceSpec extends Specification {
 
     void "test getAllMaincatsWithSubcats with excluded"() {
         setup:
-            new Category(name: 'Test').addToSubCats(new Subcategory(name: 'Test-1')).addToSubCats(new Subcategory(name: 'Test-2')).save()
-            Category exCat = new Category(name: 'Test2').addToSubCats(new Subcategory(name: 'Test2-1').addToSubCats(new Subcategory(name: 'Test2-11'))).save()
+            new Category(name: 'Test').addToSubCats(new Subcategory(name: 'Test_1')).addToSubCats(new Subcategory(name: 'Test_2')).save()
+            Category exCat = new Category(name: 'Test2').addToSubCats(new Subcategory(name: 'Test2_1').addToSubCats(new Subcategory(name: 'Test2_11'))).save()
         when:
             HashMap cats = service.getAllMaincatsWithSubcats([exCat] as List)
         then:

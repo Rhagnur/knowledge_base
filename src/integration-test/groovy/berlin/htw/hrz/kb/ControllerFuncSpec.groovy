@@ -102,8 +102,8 @@ class ControllerFuncSpec extends GebSpec {
         when:
             RestResponse response = rest.get("http://localhost:8080/document/Did+integration-test+work%3F.nonsense")
         then:
-            response.status == 501
-            response.json['error'] == "Given format is unrecognized for this method. Please use 'json' or 'xml'!"
+            response.status == 200
+            response.xml != null
     }
 
     void "test REST get doc wrong title"() {
@@ -113,7 +113,7 @@ class ControllerFuncSpec extends GebSpec {
             RestResponse response = rest.get("http://localhost:8080/document/NonsenseHalloWeltUndSo")
         then:
             response.status == 500
-            response.json['error'] =~ /Short:No Object 'document' with docTitle 'NonsenseHalloWeltUndSo' found!; Long:./
+            response.xml =~ /Short:No Object 'document' with docTitle 'NonsenseHalloWeltUndSo' found!; Long:./
     }
 
 }

@@ -20,9 +20,9 @@ class CategorySpec extends Specification {
     def cleanup() {
     }
 
-    void "test mainCat all"() {
+    void "test mainCat valid"() {
         when:
-            Category mainCat = new Category(name: 'TestingMainCat').addToSubCats(new Subcategory(name: 'TestingMainCatSubCat1')).addToSubCats(new Subcategory(name: 'TestingMainCatSubCat1')).save()
+            Category mainCat = new Category(name: 'TestingMainCat').addToSubCats(new Subcategory(name: 'TestingMainCatSubCat_1')).addToSubCats(new Subcategory(name: 'TestingMainCatSubCat1')).save()
         then:
             mainCat.validate() == true
             mainCat.name == 'TestingMainCat'
@@ -32,6 +32,13 @@ class CategorySpec extends Specification {
     void "test mainCat null name"() {
         when:
             Category mainCat = new Category(name: null)
+        then:
+            mainCat.validate() == false
+    }
+
+    void "test mainCat notMatches name"() {
+        when:
+            Category mainCat = new Category(name: '<kaputt>MeinName</kaputt>')
         then:
             mainCat.validate() == false
     }

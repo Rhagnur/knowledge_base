@@ -26,10 +26,11 @@ class DocumentServiceSpec extends Specification {
 
     void "test newTutorial with steps"() {
         when:
-            Tutorial doc = service.newTutorial('TestingServiceTutorialNullSteps',[new Step(number: 1, stepTitle: 'TestTitel1', stepText: 'TestTitel2', stepLink: 'TestLink1'), new Step(number: 2, stepTitle: 'TestTitel2', stepText: 'TestTitel2', stepLink: 'TestLink2')] as List, ['Test'] as String[])
+            Tutorial doc = service.newTutorial('Testdoc',[new Step(number: 1, stepTitle: 'TestTitel1', stepText: 'TestTitel2'), new Step(number: 2, stepTitle: 'TestTitel2', stepText: 'TestTitel2')] as List, ['Test'] as String[]).save()
         then:
+            doc.validate() == true
             doc instanceof Tutorial
-            doc?.docTitle == 'TestingServiceTutorialNullSteps'
+            doc?.docTitle == 'Testdoc'
             doc?.tags?.contains('Test')
             doc?.steps != null
             doc?.steps?.find({it.stepTitle == 'TestTitel1'}) != null

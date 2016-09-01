@@ -15,7 +15,7 @@ class Document {
     }
 
     static constraints = {
-        tags nullable: true, matches: /[\w]+/ //matches 'a-zA-Z0-9' and the char '_' (word chars)
+        tags nullable: true
         changedBy nullable: true
         createDate nullable: true
         changeDate nullable: true

@@ -22,7 +22,7 @@ class DocumentSpec extends Specification {
     def cleanup() {
     }
 
-    void "test document all"() {
+    void "test document valide"() {
         when:
             Document doc = new Document(docTitle: 'TestingDoc', createDate: new Date(), changeDate: new Date(), changedBy: ['didschu - 11.11.1111'], tags: ['test', 'testing'], viewCount: 42, locked: true).save()
         then:
@@ -48,6 +48,13 @@ class DocumentSpec extends Specification {
     void "test document not-nullable attrs = null"() {
         when:
             Document doc = new Document(docTitle: null, viewCount: null)
+        then:
+            doc.validate() == false
+    }
+
+    void "test document name not valid"() {
+        when:
+            Document doc = new Document(docTitle: '<not working>Test$', viewCount: 0)
         then:
             doc.validate() == false
     }

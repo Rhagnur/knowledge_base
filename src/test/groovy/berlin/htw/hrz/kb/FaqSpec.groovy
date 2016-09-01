@@ -49,4 +49,11 @@ class FaqSpec extends Specification {
             faq instanceof Faq
             faq instanceof Document
     }
+
+    void "test faq question not valid"() {
+        when:
+            Faq faq = new Faq(docTitle: 'TestingFaqNullable', viewCount: 2, question: '$Leeroy<b>', answer: 'Test')
+        then:
+            faq.validate() == false
+    }
 }
