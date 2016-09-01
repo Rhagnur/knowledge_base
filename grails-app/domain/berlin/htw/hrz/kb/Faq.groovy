@@ -17,6 +17,7 @@ class Faq extends Document {
 
     /**
      * Not optional
+     * need to match: all word chars, space, tab and the special chars (-&.,:?!()'")
      */
     String question
     /**

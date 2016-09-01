@@ -25,6 +25,7 @@ class Category {
 
     /**
      * Not optional, the name of the category, which is unique
+     * Can only be characters from a-Z0-9 and the char '_'
      */
     String name;
 }
