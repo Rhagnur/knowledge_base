@@ -4,7 +4,7 @@
 package berlin.htw.hrz.kb
 
 /**
- * Domainclass that represents a single category
+ * Domain class that represents a single category
  */
 class Category {
 
@@ -16,7 +16,7 @@ class Category {
 
     static constraints = {
         subCats nullable: true
-        name unique: true, matches: /[\w]+/
+        name unique: true, matches: /[\w]+/ //matches 'a-zA-Z0-9' and the char '_' (word chars)
     }
     /**
      * Optional, list of associated subcategories which can be null

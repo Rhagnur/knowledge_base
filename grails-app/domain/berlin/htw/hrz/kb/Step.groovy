@@ -4,7 +4,7 @@
 package berlin.htw.hrz.kb
 
 /**
- * Domainclass that represents a single step
+ * Domain class that represents a single step
  */
 class Step {
 
@@ -12,7 +12,7 @@ class Step {
 
     static constraints = {
         stepLink nullable: true, url: true
-        stepTitle matches: /[\w \t\-&.,:?!()'"]+/
+        stepTitle matches: /[\w \t\-&.,:?!()'"]+/ //matches all word chars, space, tab and the given special chars
     }
     /**
      * reference to the parent-document

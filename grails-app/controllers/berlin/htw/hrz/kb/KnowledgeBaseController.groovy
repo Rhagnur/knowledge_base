@@ -64,7 +64,7 @@ class KnowledgeBaseController {
     def changeArticle(){
         if (params.submit) {
             def docSubs = []
-            String[] docTags
+            String[] docTags = null
             def doc = documentService.getDoc(params.docTitle)
 
             //Hole und Verarbeite Tags
@@ -158,7 +158,7 @@ class KnowledgeBaseController {
     def changeFaq() {
         if (params.submit) {
             def docSubs = []
-            String[] docTags
+            String[] docTags = null
             def doc = documentService.getDoc(params.docTitle)
 
             //Hole und Verarbeite Tags
@@ -214,7 +214,7 @@ class KnowledgeBaseController {
     def changeTutorial() {
         if (params.submit) {
             def docSubs = []
-            String[] docTags
+            String[] docTags = null
             def doc = documentService.getDoc(params.docTitle)
 
             //Hole und Verarbeite Tags
@@ -301,7 +301,7 @@ class KnowledgeBaseController {
     def createArticle() {
         if (params.submit) {
             def docSubs = []
-            String[] docTags
+            String[] docTags = null
             Article doc = null
 
             //Hole und Verarbeite Tags
@@ -347,7 +347,7 @@ class KnowledgeBaseController {
     def createFaq() {
         if (params.submit) {
             def docSubs = []
-            String[] docTags
+            String[] docTags = null
             Faq doc = null
 
             //Hole und Verarbeite Tags

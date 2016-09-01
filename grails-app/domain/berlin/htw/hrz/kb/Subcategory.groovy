@@ -4,7 +4,7 @@
 package berlin.htw.hrz.kb
 
 /**
- * Domainclass that represents a subcategory
+ * Domain class that represents a subcategory
  */
 class Subcategory extends Category {
 

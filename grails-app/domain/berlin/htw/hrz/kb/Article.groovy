@@ -4,7 +4,7 @@
 package berlin.htw.hrz.kb
 
 /**
- * Domainclass that represents a single article-document
+ * Domain class that represents a single article-document
  */
 class Article extends Document {
 

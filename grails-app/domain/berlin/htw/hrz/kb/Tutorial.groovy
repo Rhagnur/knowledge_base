@@ -4,7 +4,7 @@
 package berlin.htw.hrz.kb
 
 /**
- * Domainclass that represents a tutorial
+ * Domain class that represents a tutorial
  */
 class Tutorial extends Document {
 

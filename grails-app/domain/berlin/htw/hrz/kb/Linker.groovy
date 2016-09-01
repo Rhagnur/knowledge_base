@@ -4,7 +4,7 @@
 package berlin.htw.hrz.kb
 
 /**
- * Domainclass that represents a single Linker-element.
+ * Domain class that represents a single Linker-element.
  * It's needed for providing a link between a single document and a subcategory.
  * Without it the many to many relationship will provide side effects.
  */

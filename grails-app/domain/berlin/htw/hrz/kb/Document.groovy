@@ -4,7 +4,7 @@
 package berlin.htw.hrz.kb
 
 /**
- * Domainclass that represents a single document
+ * Domain class that represents a single document
  */
 class Document {
 
@@ -15,13 +15,13 @@ class Document {
     }
 
     static constraints = {
-        tags nullable: true, matches: /[\w]+/
+        tags nullable: true, matches: /[\w]+/ //matches 'a-zA-Z0-9' and the char '_' (word chars)
         changedBy nullable: true
         createDate nullable: true
         changeDate nullable: true
         locked nullable: true
         linker nullable: true
-        docTitle unique: true, matches: /[\w \t\-&.,:?!()'"]+/
+        docTitle unique: true, matches: /[\w \t\-&.,:?!()'"]+/ //matches all word chars, space, tab and the given special chars
     }
 
     /**

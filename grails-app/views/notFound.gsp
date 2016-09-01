@@ -1,3 +1,6 @@
+<%--
+  edited: didschu
+--%>
 <g:applyLayout name="main">
     <head>
         <title>NOT FOUND</title>
