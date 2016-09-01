@@ -186,3 +186,18 @@ a:hover {
     margin-bottom: 2em;
     padding: 2em;
 }
+.stepHolder {
+    border: 1px solid rgba(0,0,0,0.1);
+    border-radius: 0.4em;
+    width: 400px;
+    margin-bottom: 1.5em;
+    padding-top: 0.5em;
+    padding-bottom: 0.5em;
+}
+.stepHolder input[type='button'] {
+    min-width: 34px;
+    width: 34px;
+    height: 34px;
+    float: right;
+    margin-top: 150px;
+}

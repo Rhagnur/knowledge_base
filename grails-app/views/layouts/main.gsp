@@ -10,7 +10,6 @@
     <title><g:layoutTitle default="Knowledge Base"/></title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <asset:stylesheet src="mainKB.css"/>
-    <asset:javascript src="mainKB.js"/>
     <g:layoutHead/>
 </head>
 
@@ -55,6 +54,7 @@
 <div id="footer">Platzhalter Footer</div>
 <asset:javascript src="jquery-2.2.0.min.js"/>
 <asset:javascript src="stupidtable.min.js"/>
+<asset:javascript src="mainKB.js"/>
 <script>
     $( document ).ready(function() {
         $("#search-results-table").stupidtable();

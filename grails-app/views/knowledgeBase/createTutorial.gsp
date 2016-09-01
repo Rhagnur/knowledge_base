@@ -15,24 +15,19 @@
             <g:textField name="docTitle"/>
             <br/><br/><br/>
 
-            <label for="stepTitle_1"><g:message code="kb.view.createTutorial.stepTitle"/> 1</label><br/>
-            <g:textField name="stepTitle_1"/>
-            <br/>
-            <label for="stepText_1"><g:message code="kb.view.createTutorial.stepText"/> 1</label><br/>
-            <g:textArea name="stepText_1"/>
-            <br/>
-            <label for="stepLink_1"><g:message code="kb.view.createTutorial.stepLink"/> 1</label><br/>
-            <g:textField name="stepLink_1"/>
-            <br/><br/><br/><br/>
-            <label for="stepTitle_2"><g:message code="kb.view.createTutorial.stepTitle"/> 2</label><br/>
-            <g:textField name="stepTitle_2"/>
-            <br/>
-            <label for="stepText_2"><g:message code="kb.view.createTutorial.stepText"/> 2</label><br/>
-            <g:textArea name="stepText_2"/>
-            <br/>
-            <label for="stepLink_2"><g:message code="kb.view.createTutorial.stepLink"/> 2</label><br/>
-            <g:textField name="stepLink_2"/>
-            <br/><br/>
+            <div class="stepHolder">
+                <input type="button" value="-" onclick="deleteStep()"/>
+                <input type="button" value="+" onclick="addOneStep()"/>
+                <label for="stepTitle_1"><g:message code="kb.view.createTutorial.stepTitle"/> 1</label><br/>
+                <g:textField name="stepTitle_1"/>
+                <br/>
+                <label for="stepText_1"><g:message code="kb.view.createTutorial.stepText"/> 1</label><br/>
+                <g:textArea name="stepText_1"/>
+                <br/>
+                <label for="stepLink_1"><g:message code="kb.view.createTutorial.stepLink"/> 1</label><br/>
+                <g:textField name="stepLink_1"/>
+                <div class="clear"></div>
+            </div>
 
             <label for="docTags"><g:message code="kb.view.createArticle.docTags"/>*</label><br/>
             <g:textArea name="docTags"/><br/>
