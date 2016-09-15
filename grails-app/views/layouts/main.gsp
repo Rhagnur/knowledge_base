@@ -32,7 +32,7 @@
     </div>
     <div id="sidebar">
         <sec:ifLoggedIn>
-            <p>Sie sind angemeldet als <b>${principal.fullname}</b>!</p>
+            <p>Sie sind angemeldet als <b>${principal?.fullname}</b>!</p>
             <form action="/logout">
                 <div class="logout-button"><g:submitButton name="submit" value="Ausloggen"/></div>
             </form>

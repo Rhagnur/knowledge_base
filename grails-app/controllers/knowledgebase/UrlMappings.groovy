@@ -14,6 +14,14 @@ class UrlMappings {
             action = [GET:'exportDoc']
         }
 
+        //REST für alle Klassen
+        "/category"(controller: 'category')
+        "/subcategory"(controller: 'subcategory')
+        "/faq"(controller: 'faq')
+        "/tutorial"(controller: 'tutorial')
+        "/article"(controller: 'article')
+
+
         "/$controller/$action?/$id?(.$format)?"{
             constraints {
                 // apply constraints here

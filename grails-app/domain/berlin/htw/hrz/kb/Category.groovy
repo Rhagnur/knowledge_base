@@ -3,9 +3,12 @@
  */
 package berlin.htw.hrz.kb
 
+import grails.rest.Resource
+
 /**
  * Domain class that represents a single category
  */
+//@Resource(readOnly = false, formats = ['json', 'xml'], uri = '/category')
 class Category {
 
     static mapWith = "neo4j"

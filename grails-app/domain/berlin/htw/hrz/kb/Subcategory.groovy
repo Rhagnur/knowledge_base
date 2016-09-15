@@ -3,9 +3,12 @@
  */
 package berlin.htw.hrz.kb
 
+import grails.rest.Resource
+
 /**
  * Domain class that represents a subcategory
  */
+@Resource(readOnly = false, formats = ['json', 'xml'])
 class Subcategory extends Category {
 
     static mapWith = "neo4j"
