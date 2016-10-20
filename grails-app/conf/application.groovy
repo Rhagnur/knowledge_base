@@ -2,6 +2,11 @@ grails.resources.debug = true
 
 //grails.plugin.springsecurity.useBasicAuth = true
 //grails.plugin.springsecurity.basic.realmName = "HRZ Knowledge Base"
+grails.plugin.springsecurity.ipRestrictions = [
+        [pattern: '/**', access: '141.45.0.0/16'],
+        [pattern: '/login/impersonate', access: '141.45.0.0/16'],
+        [pattern: '/logout/impersonate', access: '141.45.0.0/16']
+]
 grails.plugin.springsecurity.logout.postOnly = false
 grails.plugin.springsecurity.controllerAnnotations.staticRules = [
         [pattern: '/',               access: ['permitAll']],

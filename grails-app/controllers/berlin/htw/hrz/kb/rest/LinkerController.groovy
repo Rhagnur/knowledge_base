@@ -1,15 +1,15 @@
 package berlin.htw.hrz.kb.rest
 
-import berlin.htw.hrz.kb.Faq
+import berlin.htw.hrz.kb.Linker
 import grails.plugin.springsecurity.annotation.Secured
 import grails.rest.RestfulController
 
 @Secured("IS_AUTHENTICATED_ANONYMOUSLY")
-class FaqController extends RestfulController {
+class LinkerController extends RestfulController {
     static responseFormats = ['json', 'xml']
 
-    FaqController() {
-        super(Faq)
+    LinkerController() {
+        super(Linker)
         println('Test')
     }
 }

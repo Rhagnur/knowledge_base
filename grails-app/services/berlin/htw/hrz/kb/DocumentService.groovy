@@ -225,6 +225,7 @@ class DocumentService {
                 Document.findAllByLockedNotEqual(true).sort { it.docTitle }.each{ Document docIt ->
                     def tempElementData = [:]
                     tempElementData.put('docTitle', docIt.docTitle)
+                    tempElementData.put('docID', docIt.id)
                     tempElementData.put('docType', docIt.class.simpleName)
                     tempElementData.put('author', getAuthor(docIt))
                     tempElementData.put('viewCount', docIt.viewCount)
@@ -244,6 +245,7 @@ class DocumentService {
                         Document.findAllByLockedNotEqual(true).sort { it.docTitle }.each{ Document docIt ->
                             document {
                                 docTitle(docIt.docTitle)
+                                docID(docIt.id)
                                 docType(docIt.class.simpleName)
                                 author(getAuthor(docIt))
                                 viewCount(docIt.viewCount)

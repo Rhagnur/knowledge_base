@@ -20,6 +20,7 @@ class UrlMappings {
         "/faq"(controller: 'faq')
         "/tutorial"(controller: 'tutorial')
         "/article"(controller: 'article')
+        "/test"(controller: 'test')
 
 
         "/$controller/$action?/$id?(.$format)?"{

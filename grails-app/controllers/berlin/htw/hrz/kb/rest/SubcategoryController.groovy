@@ -6,6 +6,8 @@ import grails.rest.RestfulController
 
 @Secured("IS_AUTHENTICATED_ANONYMOUSLY")
 class SubcategoryController extends RestfulController {
+    static responseFormats = ['json', 'xml']
+
     SubcategoryController() {
         super(Subcategory)
         println('Test')
