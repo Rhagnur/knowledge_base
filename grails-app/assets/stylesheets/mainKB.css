@@ -91,18 +91,20 @@ h2 {
     font-size: 1.4em;
 }
 .step-media{
-    float: right;
+    float: left;
 }
 .step-media img {
     width: 200px;
 }
 .step-text {
     float: left;
-    margin-right: 1em;
+    margin-right: 2em;
+    width: 60%;
 }
 .step-header {
     margin-top: 2em;
     margin-bottom: 1em;
+    width: 60%;
 }
 .docDiv {
     width: 31%;

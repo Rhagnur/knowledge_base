@@ -21,7 +21,7 @@ class Document {
         changeDate nullable: true
         locked nullable: true
         linker nullable: true
-        docTitle unique: true, matches: /[\w \t\-&.,:?!()'"]+/ //matches all word chars, space, tab and the given special chars
+        docTitle unique: true, matches: /[\w \t\-&.,:?!()'"äöüßÖÄÜ]+/ //matches all word chars, space, tab and the given special chars
     }
 
     /**

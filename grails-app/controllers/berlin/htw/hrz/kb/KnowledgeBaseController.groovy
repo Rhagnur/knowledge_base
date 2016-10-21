@@ -526,12 +526,12 @@ class KnowledgeBaseController {
      */
     def index() {
         //Falls keine Hauptkategorie angelegt ist, lege Struktur mit Testdokumente an
-        //if (Category.findAll().empty) {
-        //    initService.initTestModell()
-        //    flash.info = message(code: 'kb.info.testStructureAndDataCreated') as String
-        //}
+        if (Category.findAll().empty) {
+            initService.initTestModell()
+            flash.info = message(code: 'kb.info.testStructureAndDataCreated') as String
+        }
         println "lookup: $request.remoteAddr"
-        importService.importOldDocs(['https://portal.rz.htw-berlin.de/anleitungen/wlan/windows_8/'] as List)
+        importService.importOldDocs(['https://portal.rz.htw-berlin.de/anleitungen/wlan/windows_8.export'] as List)
         [otherDocs: categoryService.getDocsOfInterest(springSecurityService.principal, request), principal: springSecurityService.principal];
     }
 

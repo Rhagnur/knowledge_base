@@ -19,17 +19,22 @@ class MyDebugInterceptor {
 
     boolean before() {
         start = new Date()
-        println("\nStart of action: '${actionName}'...")
+        println("\n\n\n\n\n #################################################################################################" +
+                "\n #################################################################################################" +
+                "\n #################################################################################################" +
+                "\nStart of action: '${actionName}'...")
         true
     }
 
     boolean after() {
         stop = new Date()
         println("End of action: ${actionName}, time needed: ${TimeCategory.minus(stop, start)}")
+        println("\n #################################################################################################" +
+                "\n #################################################################################################")
         String path = System.getProperty('user.home') + File.separator + "kbjan" + File.separator
         if (! new File(path).exists()) { new File(path).mkdirs() }
         File logFile = new File(path+'perfomance.log')
-        logFile << "${new Date().format('yyyy-MM-dd HH:mm:ss')} ${actionName}\t\t${TimeCategory.minus(stop, start)} needed\n"
+        logFile << "${new Date().format('yyyy-MM-dd HH:mm:ss')} ${actionName}\t\t${TimeCategory.minus(stop, start)} needed\n\n\n\n”"
         true
     }
 

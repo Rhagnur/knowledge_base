@@ -8,6 +8,7 @@ appender('STDOUT', ConsoleAppender) {
     }
 }
 
+//logger('org.grails.datastore', DEBUG, ['STDOUT'])
 root(ERROR, ['STDOUT'])
 
 def targetDir = BuildSettings.TARGET_DIR
