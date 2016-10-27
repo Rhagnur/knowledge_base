@@ -15,6 +15,7 @@ class Document {
     }
 
     static constraints = {
+        videoLink nullable: true, url: true
         tags nullable: true
         changedBy nullable: true
         createDate nullable: true
@@ -58,4 +59,8 @@ class Document {
      * Not optional
      */
     int viewCount
+    /**
+     * optional
+     */
+    String videoLink
 }

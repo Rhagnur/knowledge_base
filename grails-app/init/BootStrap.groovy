@@ -28,7 +28,7 @@ class BootStrap {
 
                 def temp = []
                 for (s in doc.steps.sort{ it.number }) {
-                    temp.add([number: s.number, stepTitle: s.stepTitle, stepText: s.stepText, stepLink: s.stepLink])
+                    temp.add([number: s.number, stepTitle: s.stepTitle, stepText: s.stepText, stepLink: s.stepLink, stepImage: s.stepImage])
                 }
                 output.steps = temp
             }
@@ -61,6 +61,7 @@ class BootStrap {
                                 stepTitle(s.stepTitle)
                                 stepText(s.stepText)
                                 stepLink(s.stepLink)
+                                stepImage(s.stepImage)
                             }
                         }
                     }

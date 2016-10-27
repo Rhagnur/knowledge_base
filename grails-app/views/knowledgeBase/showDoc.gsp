@@ -56,6 +56,11 @@
                             <a href="${it.stepLink}"><g:img uri="${it.stepLink}"/></a>
                         </div>
                     </g:if>
+                    <g:if test="${it.stepImage}">
+                        <div class="step-media2">
+                            <a href="/knowledgeBase/showImage/${it.id}"><img src="/knowledgeBase/showImage/${it.id}" /></a>
+                        </div>
+                    </g:if>
                     <div class="clear"></div>
                 </div>
             </g:each>

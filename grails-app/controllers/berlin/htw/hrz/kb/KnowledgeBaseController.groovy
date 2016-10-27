@@ -526,12 +526,13 @@ class KnowledgeBaseController {
      */
     def index() {
         //Falls keine Hauptkategorie angelegt ist, lege Struktur mit Testdokumente an
-        if (Category.findAll().empty) {
-            initService.initTestModell()
-            flash.info = message(code: 'kb.info.testStructureAndDataCreated') as String
-        }
+        //if (Category.findAll().empty) {
+        //    initService.initTestModell()
+        //    flash.info = message(code: 'kb.info.testStructureAndDataCreated') as String
+        //}
         println "lookup: $request.remoteAddr"
-        importService.importOldDocs(['https://portal.rz.htw-berlin.de/anleitungen/wlan/windows_8.export'] as List)
+        //importService.importOldDocs(['https://portal.rz.htw-berlin.de/anleitungen/wlan/windows_8.export'] as List)
+        importService.importOldDocs(['https://portal.rz.htw-berlin.de/anleitungen/speicherplatz/unix.export'] as List)
         [otherDocs: categoryService.getDocsOfInterest(springSecurityService.principal, request), principal: springSecurityService.principal];
     }
 
@@ -576,6 +577,14 @@ class KnowledgeBaseController {
         } else {
             [document: myDoc, author: documentService.getAuthor(myDoc), lang: documentService.getLanguage(myDoc), similarDocs: otherDocs, principal: springSecurityService.principal]
         }
+    }
+
+    def showImage() {
+        println "showImage"
+        Step myStep = Step.findById(params.id)
+
+
+        render file: myStep.stepImage, contentType: 'image/png'
     }
 
     //###### Anfang der Debugmethoden, welche nicht direkt wichtig für die eigentlichen Funktionalitäten der Anwendung sind ######

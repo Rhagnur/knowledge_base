@@ -11,6 +11,7 @@ class Step {
     static mapWith = "neo4j"
 
     static constraints = {
+        stepImage nullable: true
         stepLink nullable: true, url: true
         stepTitle matches: /[\w \t\-&.,:?!()'"äöüßÖÄÜ]+/ //matches all word chars, space, tab and the given special chars
     }
@@ -35,5 +36,9 @@ class Step {
     /**
      * optional, can be null
      */
-    String stepLink;
+    String stepLink
+    /**
+     * optional, can be null
+     */
+    byte[] stepImage
 }

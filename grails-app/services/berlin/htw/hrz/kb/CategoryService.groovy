@@ -4,6 +4,7 @@
 package berlin.htw.hrz.kb
 
 import grails.transaction.Transactional
+import groovy.time.TimeCategory
 import org.neo4j.graphdb.GraphDatabaseService
 import org.neo4j.graphdb.Result
 
@@ -120,14 +121,22 @@ class CategoryService {
      */
     Map<String, List<Document>> getAdditionalDocs(Document doc) throws IllegalArgumentException {
         def myDocs = [:]
+        def start, stop;
 
+        start = new Date()
         def temp = getSameAssociatedDocs(doc, ['theme', 'os'] as String[])
         if (temp) {
             myDocs.faq = temp.findAll { it instanceof Faq }
             myDocs.article = temp.findAll { it instanceof Article }
         }
+        stop = new Date()
+        println "Art + Faq hat ${TimeCategory.minus(stop, start)} gedauert"
 
+        start = new Date()
         myDocs.tutorial = getSameAssociatedDocs(doc, ['os', 'lang'] as String[], true)
+        stop = new Date()
+        println "Tut hat ${TimeCategory.minus(stop, start)} gedauert"
+
         return myDocs
     }
 
@@ -236,6 +245,47 @@ class CategoryService {
     }
 
     /**
+     * Returns a specific amount of documents for the given subcategory. It is possible to specify the type of documents you want.
+     * @param catName
+     * @param types array of types which should be returned
+     * @return
+     */
+    List<Document> getDocs(String catName, String[] types = null) {
+        String query = "MATCH (cat:Subcategory{name:'$catName'})\n" +
+                "MATCH (cat)<-[:SUBCAT]-(l:Linker)-[:DOC]->(doc:Document)\n"
+        if (types) {
+            query += "WHERE "
+            types.eachWithIndex { String type, int i ->
+                query += "(doc:$type)"
+                if ( i != (types.size() - 1) ) {
+                    query += " or "
+                } else {
+                    query += "\n"
+                }
+            }
+        }
+        query += "RETURN doc ORDER BY doc.viewCount DESC LIMIT $NumDocsToShow"
+        Result result = graphDatabaseService.execute(query)
+        result.toList(Document)
+    }
+
+    /**
+     * Returns a specific amount of newest documents according their createDate.
+     * @return
+     */
+    List<Document> getNewestDocs() {
+        return Document.findAll(max: NumDocsToShow, sort: 'createDate') as List<Document>
+    }
+
+    /**
+     * Returns a specific amount of most popular documents according to their viewCount.
+     * @return
+     */
+    List<Document> getPopularDocs() {
+        Document.findAll(max: NumDocsToShow, sort: 'viewCount', order: 'desc') as List<Document>
+    }
+
+    /**
      * This method will look up for documents which could be interesting for the user.
      * The category for the 'Docs of interest' are separated in 'operating system', 'group', 'popular', 'newest' and 'suggestion'.
      * The docs in 'suggestion' are found by the associated group of the user and his operating systems.
@@ -250,6 +300,8 @@ class CategoryService {
         HashMap docMap = [:]
         def start, stop, temp
 
+
+        start = new Date()
         //1 Get docs from associated OS []
         String osName = ''
         //process the os information from the request header
@@ -285,61 +337,61 @@ class CategoryService {
         }
 
         if (osName && osName != '') {
-            temp = getDocs(getCategory(osName) as Subcategory).findAll { it instanceof Tutorial || it instanceof Article }.sort { -it.viewCount }
-            if (temp.size() > NumDocsToShow) {
-                temp = temp.subList(0, NumDocsToShow) as List<Document>
-            }
-
+            temp = getDocs(osName, ['Tutorial', 'Article'] as String[])
             docMap.put(osName, temp)
             subCatNames.add(osName)
         }
+        stop = new Date()
+        println "OS hat ${TimeCategory.minus(stop, start)} gedauert"
 
+        start = new Date()
         //2 Get the documents of the associated groups [ROLE_GP-STAFF, ROLE_GP-STUD]
         if (userPrincipals.authorities.any { it.authority == ("ROLE_GP-PROF" || "ROLE_GP-LBA") }) {
-            temp = getDocs(getCategory('faculty') as Subcategory).findAll { it instanceof Tutorial || it instanceof Article }.sort { -it.viewCount }
-            if (temp.size() > NumDocsToShow) {
-                temp = temp.subList(0, NumDocsToShow) as List<Document>
+            temp = getDocs('faculty', ['Tutorial', 'Article'] as String[])
+            if (temp) {
+                docMap.put('faculty', temp)
+                subCatNames.add('faculty')
             }
-
-            docMap.put('faculty', temp)
-            subCatNames.add('faculty')
         }
         if (userPrincipals.authorities.any { it.authority == "ROLE_GP-STAFF" }) {
-            temp = getDocs(getCategory('staff') as Subcategory).findAll { it instanceof Tutorial || it instanceof Article }.sort { -it.viewCount }
-            if (temp.size() > NumDocsToShow) {
-                temp = temp.subList(0, NumDocsToShow) as List<Document>
+            temp = getDocs('staff', ['Tutorial', 'Article'] as String[])
+            if (temp) {
+                docMap.put('staff', temp)
+                subCatNames.add('staff')
             }
-
-            docMap.put('staff', temp)
-            subCatNames.add('staff')
         }
         if (userPrincipals.authorities.any { it.authority == "ROLE_GP-STUD" }) {
-            temp = getDocs(getCategory('student') as Subcategory).findAll { it instanceof Tutorial || it instanceof Article }.sort { -it.viewCount }
-            if (temp.size() > NumDocsToShow) {
-                temp = temp.subList(0, NumDocsToShow) as List<Document>
+            temp = getDocs('student', ['Tutorial', 'Article'] as String[])
+            if (temp) {
+                docMap.put('student', temp)
+                subCatNames.add('student')
             }
-
-            docMap.put('student', temp)
-            subCatNames.add('student')
         }
         if (userPrincipals.authorities.any { it.authority == "ROLE_ANONYMOUS" }) {
-            temp = getDocs(getCategory('anonym') as Subcategory).findAll { it instanceof Tutorial || it instanceof Article }.sort { -it.viewCount }
-            if (temp.size() > NumDocsToShow) {
-                temp = temp.subList(0, NumDocsToShow) as List<Document>
+            temp = getDocs('anonym', ['Tutorial', 'Article'] as String[])
+            if (temp) {
+                docMap.put('anonym', temp)
+                subCatNames.add('anonym')
             }
-
-            docMap.put('anonym', temp)
-            subCatNames.add('anonym')
         }
+        stop = new Date()
+        println "Group hat ${TimeCategory.minus(stop, start)} gedauert"
 
+        start = new Date()
         //3 Get the popularest docs
-        temp = Document.findAll(max: NumDocsToShow, sort: 'viewCount', order: 'desc')
-        docMap.put('popular', temp as List<Document>)
+        temp = getPopularDocs()
+        if (temp) { docMap.put('popular', temp) }
+        stop = new Date()
+        println "Pop hat ${TimeCategory.minus(stop, start)} gedauert"
 
-        //3 Get the popularest docs
-        temp = Document.findAll(max: NumDocsToShow, sort: 'createDate', order: 'desc')
-        docMap.put('newest', temp as List<Document>)
+        start = new Date()
+        //3 Get the newest docs
+        temp = getNewestDocs()
+        if (temp) { docMap.put('newest', temp) }
+        stop = new Date()
+        println "New hat ${TimeCategory.minus(stop, start)} gedauert"
 
+        start = new Date()
         //4 Get suggestions, sugg are associated to OS and the user-groups
         while (subCatNames && !subCatNames.empty) {
             def docs = getAllDocsAssociatedToSubCategories(subCatNames as String[], ['Tutorial', 'Article'] as String[])
@@ -350,6 +402,8 @@ class CategoryService {
                 subCatNames.remove(subCatNames.last())
             }
         }
+        stop = new Date()
+        println "Sugg hat ${TimeCategory.minus(stop, start)} gedauert"
 
         docMap.sort { -(it.value.size()) }
     }
@@ -396,8 +450,9 @@ class CategoryService {
         }
         if (forTutorial) { query += "WHERE otherDoc.docTitle<>'${givenDoc.docTitle}' AND (otherDoc:Tutorial) \n"}
         else { query += "WHERE otherDoc.docTitle<>'${givenDoc.docTitle}' AND ((otherDoc:Article) OR (otherDoc:Faq))\n"}
-        query += "RETURN distinct otherDoc ORDER BY otherDoc.docTitle"
+        query += "RETURN distinct otherDoc ORDER BY otherDoc.viewCount DESC LIMIT 10"
 
+        //println "\n\n$query\n$queryParams\n"
         Result myResult = graphDatabaseService.execute(query, queryParams)
         myResult.toList(Document)
     }
