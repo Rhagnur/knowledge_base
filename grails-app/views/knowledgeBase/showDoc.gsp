@@ -43,7 +43,7 @@
 
             <g:each in="${document.steps.sort { it.number }}">
                 <div class="step-header">
-                    <h2>Schritt ${it.number}: ${it.stepTitle}</h2>
+                    <h2>${document.numbered?"Schritt ${it.number}: ":""}${it.stepTitle}</h2>
                 </div>
 
                 <div class="step-content">
@@ -56,9 +56,9 @@
                             <a href="${it.stepLink}"><g:img uri="${it.stepLink}"/></a>
                         </div>
                     </g:if>
-                    <g:if test="${it.stepImage}">
+                    <g:if test="${it.image}">
                         <div class="step-media2">
-                            <a href="/knowledgeBase/showImage/${it.id}"><img src="/knowledgeBase/showImage/${it.id}" /></a>
+                            <a href="/knowledgeBase/showImage/${it.image.id}"><img src="/knowledgeBase/showImage/${it.image.preview?.id}" alt="${it.image.altText}" title="${it.image.altText}"/></a>
                         </div>
                     </g:if>
                     <div class="clear"></div>
@@ -86,8 +86,8 @@
         <g:if test="${document.linker}">
             <p>
                 <g:message code="kb.view.showDoc.parents"/>
-                <g:each in="${document.linker.sort { it.subcat.name }}">
-                    '${it.subcat.name}'
+                <g:each in="${document.linker.sort { it.subcat?.name }}">
+                    '${it.subcat?.name}'
                 </g:each>
             </p>
 

@@ -520,19 +520,39 @@ class KnowledgeBaseController {
         [subCats: categoryService.findUnlinkedSubcats(), docs:documentService.findUnlinkedDocs(), principal: springSecurityService.principal]
     }
 
+    @Secured(["hasAuthority('ROLE_GP-STAFF')", "hasAuthority('ROLE_GP-PROF')"])
+    //Debug
+    //todo: verfeinern
+    def importDocs() {
+        println params
+        if (params.submit) {
+            if (!params.docURLs) {
+                println 'bla'
+            }
+            String temp = params.docURLs
+            println temp
+            importService.importOldDocs(temp.split('\n').toList())
+
+        }
+
+        [principal: springSecurityService.principal]
+    }
+
     /**
      * Controller method for the index (main) page
      * @return
      */
     def index() {
         //Falls keine Hauptkategorie angelegt ist, lege Struktur mit Testdokumente an
-        //if (Category.findAll().empty) {
-        //    initService.initTestModell()
-        //    flash.info = message(code: 'kb.info.testStructureAndDataCreated') as String
-        //}
+        if (Category.findAll().empty) {
+            initService.initTestModell()
+            flash.info = message(code: 'kb.info.testStructureAndDataCreated') as String
+        }
         println "lookup: $request.remoteAddr"
+        //println "Import Tutorial\n"
         //importService.importOldDocs(['https://portal.rz.htw-berlin.de/anleitungen/wlan/windows_8.export'] as List)
-        importService.importOldDocs(['https://portal.rz.htw-berlin.de/anleitungen/speicherplatz/unix.export'] as List)
+        //println "\n\nImport Article\n"
+        //importService.importOldDocs(['https://portal.rz.htw-berlin.de/anleitungen/speicherplatz/unix.export'] as List)
         [otherDocs: categoryService.getDocsOfInterest(springSecurityService.principal, request), principal: springSecurityService.principal];
     }
 
@@ -565,7 +585,7 @@ class KnowledgeBaseController {
                 myDoc = documentService.increaseCounter(myDoc)
                 if (!(myDoc instanceof Faq)) {
                     //Falls Dokument nicht vom Typ Faq ist, hole verwandte Dokumente bzw andere interessante Dokumente
-                    otherDocs = categoryService.getAdditionalDocs(myDoc)
+                    //otherDocs = categoryService.getAdditionalDocs(myDoc)
                 }
             }
             else { flash.error = message(code: 'kb.error.noSuchDocument') as String }
@@ -581,10 +601,10 @@ class KnowledgeBaseController {
 
     def showImage() {
         println "showImage"
-        Step myStep = Step.findById(params.id)
+        //Step myStep = Step.findById(params.id)
+        def myImage = Image.findById(params.id)?:ImageCached.findById(params.id)
 
-
-        render file: myStep.stepImage, contentType: 'image/png'
+        render file: myImage.blob, contentType: myImage.mimeType
     }
 
     //###### Anfang der Debugmethoden, welche nicht direkt wichtig für die eigentlichen Funktionalitäten der Anwendung sind ######

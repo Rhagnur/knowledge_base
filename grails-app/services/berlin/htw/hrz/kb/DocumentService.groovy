@@ -193,7 +193,15 @@ class DocumentService {
         if (!doc) { throw new IllegalArgumentException("Argument 'doc' CAN NOT be null!") }
         //Falls das Dokument vom Typ Tutorial ist, lösche alle Steps
         if (doc instanceof Tutorial) {
-            doc.steps?.collect()?.each { step ->
+            doc.steps?.collect()?.each { Step step ->
+                step.image?.collect()?.each { Image img ->
+                    println img
+                    img.preview?.collect()?.each {
+                        println it
+                        it.delete()
+                    }
+                    img.delete()
+                }
                 step.delete()
             }
             doc.steps?.clear()
@@ -277,7 +285,7 @@ class DocumentService {
      */
     String getAuthor(Document doc) throws IllegalArgumentException {
         if (!doc) { throw new IllegalArgumentException("Argument 'doc' CAN NOT be null!") }
-        return (doc.linker?.subcat?.find{ it.parentCat.name == 'author' }?.name as String)?:null
+        return (doc.linker?.subcat?.find{ it.parentCat?.name == 'author' }?.name as String)?:null
     }
 
     /**
@@ -288,7 +296,7 @@ class DocumentService {
      */
     String getLanguage(Document doc) throws IllegalArgumentException {
         if (!doc) { throw new IllegalArgumentException("Argument 'doc' CAN NOT be null!") }
-        return (doc.linker?.subcat?.find{ it.parentCat.name == 'lang' }?.name as String)?:null
+        return (doc.linker?.subcat?.find{ it.parentCat?.name == 'lang' }?.name as String)?:null
     }
 
     /**

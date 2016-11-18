@@ -19,7 +19,7 @@ class Category {
 
     static constraints = {
         subCats nullable: true
-        name unique: true, matches: /[\w]+/ //matches 'a-zA-Z0-9' and the char '_' (word chars)
+        name unique: true, matches: /[\w-]+/ //matches 'a-zA-Z0-9' and the char '_' (word chars)
     }
     /**
      * Optional, list of associated subcategories which can be null
