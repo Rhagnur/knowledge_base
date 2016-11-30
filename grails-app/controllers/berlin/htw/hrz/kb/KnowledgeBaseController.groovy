@@ -7,6 +7,8 @@ package berlin.htw.hrz.kb
 import grails.converters.XML
 import grails.plugin.springsecurity.SpringSecurityService
 import grails.plugin.springsecurity.annotation.Secured
+import org.springframework.web.multipart.MultipartFile
+import org.springframework.web.multipart.support.StandardMultipartHttpServletRequest
 
 /**
  * Controller class for handling the requests, redirects and processing data given from the views
@@ -529,9 +531,21 @@ class KnowledgeBaseController {
             if (!params.docURLs) {
                 println 'bla'
             }
-            String temp = params.docURLs
-            println temp
-            importService.importOldDocs(temp.split('\n').toList())
+
+            /*
+            MultipartFile tempFile = request.getFile('infoFile')
+            println tempFile.getContentType()
+            File myFile = new File(tempFile.getOriginalFilename());
+            myFile.createNewFile();
+            FileOutputStream fos = new FileOutputStream(myFile);
+            fos.write(tempFile.getBytes());
+            fos.close();
+            myFile.readLines().each {
+                println it
+            }
+            */
+            importService.importOldDocs(request.getFile('infoFile') as MultipartFile)
+            //importService.importOldDocs(temp.split('\n').toList())
 
         }
 
@@ -549,6 +563,7 @@ class KnowledgeBaseController {
             flash.info = message(code: 'kb.info.testStructureAndDataCreated') as String
         }
         println "lookup: $request.remoteAddr"
+        println "principal: $springSecurityService.principal"
         //println "Import Tutorial\n"
         //importService.importOldDocs(['https://portal.rz.htw-berlin.de/anleitungen/wlan/windows_8.export'] as List)
         //println "\n\nImport Article\n"
@@ -578,8 +593,10 @@ class KnowledgeBaseController {
         Document myDoc = null
         def otherDocs = [:]
 
-        if (params.docTitle) {
-            myDoc = documentService.getDoc(params.docTitle)
+        if (params.docTitle || params.mirUrl) {
+            if (params.docTitle) { myDoc = documentService.getDoc(params.docTitle) }
+            if (params.mirUrl) { myDoc = documentService.getDocByMirURL(params.mirUrl)}
+
             if (myDoc) {
                 //Erhöhe Viewcount
                 myDoc = documentService.increaseCounter(myDoc)

@@ -1,6 +1,7 @@
 package berlin.htw.hrz.kb
 
 import grails.transaction.Transactional
+import org.springframework.web.multipart.MultipartFile
 
 import javax.imageio.ImageIO
 import java.awt.Graphics2D
@@ -17,20 +18,32 @@ class ImportService {
     String preUrl = 'http://portal.rz.htw-berlin.de'
 
     void importOldDocs(List<String> oldFiles) {
-        println "importOldDocs: ${oldFiles}"
-        oldFiles.each { String myUrl ->
-            println "url $myUrl"
-            Node result = new XmlParser().parse(myUrl)
-            println "steps ${result.steps.step.size()}"
-            if (result.docType?.text() == 'Tutorial') {
-                println "tut gefunden"
-                importTutorial(result)
-            }
-            else {
-                println "keine steps gefunden"
-                //importArticle(result)
+        //println "importOldDocs: ${oldFiles}"
+        List<String> errorFiles = []
+        oldFiles.eachWithIndex { String myUrl, int index ->
+            if (index < 1000) {
+                println "\n[INFO] Verarbeite URL: '$myUrl' ..."
+                Node result = new XmlParser().parse(myUrl)
+                println "[INFO] Es wurden ${result.steps.step.size()} Schritte gefunden"
+                if (result.docType?.text() == 'Tutorial') {
+                    if (!importTutorial(result)) { errorFiles.add(myUrl) }
+                }
+                else {
+                    println "keine steps gefunden"
+                    //importArticle(result)
+                }
             }
         }
+        println "[INFO] Es gab ${errorFiles.size()} Fehler beim Importierten. Diese Fehler betrafen:\n"
+        errorFiles.each {
+            println it
+        }
+    }
+
+    void importOldDocs(MultipartFile linkFile) {
+        importOldDocs(linkFile.inputStream.readLines().collect {
+            it.toString().replace('.xml', '.export')
+        })
     }
 
     String getMimeType(URL path) {
@@ -60,7 +73,7 @@ class ImportService {
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream()
         String mimeType = getMimeType(path)
-        println mimeType.substring(mimeType.indexOf('/') + 1, mimeType.length())
+        //println mimeType.substring(mimeType.indexOf('/') + 1, mimeType.length())
         ImageIO.write(bimage, mimeType.substring(mimeType.indexOf('/') + 1, mimeType.length()), baos)
         baos.toByteArray()
     }
@@ -80,16 +93,16 @@ class ImportService {
     }
 
     Subcategory getAuthor(Node xmlDoc) {
-        println "getAuthor"
         String author = xmlDoc.author.text() as String
-        println "author $author"
+        //println "author $author"
+        if (!author) { author = 'IT-Helpcenter' }
         Subcategory authorNode = Subcategory.findByName(author)
         if (!authorNode) {
             authorNode = new Subcategory(name: author)
             Category.findByName('author')?.addToSubCats(authorNode)?.save(flush:true)
         }
-        println authorNode
-        println authorNode.name
+        //println authorNode
+        //println authorNode.name
         authorNode.save(flush: true)
     }
 
@@ -110,7 +123,7 @@ class ImportService {
             //println XmlUtil.serialize(section.content)
         }
 
-        println "\n\n\nContent\n$myContent"
+        //println "\n\n\nContent\n$myContent"
 
 
     }
@@ -132,6 +145,7 @@ class ImportService {
     }
 
     Step[] processSteps(NodeList rawSteps) {
+        println '[INFO] Verarbeite Schritte...'
         Step[] mySteps = []
         rawSteps?.step?.eachWithIndex { step, int index ->
             int stepNumber
@@ -140,19 +154,19 @@ class ImportService {
             ImageCached imgc = null
             Image img = null
 
-            println "debug: number"
+            //println "debug: number"
             if (step.number) {
                 stepNumber = (step.number?.text())?.toInteger()
             } else {
                 stepNumber = index + 1
             }
 
-            println "debug: media alt"
+            //println "debug: media alt"
             if (step.image?.alt?.text()) {
                 altText = step.image?.alt?.text() as String
             }
 
-            println "debug: media"
+            //println "debug: media"
             if (step.image?.link?.text()) {
                 mimeType = getMimeType(("$preUrl${step.image?.link?.text()}" as String).toURL())
 
@@ -177,33 +191,33 @@ class ImportService {
 
 
 
-            println "debug: title"
+            //println "debug: title"
             if (step.section.size() > 1) {
                 stepTitle = step.section?.find { it.'@number' == '1' }?.title?.text() as String
             } else {
                 stepTitle = step.section?.title?.text() as String
             }
             if (stepTitle.startsWith('Schritt')) {
-                println "Lösche Titel prefix"
+                //println "Lösche Titel prefix"
                 stepTitle = stepTitle.replaceFirst(/Schritt [0-9]+: /, '')
             }
 
 
-            println "debug: content"
+            //println "debug: content"
              stepContent = ""
 
-            println "debug: steps"
+            //println "debug: steps"
             step.section?.each { section ->
                 String content = asString(section.content[0].children())
                 String myCss = ''
 
                 if (section.classes?.css) {
-                    println "Gibt css"
+                    //println "Gibt css"
                     section.classes.css.each {
-                        println "css $it.text()"
+                        //println "css $it.text()"
                         myCss += (it.text()=='Hinweis'?'infobox ':'')
                     }
-                    println "myCss $myCss"
+                    //println "myCss $myCss"
                 }
 
                 if (section.'@number' && (section.'@number' as int) > 1) {
@@ -211,7 +225,7 @@ class ImportService {
                     stepContent += "<section class='$myCss'><h2>$title</h2>$content</section>\n" as String
                 } else {
                     if (content.startsWith(/[0-9]+. /)) {
-                        println "Lösche content prefix"
+                        //println "Lösche content prefix"
                         content = content.replaceFirst(/[0-9]+. /, '')
                     }
                     stepContent += "<section class='$myCss'>$content</section>\n" as String
@@ -219,7 +233,7 @@ class ImportService {
 
             }
 
-            println "\nNumber $stepNumber\nTitel $stepTitle\nContent $stepContent\n" +
+            //println "\nNumber $stepNumber\nTitel $stepTitle\nContent $stepContent\n" +
                     "\nMediaType $mimeType\nAltText $altText"
             Step myStep = new Step(number: stepNumber, stepTitle: stepTitle, stepText: stepContent, image: img)
             if (myStep.validate()) {
@@ -234,11 +248,12 @@ class ImportService {
         mySteps
     }
 
-    void importTutorial(Node xmlDoc) {
+    boolean importTutorial(Node xmlDoc) {
+        println '[INFO] Importiere Dokument...'
         Step[] mySteps = []
 
         //steps verarbeiten
-        println "debug: steps verarbeiten"
+        //println "debug: steps verarbeiten"
         mySteps = processSteps(xmlDoc.steps)
 
 
@@ -246,20 +261,22 @@ class ImportService {
 
 
         //tut erstellen
-        Tutorial myTut = new Tutorial(docTitle: xmlDoc.title.text() as String, locked: false, numbered: Boolean.valueOf(xmlDoc.numbered.text()), viewCount: 0, createDate: getDate(xmlDoc), tags: getTags(xmlDoc))
+        Tutorial myTut = new Tutorial(docTitle: xmlDoc.title.text() as String, locked: false, numbered: Boolean.valueOf(xmlDoc.numbered.text()), viewCount: 0, createDate: getDate(xmlDoc), tags: getTags(xmlDoc), mirUrl: xmlDoc.mirurl.text() as String)
         //steps hinzufügen
         mySteps.each { step ->
             myTut.addToSteps(step)
         }
         if (!myTut.validate()) {
             println myTut.errors
+            false
         } else {
             //wenn alles schick, speichern und an author/lang unterkategorien hängen
             myTut = myTut.save(flush:true)
             new Linker(subcat: getAuthor(xmlDoc), doc: myTut).save(flush:true)
             new Linker(subcat: Subcategory.findByName('de'), doc: myTut).save(flush:true)
-            println getAuthor(xmlDoc)
-            println myTut.linker.subcat.name
+            //println getAuthor(xmlDoc)
+            //println myTut.linker.subcat.name
+            true
         }
     }
 }

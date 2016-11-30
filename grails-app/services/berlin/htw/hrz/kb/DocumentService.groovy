@@ -285,7 +285,7 @@ class DocumentService {
      */
     String getAuthor(Document doc) throws IllegalArgumentException {
         if (!doc) { throw new IllegalArgumentException("Argument 'doc' CAN NOT be null!") }
-        return (doc.linker?.subcat?.find{ it.parentCat?.name == 'author' }?.name as String)?:null
+        return (doc.linker?.subcat?.find{ it?.parentCat?.name == 'author' }?.name as String)?:null
     }
 
     /**
@@ -296,7 +296,7 @@ class DocumentService {
      */
     String getLanguage(Document doc) throws IllegalArgumentException {
         if (!doc) { throw new IllegalArgumentException("Argument 'doc' CAN NOT be null!") }
-        return (doc.linker?.subcat?.find{ it.parentCat?.name == 'lang' }?.name as String)?:null
+        return (doc.linker?.subcat?.find{ it?.parentCat?.name == 'lang' }?.name as String)?:null
     }
 
     /**
@@ -310,6 +310,13 @@ class DocumentService {
         if (!docTitle) { throw new IllegalArgumentException("Argument 'docTitle' CAN NOT be null!") }
         Document myDoc = Document.findByDocTitle(docTitle)
         if (!myDoc) { throw new NoSuchObjectFoundException("No Object 'document' with docTitle '${docTitle}' found!") }
+        myDoc
+    }
+
+    Document getDocByMirURL(String mirUrl) throws IllegalArgumentException, NoSuchObjectFoundException {
+        if (!mirUrl) { throw new IllegalArgumentException("Argument 'mirUrl' CAN NOT be null!") }
+        Document myDoc = Document.findByMirUrl(mirUrl)
+        if (!myDoc) { throw new NoSuchObjectFoundException("No Object 'document' with Mir-URL '${mirUrl}' found!") }
         myDoc
     }
 
