@@ -12,8 +12,15 @@
 
     <content tag="main">
         <h1><g:message code="kb.view.importDocs.title"/></h1>
+        <g:message code="kb.view.importDocs.introText"/>
         <g:uploadForm controller="KnowledgeBase" action="importDocs" class="catForm">
-            <label for="infoFile"><g:message code="kb.view.importDocs.label.urls"/></label><br/>
+            <label for="username"><g:message code="kb.view.importDocs.label.username"/></label><br/>
+            <input type="text" name="username" id="username"/>
+            <br/><br/>
+            <label for="password"><g:message code="kb.view.importDocs.label.password"/></label><br/>
+            <input type="password" name="password" id="password"/>
+            <br/><br/>
+            <g:message code="kb.view.importDocs.infoText.allLinkFile"/><br/>
             <!--textarea name="docURLs" placeholder="URLs durch neue Zeile trennen"></textarea><br/><br/><br/-->
             <input type="file" id="infoFile" name="infoFile"/>
             <div class="clear"></div>

@@ -2,6 +2,7 @@ package berlin.htw.hrz.kb
 
 import grails.transaction.Transactional
 import org.springframework.web.multipart.MultipartFile
+import sun.awt.image.URLImageSource
 
 import javax.imageio.ImageIO
 import java.awt.Graphics2D
@@ -15,24 +16,47 @@ class ImportService {
     //todo Verlinkung der Anleitungsdokumente untereinander
     //todo videos?
     DocumentService documentService
-    String preUrl = 'http://portal.rz.htw-berlin.de'
+    String preUrl = 'https://portal.rz.htw-berlin.de'
+    String cookieCheckPage = 'https://portal.rz.htw-berlin.de/anleitungen.xml'
 
-    void importOldDocs(List<String> oldFiles) {
+    void importOldDocs(List<String> oldFiles, String cookie) {
         //println "importOldDocs: ${oldFiles}"
         List<String> errorFiles = []
-        oldFiles.eachWithIndex { String myUrl, int index ->
+        URLConnection conn = null
+
+        oldFiles.eachWithIndex{ String myUrl, int index ->
             if (index < 1000) {
-                println "\n[INFO] Verarbeite URL: '$myUrl' ..."
-                Node result = new XmlParser().parse(myUrl)
-                println "[INFO] Es wurden ${result.steps.step.size()} Schritte gefunden"
-                if (result.docType?.text() == 'Tutorial') {
-                    if (!importTutorial(result)) { errorFiles.add(myUrl) }
+
+                try {
+                    println "\n${index+1} [INFO] Verarbeite URL: '$myUrl' ..."
+                    conn = myUrl.toURL().openConnection()
+                    conn.setRequestProperty('Cookie', cookie)
+                    conn.connect()
+                    if (conn.responseCode == 200) {
+                        Node result = new XmlParser().parseText(conn.content.text as String)
+                        println "[INFO] Es wurden ${result.steps.step.size()} Schritte gefunden"
+                        if (result.docType?.text() == 'Tutorial') {
+                            if (!importTutorial(result, cookie)) {
+                                errorFiles.add(myUrl)
+                            }
+                        } else {
+                            println "keine steps gefunden"
+                            //importArticle(result)
+                        }
+                    } else {
+                        errorFiles.add(myUrl)
+                    }
+
+                } catch (Exception e) {
+                    errorFiles.add(myUrl)
+                    throw new Exception(e.message)
                 }
-                else {
-                    println "keine steps gefunden"
-                    //importArticle(result)
+                finally {
+                    conn.disconnect()
                 }
+
             }
+
         }
         println "[INFO] Es gab ${errorFiles.size()} Fehler beim Importierten. Diese Fehler betrafen:\n"
         errorFiles.each {
@@ -40,22 +64,71 @@ class ImportService {
         }
     }
 
-    void importOldDocs(MultipartFile linkFile) {
-        importOldDocs(linkFile.inputStream.readLines().collect {
-            it.toString().replace('.xml', '.export')
-        })
+    static String cookieGetter(String user, String pass) {
+        String temp = ''
+        HttpURLConnection conn = 'https://portal.rz.htw-berlin.de/anleitungen.html'.toURL().openConnection() as HttpURLConnection
+        conn.requestMethod = 'GET'
+        conn.connect()
+        if (conn.responseCode.toInteger() == 200) {
+            temp = conn.getHeaderField('Set-Cookie')
+            temp = temp.substring(0, temp.lastIndexOf(';'))
+        }
+        conn.disconnect()
+
+
+        conn = "https://portal.rz.htw-berlin.de/cms/login?username=$user&password=$pass".toString().toURL().openConnection() as HttpURLConnection
+        conn.requestMethod = 'GET'
+        conn.setRequestProperty('Cookie', temp)
+        conn.connect()
+        if (conn.responseCode.toInteger() == 200) {
+            conn.disconnect()
+            temp
+        } else {
+            conn.disconnect()
+            null
+        }
     }
 
-    String getMimeType(URL path) {
-        URLConnection.guessContentTypeFromStream(new BufferedInputStream(path.openStream()))
+    boolean testingCookie (String cookie) {
+        URLConnection conn = null
+        try {
+            conn = cookieCheckPage.toURL().openConnection()
+            conn.setRequestProperty('Cookie', cookie)
+            conn.connect()
+            if (!conn.responseCode != 200) { false }
+
+            def result = new XmlSlurper().parseText(conn.content.text as String)
+            if (!(result?.'meta-inf'?.user?.username as String)) { false }
+            else { true }
+        } catch (Exception e) {
+            e.printStackTrace()
+            false
+        }
     }
 
-    byte[] imageToBytes(URL path) {
-        path.bytes
+    boolean importOldDocs(MultipartFile linkFile, String user, String pass) {
+        String cookie = cookieGetter(user, pass)
+        boolean cookieGood = testingCookie(cookie)
+        if ( cookieGood ) {
+            importOldDocs(linkFile.inputStream.readLines().collect {
+                it.toString().replace('.xml', '.export')
+            }, cookie)
+            true
+        } else {
+            false
+        }
     }
 
-    byte[] resizeImage(URL path) {
-        BufferedImage img = ImageIO.read(path)
+    String getMimeType(URLConnection conn) {
+        conn.getHeaderField('Content-Type')
+    }
+
+    byte[] imageToBytes(URLConnection conn) {
+        conn.inputStream.bytes
+    }
+
+    byte[] resizeImage(byte[] stepMedia, String mimeType) {
+        BufferedImage img = ImageIO.read(new ByteArrayInputStream(stepMedia))
         double scale = 200 / img.width
         int newWidth = 200
         int newHeight = img.height * scale
@@ -72,8 +145,6 @@ class ImportService {
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING,RenderingHints.VALUE_ANTIALIAS_ON)
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream()
-        String mimeType = getMimeType(path)
-        //println mimeType.substring(mimeType.indexOf('/') + 1, mimeType.length())
         ImageIO.write(bimage, mimeType.substring(mimeType.indexOf('/') + 1, mimeType.length()), baos)
         baos.toByteArray()
     }
@@ -144,7 +215,7 @@ class ImportService {
         temp
     }
 
-    Step[] processSteps(NodeList rawSteps) {
+    Step[] processSteps(NodeList rawSteps, String cookie) {
         println '[INFO] Verarbeite Schritte...'
         Step[] mySteps = []
         rawSteps?.step?.eachWithIndex { step, int index ->
@@ -168,10 +239,25 @@ class ImportService {
 
             //println "debug: media"
             if (step.image?.link?.text()) {
-                mimeType = getMimeType(("$preUrl${step.image?.link?.text()}" as String).toURL())
+                URL imgUrl = ("$preUrl${step.image?.link?.text()}" as String).toURL()
 
-                previewMedia = resizeImage(("$preUrl${step.image?.link?.text()}" as String).toURL())
-                imgc = new ImageCached(blob: previewMedia, altText: altText, mimeType: mimeType,)
+
+                println 'getMime and imageRaw'
+                URLConnection conn = imgUrl.openConnection()
+                conn.setRequestProperty('Cookie', cookie)
+                conn.connect()
+
+                if (conn.responseCode == 200) {
+                    mimeType = getMimeType(conn)
+
+                    stepMedia = imageToBytes(conn)
+                    img = new Image(blob: stepMedia, altText: altText, mimeType: mimeType, preview: null)
+                }
+
+                previewMedia = resizeImage(stepMedia, mimeType)
+
+                println 'resize'
+                imgc = new ImageCached(blob: previewMedia, altText: altText, mimeType: mimeType)
                 if (imgc.validate()) {
                     imgc = imgc.save(flush:true)
                 } else {
@@ -179,17 +265,16 @@ class ImportService {
                     throw new Exception("Kaputt")
                 }
 
-                stepMedia = imageToBytes(("$preUrl${step.image?.link?.text()}" as String).toURL())
-                img = new Image(blob: stepMedia, altText: altText, mimeType: mimeType, preview: imgc)
+                img.preview = imgc
                 if (img.validate()) {
-                    img = img.save(flush:true)
+                    img = img.save(flush: true)
                 } else {
                     img.errors?.allErrors?.each { println it }
                     throw new Exception("Kaputt")
                 }
+
+                conn.disconnect()
             }
-
-
 
             //println "debug: title"
             if (step.section.size() > 1) {
@@ -237,7 +322,7 @@ class ImportService {
                     "\nMediaType $mimeType\nAltText $altText"
             Step myStep = new Step(number: stepNumber, stepTitle: stepTitle, stepText: stepContent, image: img)
             if (myStep.validate()) {
-                mySteps += myStep.save(flush:true)
+                mySteps += myStep
             } else {
                 myStep.errors?.allErrors?.each { println it }
                 throw new Exception("Kaputt")
@@ -248,13 +333,13 @@ class ImportService {
         mySteps
     }
 
-    boolean importTutorial(Node xmlDoc) {
+    boolean importTutorial(Node xmlDoc, String cookie) {
         println '[INFO] Importiere Dokument...'
         Step[] mySteps = []
 
         //steps verarbeiten
         //println "debug: steps verarbeiten"
-        mySteps = processSteps(xmlDoc.steps)
+        mySteps = processSteps(xmlDoc.steps, cookie)
 
 
 
@@ -268,9 +353,11 @@ class ImportService {
         }
         if (!myTut.validate()) {
             println myTut.errors
+            //myTut.delete()
             false
         } else {
             //wenn alles schick, speichern und an author/lang unterkategorien hängen
+            println "[INFO] Everything seems fine. Save doc..."
             myTut = myTut.save(flush:true)
             new Linker(subcat: getAuthor(xmlDoc), doc: myTut).save(flush:true)
             new Linker(subcat: Subcategory.findByName('de'), doc: myTut).save(flush:true)

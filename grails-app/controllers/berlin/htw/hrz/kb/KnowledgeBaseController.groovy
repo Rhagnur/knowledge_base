@@ -7,6 +7,7 @@ package berlin.htw.hrz.kb
 import grails.converters.XML
 import grails.plugin.springsecurity.SpringSecurityService
 import grails.plugin.springsecurity.annotation.Secured
+import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.multipart.MultipartFile
 import org.springframework.web.multipart.support.StandardMultipartHttpServletRequest
 
@@ -526,13 +527,12 @@ class KnowledgeBaseController {
     //Debug
     //todo: verfeinern
     def importDocs() {
-        println params
+        //println params
         if (params.submit) {
-            if (!params.docURLs) {
-                println 'bla'
-            }
-
-            /*
+            if (!params.username || !params.password || (params.infoFile as MultipartFile).isEmpty()) {
+                flash.error = message(code: 'kb.error.fillOutAllFields') as String
+            } else {
+                /*
             MultipartFile tempFile = request.getFile('infoFile')
             println tempFile.getContentType()
             File myFile = new File(tempFile.getOriginalFilename());
@@ -544,9 +544,14 @@ class KnowledgeBaseController {
                 println it
             }
             */
-            importService.importOldDocs(request.getFile('infoFile') as MultipartFile)
-            //importService.importOldDocs(temp.split('\n').toList())
-
+                if (importService.importOldDocs(request.getFile('infoFile') as MultipartFile, params.username as String, params.password as String)) {
+                    flash.info = message(code: 'kb.info.documentsImported') as String
+                    redirect(view: 'index', model: [otherDocs: categoryService.getDocsOfInterest(springSecurityService.principal, request), principal: springSecurityService.principal])
+                } else {
+                    flash.error = message(code: 'kb.error.credentialsWrong') as String
+                }
+                //importService.importOldDocs(temp.split('\n').toList())
+            }
         }
 
         [principal: springSecurityService.principal]
