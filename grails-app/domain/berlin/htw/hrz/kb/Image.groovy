@@ -17,4 +17,5 @@ class Image {
      */
     String altText
     String mimeType
+    int number
 }

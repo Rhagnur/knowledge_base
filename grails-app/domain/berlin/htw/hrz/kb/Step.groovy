@@ -12,7 +12,7 @@ class Step {
 
     static constraints = {
         stepTitle nullable: true, matches: /[\w \t\-&.,:?!()'"äöüßÖÄÜ@\/]+/ //matches all word chars, space, tab and the given special chars
-        image nullable: true
+        images nullable: true
         doc nullable: true
     }
     /**
@@ -23,12 +23,13 @@ class Step {
     /**
      * optional: reference to image-blob
      */
-    static hasOne = [image: Image]
+    //static hasOne = [image: Image]
+    static hasMany = [images: Image]
 
     /**
      * Not optional
      */
-    int number;
+    int number
     /**
      * Not optional
      * need to match: all word chars, space, tab and the special chars (-&.,:?!()'")
@@ -41,4 +42,5 @@ class Step {
     /**
      * optional, can be null
      */
+    boolean showNumber
 }

@@ -2,25 +2,22 @@ package berlin.htw.hrz.kb
 
 import grails.transaction.Transactional
 import org.springframework.web.multipart.MultipartFile
-import sun.awt.image.URLImageSource
 
 import javax.imageio.ImageIO
 import java.awt.Graphics2D
-import java.awt.Transparency
 import java.awt.image.BufferedImage
 import java.awt.AlphaComposite
 import java.awt.RenderingHints
 
 @Transactional
 class ImportService {
-    //todo Verlinkung der Anleitungsdokumente untereinander
     //todo videos?
     DocumentService documentService
     String preUrl = 'https://portal.rz.htw-berlin.de'
     String cookieCheckPage = 'https://portal.rz.htw-berlin.de/anleitungen.xml'
+    int count = 0
 
     void importOldDocs(List<String> oldFiles, String cookie) {
-        //println "importOldDocs: ${oldFiles}"
         List<String> errorFiles = []
         URLConnection conn = null
 
@@ -28,7 +25,7 @@ class ImportService {
             if (index < 1000) {
 
                 try {
-                    println "\n${index+1} [INFO] Verarbeite URL: '$myUrl' ..."
+                    println "\n[INFO] Verarbeite URL (${index+1}): '$myUrl' ..."
                     conn = myUrl.toURL().openConnection()
                     conn.setRequestProperty('Cookie', cookie)
                     conn.connect()
@@ -58,13 +55,26 @@ class ImportService {
             }
 
         }
-        println "[INFO] Es gab ${errorFiles.size()} Fehler beim Importierten. Diese Fehler betrafen:\n"
+        println "\n\n[INFO] Es gab ${errorFiles.size()} Fehler beim Importierten. Diese Fehler betrafen:\n"
         errorFiles.each {
             println it
         }
     }
 
-    static String cookieGetter(String user, String pass) {
+    String getIntro(Node xmlDoc) {
+        String temp = ""
+        if (xmlDoc.intro && xmlDoc.intro.text()) {
+            xmlDoc.intro.section.each {
+                temp += "<section>"
+                if (it.title.text()) { temp += "<h2>${it.title.text()}</h2>" }
+                if (it.text.text()) { temp += asString(it.text as NodeList) }
+                temp += "</section>"
+            }
+        }
+        temp
+    }
+
+    String cookieGetter(String user, String pass) {
         String temp = ''
         HttpURLConnection conn = 'https://portal.rz.htw-berlin.de/anleitungen.html'.toURL().openConnection() as HttpURLConnection
         conn.requestMethod = 'GET'
@@ -209,8 +219,8 @@ class ImportService {
     }
     String asString(NodeList nodes) {
         String temp = ""
-        nodes.each { Node node ->
-            temp += asString(node)
+        nodes.each {
+            temp += asString(it)
         }
         temp
     }
@@ -219,11 +229,11 @@ class ImportService {
         println '[INFO] Verarbeite Schritte...'
         Step[] mySteps = []
         rawSteps?.step?.eachWithIndex { step, int index ->
+            boolean showNumber = false
             int stepNumber
             byte[] stepMedia = null, previewMedia = null
             String stepContent ="", stepTitle = "", altText = "", mimeType = ""
-            ImageCached imgc = null
-            Image img = null
+            List<Image> imgsTemp = []
 
             //println "debug: number"
             if (step.number) {
@@ -238,26 +248,32 @@ class ImportService {
             }
 
             //println "debug: media"
-            if (step.image?.link?.text()) {
-                URL imgUrl = ("$preUrl${step.image?.link?.text()}" as String).toURL()
+            step.images.image.each {
+                println 'image verarbeiten'
+                println it
+
+                Image img = null
+                URL imgUrl = ("$preUrl${it?.link?.text()}" as String).toURL()
 
 
-                println 'getMime and imageRaw'
+                //println 'getMime and imageRaw'
                 URLConnection conn = imgUrl.openConnection()
                 conn.setRequestProperty('Cookie', cookie)
                 conn.connect()
 
                 if (conn.responseCode == 200) {
                     mimeType = getMimeType(conn)
-
                     stepMedia = imageToBytes(conn)
-                    img = new Image(blob: stepMedia, altText: altText, mimeType: mimeType, preview: null)
+                    int imgNumber = it.number.text()?.toInteger()
+                    println "number ${it.number.text()?.toInteger()}"
+                    println "numberInt $imgNumber"
+                    img = new Image(blob: stepMedia, altText: altText, mimeType: mimeType, preview: null, number: imgNumber)
                 }
 
                 previewMedia = resizeImage(stepMedia, mimeType)
 
-                println 'resize'
-                imgc = new ImageCached(blob: previewMedia, altText: altText, mimeType: mimeType)
+                //println 'resize'
+                ImageCached imgc = new ImageCached(blob: previewMedia, altText: altText, mimeType: mimeType)
                 if (imgc.validate()) {
                     imgc = imgc.save(flush:true)
                 } else {
@@ -273,6 +289,10 @@ class ImportService {
                     throw new Exception("Kaputt")
                 }
 
+                println "number bla $img.number"
+
+                imgsTemp.add(img)
+
                 conn.disconnect()
             }
 
@@ -284,6 +304,7 @@ class ImportService {
             }
             if (stepTitle.startsWith('Schritt')) {
                 //println "Lösche Titel prefix"
+                showNumber = true
                 stepTitle = stepTitle.replaceFirst(/Schritt [0-9]+: /, '')
             }
 
@@ -301,6 +322,7 @@ class ImportService {
                     section.classes.css.each {
                         //println "css $it.text()"
                         myCss += (it.text()=='Hinweis'?'infobox ':'')
+                        myCss += (it.text()=='Graue Box'?'infobox-2 ':'')
                     }
                     //println "myCss $myCss"
                 }
@@ -320,7 +342,12 @@ class ImportService {
 
             //println "\nNumber $stepNumber\nTitel $stepTitle\nContent $stepContent\n" +
                     "\nMediaType $mimeType\nAltText $altText"
-            Step myStep = new Step(number: stepNumber, stepTitle: stepTitle, stepText: stepContent, image: img)
+            Step myStep = new Step(number: stepNumber, stepTitle: stepTitle, stepText: stepContent, showNumber: showNumber)
+            imgsTemp.each {
+                myStep.addToImages(it)
+            }
+            myStep.save(flush: true)
+
             if (myStep.validate()) {
                 mySteps += myStep
             } else {
@@ -346,24 +373,181 @@ class ImportService {
 
 
         //tut erstellen
-        Tutorial myTut = new Tutorial(docTitle: xmlDoc.title.text() as String, locked: false, numbered: Boolean.valueOf(xmlDoc.numbered.text()), viewCount: 0, createDate: getDate(xmlDoc), tags: getTags(xmlDoc), mirUrl: xmlDoc.mirurl.text() as String)
+        Tutorial myTut = new Tutorial(docTitle: xmlDoc.title.text() as String, locked: false, viewCount: 0, createDate: getDate(xmlDoc), tags: getTags(xmlDoc), mirUrl: xmlDoc.mirurl.text() as String, intro: getIntro(xmlDoc), videoLink: (xmlDoc.video.'@link'.text() as String)?:null)
         //steps hinzufügen
         mySteps.each { step ->
             myTut.addToSteps(step)
         }
+        
         if (!myTut.validate()) {
-            println myTut.errors
-            //myTut.delete()
-            false
+            String errors = myTut.errors.toString()
+            if ( errors.contains('docTitle.unique.error') ) {
+                println "[WARNING] Dokument mit dem Titel '$myTut.docTitle' existiert bereits!"
+                println "[INFO] Ändere Dokumententitel zu '${myTut.docTitle} $count'..."
+                myTut.docTitle = "${myTut.docTitle} $count"
+                count += 1
+                if (myTut.validate()) {
+                    println "[INFO] Alles ok, Dokument wird gespeichert..."
+                    myTut = myTut.save(flush:true)
+                    linkDocument(xmlDoc, myTut)
+                    true
+                } else {
+                    throw new Exception('Testaustieg2, später rausnehmen')
+                    false
+                }
+            }
+
+            if (myTut.errors.errorCount > 0 ) {
+                println myTut.errors
+                throw new Exception('Testaustieg, später rausnehmen')
+                false
+            }
+            true
         } else {
             //wenn alles schick, speichern und an author/lang unterkategorien hängen
-            println "[INFO] Everything seems fine. Save doc..."
+            println "[INFO] Alles ok, Dokument wird gespeichert..."
             myTut = myTut.save(flush:true)
-            new Linker(subcat: getAuthor(xmlDoc), doc: myTut).save(flush:true)
-            new Linker(subcat: Subcategory.findByName('de'), doc: myTut).save(flush:true)
-            //println getAuthor(xmlDoc)
-            //println myTut.linker.subcat.name
+            linkDocument(xmlDoc, myTut)
             true
+        }
+    }
+
+    void linkDocument (Node xmlDoc, Document myDoc) {
+        new Linker(subcat: getAuthor(xmlDoc), doc: myDoc).save(flush:true)
+        new Linker(subcat: Subcategory.findByName('de'), doc: myDoc).save(flush:true)
+        
+        String mirLink = myDoc.mirUrl
+        List<String> mirLinkParts = myDoc.mirUrl.split('/').toList()
+
+        //os
+        //todo eleganter machen
+        if (mirLink.contains('windows')) {
+            if (mirLinkParts.contains('windowsxp') || mirLinkParts.contains('windows_xp')) {
+                println "[INFO] Anleitung für Win xp erkannt, verlinke Dokument mit der Subkategorie..."
+                new Linker(subcat: Subcategory.findByName('win_xp'), doc: myDoc).save(flush:true)
+            } else if (mirLinkParts.contains('windowsvista') || mirLinkParts.contains('windows_vista')) {
+                println "[INFO] Anleitung für Win vista erkannt, verlinke Dokument mit der Subkategorie..."
+                new Linker(subcat: Subcategory.findByName('win_vista'), doc: myDoc).save(flush:true)
+            } else if (mirLinkParts.contains('windows7') || mirLinkParts.contains('windows_7')) {
+                println "[INFO] Anleitung für Win 7 erkannt, verlinke Dokument mit der Subkategorie..."
+                new Linker(subcat: Subcategory.findByName('win_7'), doc: myDoc).save(flush:true)
+            } else if (mirLinkParts.contains('windows8') || mirLinkParts.contains('windows_8')) {
+                println "[INFO] Anleitung für Win 8 erkannt, verlinke Dokument mit der Subkategorie..."
+                new Linker(subcat: Subcategory.findByName('win_8'), doc: myDoc).save(flush:true)
+            } else if (mirLinkParts.contains('windows10') || mirLinkParts.contains('windows_10')) {
+                println "[INFO] Anleitung für Win 10 erkannt, verlinke Dokument mit der Subkategorie..."
+                new Linker(subcat: Subcategory.findByName('win_10'), doc: myDoc).save(flush:true)
+            } else if (mirLinkParts.contains('windowsphone') || mirLinkParts.contains('windows_phone')) {
+                println "[INFO] Anleitung für Win Phone erkannt, verlinke Dokument mit der Subkategorie..."
+                new Linker(subcat: Subcategory.findByName('win_phone'), doc: myDoc).save(flush:true)
+            } else {
+                new Linker(subcat: Subcategory.findByName('windows'), doc: myDoc).save(flush:true)
+            }
+        } else if (mirLink.contains('mac_os_x') || mirLink.contains('macosx')) {
+            if (mirLinkParts.find { it ==~ /(mac(_)?os?(_)?x?(_)?)?10(_)?4(_[a-z]+)?/}) {
+                println "[INFO] Anleitung für OS X 10_4 erkannt, verlinke Dokument mit der Subkategorie..."
+                new Linker(subcat: Subcategory.findByName('osx_10_4'), doc: myDoc).save(flush:true)
+            } else if (mirLinkParts.find { it ==~ /(mac(_)?os?(_)?x?(_)?)?10(_)?5(_[a-z]+)?/}) {
+                println "[INFO] Anleitung für OS X 10_5 erkannt, verlinke Dokument mit der Subkategorie..."
+                new Linker(subcat: Subcategory.findByName('osx_10_5'), doc: myDoc).save(flush:true)
+            } else if (mirLinkParts.find { it ==~ /(mac(_)?os?(_)?x?(_)?)?10(_)?6(_[a-z]+)?/}) {
+                println "[INFO] Anleitung für OS X 10_6 erkannt, verlinke Dokument mit der Subkategorie..."
+                new Linker(subcat: Subcategory.findByName('osx_10_6'), doc: myDoc).save(flush:true)
+            } else if (mirLinkParts.find { it ==~ /(mac(_)?os?(_)?x?(_)?)?10(_)?7(_[a-z]+)?/}) {
+                println "[INFO] Anleitung für OS X 10_7 erkannt, verlinke Dokument mit der Subkategorie..."
+                new Linker(subcat: Subcategory.findByName('osx_10_7'), doc: myDoc).save(flush:true)
+            } else if (mirLinkParts.find { it ==~ /(mac(_)?os?(_)?x?(_)?)?10(_)?8(_[a-z]+)?/}) {
+                println "[INFO] Anleitung für OS X 10_8 erkannt, verlinke Dokument mit der Subkategorie..."
+                new Linker(subcat: Subcategory.findByName('osx_10_8'), doc: myDoc).save(flush:true)
+            } else if (mirLinkParts.find { it ==~ /(mac(_)?os?(_)?x?(_)?)?10(_)?9(_[a-z]+)?/}) {
+                println "[INFO] Anleitung für OS X 10_9 erkannt, verlinke Dokument mit der Subkategorie..."
+                new Linker(subcat: Subcategory.findByName('osx_10_9'), doc: myDoc).save(flush:true)
+            } else if (mirLinkParts.find { it ==~ /(mac(_)?os?(_)?x?(_)?)?10(_)?10(_[a-z]+)?/}) {
+                println "[INFO] Anleitung für OS X 10_10 erkannt, verlinke Dokument mit der Subkategorie..."
+                new Linker(subcat: Subcategory.findByName('osx_10_10'), doc: myDoc).save(flush:true)
+            } else if (mirLinkParts.find { it ==~ /(mac(_)?os?(_)?x?(_)?)?10(_)?11(_[a-z]+)?/}) {
+                println "[INFO] Anleitung für OS X 10_11 erkannt, verlinke Dokument mit der Subkategorie..."
+                new Linker(subcat: Subcategory.findByName('osx_10_11'), doc: myDoc).save(flush:true)
+            } else {
+                new Linker(subcat: Subcategory.findByName('mac'), doc: myDoc).save(flush:true)
+            }
+        } else if (mirLink.contains('linux')) {
+            println "[INFO] Anleitung für Linux erkannt, verlinke Dokument mit der Subkategorie..."
+            new Linker(subcat: Subcategory.findByName('linux'), doc: myDoc).save(flush:true)
+        } else if (mirLink.contains('ubuntu')) {
+            println "[INFO] Anleitung für Ubuntu erkannt, verlinke Dokument mit der Subkategorie..."
+            new Linker(subcat: Subcategory.findByName('ubuntu'), doc: myDoc).save(flush:true)
+        } else if (mirLink.contains('symbian')) {
+            println "[INFO] Anleitung für Symbian erkannt, verlinke Dokument mit der Subkategorie..."
+            new Linker(subcat: Subcategory.findByName('symbian'), doc: myDoc).save(flush:true)
+        } else if (mirLink.contains('kindle_touch')) {
+            println "[INFO] Anleitung für kindle_touch erkannt, verlinke Dokument mit der Subkategorie..."
+            new Linker(subcat: Subcategory.findByName('kindle_touch'), doc: myDoc).save(flush:true)
+        } else if (mirLink.contains('android')) {
+            if (mirLinkParts.contains('android_5_1')) {
+                println "[INFO] Anleitung für android 5.1 erkannt, verlinke Dokument mit der Subkategorie..."
+                new Linker(subcat: Subcategory.findByName('an_5_1'), doc: myDoc).save(flush:true)
+            } else {
+                println "[INFO] Anleitung für android erkannt, verlinke Dokument mit der Subkategorie..."
+                new Linker(subcat: Subcategory.findByName('android'), doc: myDoc).save(flush:true)
+            }
+        } else if (mirLink.contains('ios') || mirLink.contains('ipod')) {
+            if (mirLinkParts.contains('ios7') || mirLinkParts.contains('ios_7')) {
+                println "[INFO] Anleitung für ios7 erkannt, verlinke Dokument mit der Subkategorie..."
+                new Linker(subcat: Subcategory.findByName('ios_7'), doc: myDoc).save(flush:true)
+            } else if (mirLinkParts.contains('ios8p')) {
+                println "[INFO] Anleitung für ios8 erkannt, verlinke Dokument mit der Subkategorie..."
+                new Linker(subcat: Subcategory.findByName('ios_8'), doc: myDoc).save(flush:true)
+            } else {
+                println "[INFO] Anleitung für ios erkannt, verlinke Dokument mit der Subkategorie..."
+                new Linker(subcat: Subcategory.findByName('ios'), doc: myDoc).save(flush:true)
+            }
+        } else {
+            println '[INFO] Es wurde kein Betriebssystem erkannt, überspringe Schritt...'
+        }
+
+        //theme
+        String subTemp = mirLink.split(/\/anleitungen\//)[1]
+        String foundTheme = subTemp.substring(0, (subTemp.indexOf('/') > 0)?subTemp.indexOf('/'):subTemp.size())
+        Subcategory cat = Subcategory.findByName(foundTheme)
+        if (!cat) {
+            println "[INFO] Keine Themen-Subkategorie mit dem Namen '$foundTheme' gefunden, erstelle eine..."
+            cat = new Subcategory(name: foundTheme)
+            Category.findByName('theme').addToSubCats(cat).save(flush: true)
+            cat = cat.save(flush: true)
+        }
+        println "[INFO] Verlinke Dokument mit der Themen-Subkategorie '$cat.name'..."
+        new Linker(subcat: cat, doc: myDoc).save(flush:true)
+
+        //groups
+        if (mirLinkParts.contains('lehrende')) {
+            println "[INFO] Gruppenzuordnung für 'faculty' gefunden, verlinke..."
+            new Linker(subcat: Subcategory.findByName('faculty'), doc: myDoc).save(flush:true)
+        } else if (mirLinkParts.contains('studierende')) {
+            println "[INFO] Gruppenzuordnung für 'student' gefunden, verlinke..."
+            new Linker(subcat: Subcategory.findByName('student'), doc: myDoc).save(flush:true)
+        } else {
+            println '[INFO] Keine spezifische Gruppenzuordnung gefunden, benutze festgelegte...'
+
+            //todo eleganter machen
+            HashMap<String, List<String>> tempAsso = new HashMap<>()
+            tempAsso.put('eFormulare', ['anonym', 'student', 'staff', 'faculty'] as List<String>)
+            tempAsso.put('groupware', ['staff', 'faculty'] as List<String>)
+            tempAsso.put('account', ['anonym', 'student', 'staff', 'faculty'] as List<String>)
+            tempAsso.put('kopieren_drucken', ['anonym', 'student', 'staff', 'faculty'] as List<String>)
+            tempAsso.put('email', ['anonym', 'student', 'staff', 'faculty'] as List<String>)
+            tempAsso.put('speicherplatz', ['student', 'staff', 'faculty'] as List<String>)
+            tempAsso.put('vpn', ['anonym', 'student', 'staff', 'faculty'] as List<String>)
+            tempAsso.put('web', ['student', 'staff', 'faculty'] as List<String>)
+            tempAsso.put('telefonie', ['staff', 'faculty'] as List<String>)
+            tempAsso.put('lan', ['anonym', 'student', 'staff', 'faculty'] as List<String>)
+            tempAsso.put('wlan', ['anonym', 'student', 'staff', 'faculty'] as List<String>)
+            tempAsso.put('cm', ['anonym', 'student', 'staff', 'faculty'] as List<String>)
+
+            println "[INFO] Für Thema '$foundTheme' Gruppenzuordnung '${tempAsso.get(foundTheme).toString()}' gefunden, verlinke..."
+            tempAsso.get(foundTheme).each { String group ->
+                new Linker(subcat: Subcategory.findByName(group), doc: myDoc).save(flush: true)
+            }
         }
     }
 }

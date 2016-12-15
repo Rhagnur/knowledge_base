@@ -322,16 +322,18 @@ class CategoryService {
             osName = 'ios_6'
         } else if (request.getHeader('User-Agent').toString().toLowerCase().contains('iphone os 7')) {
             osName = 'ios_7'
+        } else if (request.getHeader('User-Agent').toString().toLowerCase().contains('iphone os 8')) {
+            osName = 'ios_8'
         } else if (request.getHeader('User-Agent').toString().toLowerCase().contains('iphone os 9')) {
             osName = 'ios_9'
         } else if (request.getHeader('User-Agent').toString().toLowerCase().contains('os x 10_8')) {
-            osName = 'mac_108'
+            osName = 'osx_10_8'
         } else if (request.getHeader('User-Agent').toString().toLowerCase().contains('os x 10_9')) {
-            osName = 'mac_109'
+            osName = 'osx_10_9'
         } else if (request.getHeader('User-Agent').toString().toLowerCase().contains('os x 10_10')) {
-            osName = 'mac_1010'
+            osName = 'osx_10_10'
         } else if (request.getHeader('User-Agent').toString().toLowerCase().contains('os x 10_11')) {
-            osName = 'mac_1011'
+            osName = 'osx_10_11'
         } else if (request.getHeader('User-Agent').toString().toLowerCase().contains('os x')) {
             osName = 'mac'
         }
@@ -444,7 +446,7 @@ class CategoryService {
 
         def query = "MATCH (doc:Document) WHERE doc.docTitle='${givenDoc.docTitle}' WITH doc\n"
         importantMainCats.eachWithIndex { String catName, i ->
-            query += "MATCH (doc)<-[:DOC]-(:Linker)-[:SUBCAT]->(sub${i}:Subcategory)-[*..5]->(main${i}:Category{name:{catName${i}}})\n" +
+            query += "MATCH (doc)<-[:DOC]-(:Linker)-[:SUBCAT]->(sub${i}:Subcategory)-[:PARENTCAT*..3]->(main${i}:Category{name:{catName${i}}})\n" +
                      "MATCH (sub${i})<-[:SUBCAT]-(:Linker)-[:DOC]->(otherDoc:Document)\n"
             queryParams.put("catName${i}" as String, catName)
         }

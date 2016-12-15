@@ -22,7 +22,8 @@ class Document {
         changeDate nullable: true
         locked nullable: true
         linker nullable: true
-        docTitle unique: true, matches: /[\w \t\-&.,:?!()'"äöüßÖÄÜ@\/]+/ //matches all word chars, space, tab and the given special chars
+        intro nullable: true
+        docTitle unique: true, matches: /[\w \t\-&.,:?!()'"äöüßÖÄÜ@\/+]+/ //matches all word chars, space, tab and the given special chars
         mirUrl nullable: true, unique: true, matches: /[\w\/-]+/
     }
 
@@ -65,4 +66,5 @@ class Document {
      */
     String videoLink
     String mirUrl
+    String intro
 }

@@ -39,11 +39,28 @@
         <g:if test="${!document.question}">
             <h1>${document.docTitle}</h1>
         </g:if>
+
+        <g:if test="${document.videoLink}">
+            <div class="video">
+                <video controls="true">
+                    <source type="video/mp4" src="${document.videoLink}.mp4">
+                    <source type="video/m4v" src="${document.videoLink}.m4v">
+                    <source type="video/webm" src="${document.videoLink}.webm">
+                    <source type="video/ogg" src="${document.videoLink}.ogg">
+                    Ihr Browser unterstützt das HTML 5 Videoelement leider nicht.
+                </video>
+            </div>
+        </g:if>
+
+        <g:if test="${document.intro}">
+            ${raw(document.intro)}
+        </g:if>
+
         <g:if test="${document.steps}">
 
             <g:each in="${document.steps.sort { it.number }}">
                 <div class="step-header">
-                    <h2>${document.numbered?"Schritt ${it.number}: ":""}${it.stepTitle}</h2>
+                    <h2>${it.showNumber?"Schritt ${it.number}: ":""}${it.stepTitle}</h2>
                 </div>
 
                 <div class="step-content">
@@ -56,11 +73,11 @@
                             <a href="${it.stepLink}"><g:img uri="${it.stepLink}"/></a>
                         </div>
                     </g:if>
-                    <g:if test="${it.image}">
+                    <g:each in="${it.images.sort{ it.number }}">
                         <div class="step-media2">
-                            <a href="/knowledgeBase/showImage/${it.image.id}"><img src="/knowledgeBase/showImage/${it.image.preview?.id}" alt="${it.image.altText}" title="${it.image.altText}"/></a>
+                            <a href="/knowledgeBase/showImage/${it.id}"><img src="/knowledgeBase/showImage/${it.preview?.id}" alt="${it.altText}" title="${it.altText}"/></a>
                         </div>
-                    </g:if>
+                    </g:each>
                     <div class="clear"></div>
                 </div>
             </g:each>

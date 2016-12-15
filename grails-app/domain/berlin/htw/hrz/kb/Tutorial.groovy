@@ -13,7 +13,6 @@ class Tutorial extends Document {
     static constraints = {
         steps nullable: false
         intro nullable: true
-        videoLink nullable: true, url: true
     }
 
     /**
@@ -22,17 +21,7 @@ class Tutorial extends Document {
     static hasMany = [steps: Step]
 
     /**
-     * declares if step number will be displayed
-     */
-    boolean numbered
-
-    /**
      * Intro text for tutorial
      */
     String intro
-
-    /**
-     * Optional: Link to video
-     */
-    String videoLink
 }

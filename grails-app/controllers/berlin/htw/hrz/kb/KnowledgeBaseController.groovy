@@ -607,7 +607,7 @@ class KnowledgeBaseController {
                 myDoc = documentService.increaseCounter(myDoc)
                 if (!(myDoc instanceof Faq)) {
                     //Falls Dokument nicht vom Typ Faq ist, hole verwandte Dokumente bzw andere interessante Dokumente
-                    //otherDocs = categoryService.getAdditionalDocs(myDoc)
+                    otherDocs = categoryService.getAdditionalDocs(myDoc)
                 }
             }
             else { flash.error = message(code: 'kb.error.noSuchDocument') as String }
@@ -622,7 +622,6 @@ class KnowledgeBaseController {
     }
 
     def showImage() {
-        println "showImage"
         //Step myStep = Step.findById(params.id)
         def myImage = Image.findById(params.id)?:ImageCached.findById(params.id)
 
