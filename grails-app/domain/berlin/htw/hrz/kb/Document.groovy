@@ -22,6 +22,7 @@ class Document {
         changeDate nullable: true
         locked nullable: true
         linker nullable: true
+        sideboxes nullable: true
         intro nullable: true
         docTitle unique: true, matches: /[\w \t\-&.,:?!()'"äöüßÖÄÜ@\/+]+/ //matches all word chars, space, tab and the given special chars
         mirUrl nullable: true, unique: true, matches: /[\w\/-]+/
@@ -30,7 +31,7 @@ class Document {
     /**
      * Optional, list of associated linker-elements, can be null
      */
-    static hasMany = [linker: Linker]
+    static hasMany = [linker: Linker, sideboxes: Sidebox]
 
     /**
      * Not optional

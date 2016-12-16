@@ -1,3 +1,4 @@
+<%@ page import="berlin.htw.hrz.kb.Sidebox" %>
 <%--
   Created by IntelliJ IDEA.
   User: didschu
@@ -7,6 +8,37 @@
     <head>
         <title><g:message code="kb.view.showDoc.headline"/></title>
     </head>
+
+    <content tag="side">
+        <g:each in="${document.sideboxes?.sort{ it.number }}">
+            <div class="sidebox">
+                <div class="${it.style?:''}">
+                    <div class="step-header">
+                        <h2>${it.showNumber?"Schritt ${it.number}: ":""}${it.stepTitle}</h2>
+                    </div>
+
+                    <div class="step-content">
+                        <div class="step-text">
+                            <p>${raw(it.stepText)}</p>
+                        </div>
+
+                        <g:if test="${it.stepLink}">
+                            <div class="step-media">
+                                <a href="${it.stepLink}"><g:img uri="${it.stepLink}"/></a>
+                            </div>
+                        </g:if>
+                        <g:each in="${it.images.sort{ it.number }}">
+                            <div class="step-media2">
+                                <a href="/knowledgeBase/showImage/${it.id}"><img src="/knowledgeBase/showImage/${it.preview?.id}" alt="${it.altText}" title="${it.altText}"/></a>
+                            </div>
+                        </g:each>
+                        <div class="clear"></div>
+                    </div>
+                </div>
+            </div>
+
+        </g:each>
+    </content>
 
     <content tag="main">
         <h1><g:message code="kb.view.showDoc.headline"/></h1>
@@ -59,27 +91,33 @@
         <g:if test="${document.steps}">
 
             <g:each in="${document.steps.sort { it.number }}">
-                <div class="step-header">
-                    <h2>${it.showNumber?"Schritt ${it.number}: ":""}${it.stepTitle}</h2>
-                </div>
+                <g:if test="${!(it instanceof berlin.htw.hrz.kb.Sidebox)}">
+                    <div class="${it.style?:''}">
+                        <div class="step-header">
+                            <h2>${it.showNumber?"Schritt ${it.number}: ":""}${it.stepTitle}</h2>
+                        </div>
 
-                <div class="step-content">
-                    <div class="step-text">
-                        <p>${raw(it.stepText)}</p>
+                        <div class="step-content">
+                            <div class="step-text">
+                                <p>${raw(it.stepText)}</p>
+                            </div>
+
+                            <g:if test="${it.stepLink}">
+                                <div class="step-media">
+                                    <a href="${it.stepLink}"><g:img uri="${it.stepLink}"/></a>
+                                </div>
+                            </g:if>
+                            <g:each in="${it.images.sort{ it.number }}">
+                                <div class="step-media2">
+                                    <a href="/knowledgeBase/showImage/${it.id}"><img src="/knowledgeBase/showImage/${it.preview?.id}" alt="${it.altText}" title="${it.altText}"/></a>
+                                </div>
+                            </g:each>
+                            <div class="clear"></div>
+                        </div>
                     </div>
+                </g:if>
 
-                    <g:if test="${it.stepLink}">
-                        <div class="step-media">
-                            <a href="${it.stepLink}"><g:img uri="${it.stepLink}"/></a>
-                        </div>
-                    </g:if>
-                    <g:each in="${it.images.sort{ it.number }}">
-                        <div class="step-media2">
-                            <a href="/knowledgeBase/showImage/${it.id}"><img src="/knowledgeBase/showImage/${it.preview?.id}" alt="${it.altText}" title="${it.altText}"/></a>
-                        </div>
-                    </g:each>
-                    <div class="clear"></div>
-                </div>
+
             </g:each>
         </g:if>
         <g:elseif test="${document.question && document.answer}">

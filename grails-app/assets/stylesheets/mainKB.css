@@ -28,12 +28,17 @@ body {
 #sidebar {
     max-width: 18%;
     float:right;
+}
+#sidebar .sidebox {
     box-sizing: border-box;
     box-shadow: 0 0 5px rgba(0,0,0, 0.15);
     background-color: white;
     padding: 2em 1em 1em 1em;
     margin-left: 1em;
+    margin-bottom: 1em;
 }
+
+
 #loginForm input:not([type='submit']) {
     width: 90%;
 }
@@ -213,6 +218,9 @@ a:hover {
     border-bottom: 0.15em solid #0082D1;
     border-left: 0.15em solid #0082D1;
     max-width: 33em;
+}
+.infobox .step-header, .infobox .step-text {
+    width: 100%;
 }
 
 .infobox h2:after {

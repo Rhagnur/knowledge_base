@@ -11,7 +11,7 @@ class Faq extends Document {
     static mapWith = "neo4j"
 
     static constraints = {
-        question nullable: false, matches: /[\w \t\-&.,:?!()'"]+/ //matches all word chars, space, tab and the given special chars
+        question nullable: false, matches: /[\w \t\-&.,:?!()'"äöüßÖÄÜ@\/+]+/ //matches all word chars, space, tab and the given special chars
         answer nullable: false
     }
 

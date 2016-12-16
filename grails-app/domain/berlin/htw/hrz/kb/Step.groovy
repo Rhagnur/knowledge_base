@@ -14,6 +14,7 @@ class Step {
         stepTitle nullable: true, matches: /[\w \t\-&.,:?!()'"äöüßÖÄÜ@\/]+/ //matches all word chars, space, tab and the given special chars
         images nullable: true
         doc nullable: true
+        style nullable: true
     }
     /**
      * reference to the parent-document
@@ -31,7 +32,6 @@ class Step {
      */
     int number
     /**
-     * Not optional
      * need to match: all word chars, space, tab and the special chars (-&.,:?!()'")
      */
     String stepTitle
@@ -43,4 +43,9 @@ class Step {
      * optional, can be null
      */
     boolean showNumber
+
+    /**
+     * optional, style-rule for the complete step
+     */
+    String style
 }

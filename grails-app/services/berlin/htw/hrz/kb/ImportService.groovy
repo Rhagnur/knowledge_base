@@ -15,7 +15,6 @@ class ImportService {
     DocumentService documentService
     String preUrl = 'https://portal.rz.htw-berlin.de'
     String cookieCheckPage = 'https://portal.rz.htw-berlin.de/anleitungen.xml'
-    int count = 0
 
     void importOldDocs(List<String> oldFiles, String cookie) {
         List<String> errorFiles = []
@@ -31,14 +30,16 @@ class ImportService {
                     conn.connect()
                     if (conn.responseCode == 200) {
                         Node result = new XmlParser().parseText(conn.content.text as String)
-                        println "[INFO] Es wurden ${result.steps.step.size()} Schritte gefunden"
                         if (result.docType?.text() == 'Tutorial') {
+                            println "[INFO] Tutorial mit ${result.steps.step.size()} Schritten gefunden"
                             if (!importTutorial(result, cookie)) {
                                 errorFiles.add(myUrl)
                             }
                         } else {
-                            println "keine steps gefunden"
-                            //importArticle(result)
+                            println "[INFO] Faq mit ${result.steps.step.size()} Elementen gefunden"
+                            if (!importFaq(result, cookie)) {
+                                errorFiles.add(myUrl)
+                            }
                         }
                     } else {
                         errorFiles.add(myUrl)
@@ -225,14 +226,14 @@ class ImportService {
         temp
     }
 
-    Step[] processSteps(NodeList rawSteps, String cookie) {
+    List processSteps(NodeList rawSteps, String cookie, asSidebox = false) {
         println '[INFO] Verarbeite Schritte...'
-        Step[] mySteps = []
+        List mySteps = []
         rawSteps?.step?.eachWithIndex { step, int index ->
             boolean showNumber = false
             int stepNumber
             byte[] stepMedia = null, previewMedia = null
-            String stepContent ="", stepTitle = "", altText = "", mimeType = ""
+            String stepContent ="", stepTitle = "", altText = "", mimeType = "", css = ""
             List<Image> imgsTemp = []
 
             //println "debug: number"
@@ -243,14 +244,15 @@ class ImportService {
             }
 
             //println "debug: media alt"
-            if (step.image?.alt?.text()) {
-                altText = step.image?.alt?.text() as String
-            }
+
 
             //println "debug: media"
             step.images.image.each {
-                println 'image verarbeiten'
-                println it
+                //println 'image verarbeiten'
+                //println it
+                if (it.alt?.text()) {
+                    altText = it.alt?.text() as String
+                }
 
                 Image img = null
                 URL imgUrl = ("$preUrl${it?.link?.text()}" as String).toURL()
@@ -265,8 +267,9 @@ class ImportService {
                     mimeType = getMimeType(conn)
                     stepMedia = imageToBytes(conn)
                     int imgNumber = it.number.text()?.toInteger()
-                    println "number ${it.number.text()?.toInteger()}"
-                    println "numberInt $imgNumber"
+
+                    //println "number ${it.number.text()?.toInteger()}"
+                    //println "numberInt $imgNumber"
                     img = new Image(blob: stepMedia, altText: altText, mimeType: mimeType, preview: null, number: imgNumber)
                 }
 
@@ -277,6 +280,7 @@ class ImportService {
                 if (imgc.validate()) {
                     imgc = imgc.save(flush:true)
                 } else {
+                    println '[WARNING] ImageCached Element ist nicht valide, Fehlermeldung folgt...'
                     imgc.errors?.allErrors?.each { println it }
                     throw new Exception("Kaputt")
                 }
@@ -285,11 +289,12 @@ class ImportService {
                 if (img.validate()) {
                     img = img.save(flush: true)
                 } else {
+                    println '[WARNING] Image Element ist nicht valide, Fehlermeldung folgt...'
                     img.errors?.allErrors?.each { println it }
                     throw new Exception("Kaputt")
                 }
 
-                println "number bla $img.number"
+                //println "number bla $img.number"
 
                 imgsTemp.add(img)
 
@@ -310,47 +315,54 @@ class ImportService {
 
 
             //println "debug: content"
-             stepContent = ""
+            stepContent = ""
+
+            //println "debug: css"
+            if (step.classes.css) {
+                step.classes.css.each {
+                    css += (it.text() == 'Hinweis'?'infobox ':(it.text()=='Graue Box'?'infobox-2 ':''))
+                }
+                println "style $css"
+            }
 
             //println "debug: steps"
             step.section?.each { section ->
                 String content = asString(section.content[0].children())
-                String myCss = ''
 
-                if (section.classes?.css) {
-                    //println "Gibt css"
-                    section.classes.css.each {
-                        //println "css $it.text()"
-                        myCss += (it.text()=='Hinweis'?'infobox ':'')
-                        myCss += (it.text()=='Graue Box'?'infobox-2 ':'')
-                    }
-                    //println "myCss $myCss"
-                }
 
                 if (section.'@number' && (section.'@number' as int) > 1) {
                     String title = section.title?.text()
-                    stepContent += "<section class='$myCss'><h2>$title</h2>$content</section>\n" as String
+                    stepContent += "<section><h2>$title</h2>$content</section>\n" as String
                 } else {
                     if (content.startsWith(/[0-9]+. /)) {
                         //println "Lösche content prefix"
                         content = content.replaceFirst(/[0-9]+. /, '')
                     }
-                    stepContent += "<section class='$myCss'>$content</section>\n" as String
+                    stepContent += "<section>$content</section>\n" as String
                 }
 
             }
 
-            //println "\nNumber $stepNumber\nTitel $stepTitle\nContent $stepContent\n" +
+            println "\nNumber $stepNumber\nTitel $stepTitle\nContent $stepContent\n" +
                     "\nMediaType $mimeType\nAltText $altText"
-            Step myStep = new Step(number: stepNumber, stepTitle: stepTitle, stepText: stepContent, showNumber: showNumber)
+
+            Step myStep = null
+            if (asSidebox) {
+                myStep = new Sidebox(number: stepNumber, stepTitle: stepTitle, stepText: stepContent, showNumber: showNumber, style: css)
+            } else {
+                myStep = new Step(number: stepNumber, stepTitle: stepTitle, stepText: stepContent, showNumber: showNumber, style: css)
+            }
+
             imgsTemp.each {
                 myStep.addToImages(it)
             }
-            myStep.save(flush: true)
+            myStep
 
             if (myStep.validate()) {
-                mySteps += myStep
+                mySteps += myStep.save(flush: true)
             } else {
+                println '[WARNING] Step Element ist nicht valide, Fehlermeldung folgt...'
+                println myStep.errors
                 myStep.errors?.allErrors?.each { println it }
                 throw new Exception("Kaputt")
             }
@@ -360,53 +372,91 @@ class ImportService {
         mySteps
     }
 
+    Document validateAndSaveDoc(Document doc) {
+        if (!doc.validate()) {
+
+            if ( Document.findByDocTitle(doc.docTitle) ) {
+
+                println "[WARNING] Dokument mit dem Titel '$doc.docTitle' existiert bereits!"
+                doc.docTitle = changeDuplicatedTitle(doc.docTitle)
+                println "[INFO] Ändere Dokumententitel zu '${doc.docTitle}'..."
+
+                if (doc.validate()) {
+                    println "[INFO] Alles ok, Dokument wird gespeichert..."
+                    doc.save(flush: true)
+                } else {
+                    println '[WARNING] Dokument ist nicht valide, Fehlermeldung folgt...'
+                    println doc.errors
+                    throw new Exception('Testaustieg2, später rausnehmen')
+                    null
+                }
+            }
+
+            if (doc.errors.errorCount > 0 ) {
+                println '[WARNING] Dokument ist nicht valide, Fehlermeldung folgt...'
+                println doc.errors
+                throw new Exception('Testaustieg, später rausnehmen')
+                null
+            }
+        }
+        doc.save(flush: true)
+    }
+
+    boolean importFaq(Node xmlDoc, String cookie) {
+        boolean noError = true
+        println '[INFO] Importierte Faq...'
+        xmlDoc.steps.step.each { def faq ->
+            Document temp = new Faq(docTitle: faq.section.title.text(), question: faq.section.title.text(), answer: asString(faq.section.content), tags: getTags(xmlDoc), createDate: getDate(xmlDoc), changeDate: new Date(), locked: false, viewCount: 0, )
+            temp = addSideInfo(xmlDoc, temp, cookie)
+            temp = validateAndSaveDoc(temp)
+            if (!temp) { noError = false }
+            else { linkDocument(xmlDoc, temp) }
+        }
+        noError
+    }
+
+    Document addSideInfo(Node xmlDoc, Document doc, String cookie) {
+        if (xmlDoc.aside && xmlDoc.aside.step.size() > 1 && (xmlDoc.aside.step.content || xmlDoc.aside.step.images)) {
+            processSteps(xmlDoc.aside, cookie, true).each {
+                doc.addToSideboxes(it)
+            }
+        } else {
+            println 'nix'
+        }
+        doc
+    }
+
+    String changeDuplicatedTitle(String oldTitle) {
+        int count = 2
+        String newTitle = ""
+        while (true) {
+            newTitle = "$oldTitle ($count)"
+            if (!Document.findByDocTitle(newTitle)) {
+                break
+            }
+            count += 1
+        }
+        newTitle
+    }
+
     boolean importTutorial(Node xmlDoc, String cookie) {
-        println '[INFO] Importiere Dokument...'
+        println '[INFO] Importiere Tutorial...'
         Step[] mySteps = []
 
         //steps verarbeiten
         //println "debug: steps verarbeiten"
         mySteps = processSteps(xmlDoc.steps, cookie)
 
-
-
-
-
         //tut erstellen
-        Tutorial myTut = new Tutorial(docTitle: xmlDoc.title.text() as String, locked: false, viewCount: 0, createDate: getDate(xmlDoc), tags: getTags(xmlDoc), mirUrl: xmlDoc.mirurl.text() as String, intro: getIntro(xmlDoc), videoLink: (xmlDoc.video.'@link'.text() as String)?:null)
+        Document myTut = new Tutorial(docTitle: xmlDoc.title.text() as String, locked: false, viewCount: 0, createDate: getDate(xmlDoc), tags: getTags(xmlDoc), mirUrl: xmlDoc.mirurl.text() as String, intro: getIntro(xmlDoc), videoLink: (xmlDoc.video.'@link'.text() as String)?:null)
         //steps hinzufügen
         mySteps.each { step ->
             myTut.addToSteps(step)
         }
-        
-        if (!myTut.validate()) {
-            String errors = myTut.errors.toString()
-            if ( errors.contains('docTitle.unique.error') ) {
-                println "[WARNING] Dokument mit dem Titel '$myTut.docTitle' existiert bereits!"
-                println "[INFO] Ändere Dokumententitel zu '${myTut.docTitle} $count'..."
-                myTut.docTitle = "${myTut.docTitle} $count"
-                count += 1
-                if (myTut.validate()) {
-                    println "[INFO] Alles ok, Dokument wird gespeichert..."
-                    myTut = myTut.save(flush:true)
-                    linkDocument(xmlDoc, myTut)
-                    true
-                } else {
-                    throw new Exception('Testaustieg2, später rausnehmen')
-                    false
-                }
-            }
-
-            if (myTut.errors.errorCount > 0 ) {
-                println myTut.errors
-                throw new Exception('Testaustieg, später rausnehmen')
-                false
-            }
-            true
-        } else {
-            //wenn alles schick, speichern und an author/lang unterkategorien hängen
-            println "[INFO] Alles ok, Dokument wird gespeichert..."
-            myTut = myTut.save(flush:true)
+        myTut = addSideInfo(xmlDoc, myTut, cookie)
+        myTut = validateAndSaveDoc(myTut)
+        if (!myTut) { false }
+        else {
             linkDocument(xmlDoc, myTut)
             true
         }
@@ -416,8 +466,8 @@ class ImportService {
         new Linker(subcat: getAuthor(xmlDoc), doc: myDoc).save(flush:true)
         new Linker(subcat: Subcategory.findByName('de'), doc: myDoc).save(flush:true)
         
-        String mirLink = myDoc.mirUrl
-        List<String> mirLinkParts = myDoc.mirUrl.split('/').toList()
+        String mirLink = xmlDoc.mirurl.text()
+        List<String> mirLinkParts = mirLink.split('/').toList()
 
         //os
         //todo eleganter machen

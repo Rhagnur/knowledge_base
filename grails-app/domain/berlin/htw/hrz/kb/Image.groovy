@@ -5,6 +5,7 @@ class Image {
     static constraints = {
         preview nullable: true
         altText nullable: true
+        link nullable: true, url: true
     }
 
     static hasOne = [preview: ImageCached]
@@ -17,5 +18,6 @@ class Image {
      */
     String altText
     String mimeType
+    String link
     int number
 }

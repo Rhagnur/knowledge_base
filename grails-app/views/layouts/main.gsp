@@ -31,20 +31,26 @@
         <g:pageProperty name="page.main"/>
     </div>
     <div id="sidebar">
+        <g:pageProperty name="page.side"/>
         <sec:ifLoggedIn>
-            <p>Sie sind angemeldet als <b>${principal?.fullname}</b>!</p>
-            <form action="/logout">
-                <div class="logout-button"><g:submitButton name="submit" value="Ausloggen"/></div>
-            </form>
+            <div class="sidebox">
+                <p>Sie sind angemeldet als <b>${principal?.fullname}</b>!</p>
+                <form action="/logout">
+                    <div class="logout-button"><g:submitButton name="submit" value="Ausloggen"/></div>
+                </form>
+            </div>
         </sec:ifLoggedIn>
         <sec:ifNotLoggedIn>
-            <form action="/login/authenticate" method="POST" autocomplete="off" id="loginForm">
-                <label for="username">Benutzername</label><br/>
-                <g:textField name="username"/><br/><br/>
-                <label for="password">Passwort:</label><br/>
-                <g:passwordField name="password"/><br/><br/>
-                <div class="logout-button"><g:submitButton name="submit" value="Einloggen"/></div>
-            </form>
+            <div class="sidebox">
+                <form action="/login/authenticate" method="POST" autocomplete="off" id="loginForm">
+                    <label for="username">Benutzername</label><br/>
+                    <g:textField name="username"/><br/><br/>
+                    <label for="password">Passwort:</label><br/>
+                    <g:passwordField name="password"/><br/><br/>
+                    <div class="logout-button"><g:submitButton name="submit" value="Einloggen"/></div>
+                </form>
+            </div>
+
         </sec:ifNotLoggedIn>
     </div>
     <div class="clear"></div>
