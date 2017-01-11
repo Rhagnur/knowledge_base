@@ -20,36 +20,45 @@ body {
 }
 
 #page {
-    background-color: rgb(235,235,235);
-    padding: 2em 1em 2em 1em;
-    box-sizing: border-box;
+    max-width: 90em;
+    margin-left: auto;
+    margin-right: auto;
+    background: #EBEBEB;
     border-top: 1px solid #e2e2e2;
 }
 #sidebar {
-    max-width: 18%;
+    width: 31.91486%;
     float:right;
+    margin-top: 0;
+    margin-right: 0;
 }
 #sidebar .sidebox {
     box-sizing: border-box;
     box-shadow: 0 0 5px rgba(0,0,0, 0.15);
     background-color: white;
-    padding: 2em 1em 1em 1em;
-    margin-left: 1em;
     margin-bottom: 1em;
 }
-
-
+#sidebar section {
+    padding: 1em;
+}
+.inner {
+    padding: 1em 4%;
+}
 #loginForm input:not([type='submit']) {
     width: 90%;
 }
 #main {
-    width: 80%;
+    width: 65.95745%;
     box-sizing: border-box;
     box-shadow: 0 0 5px rgba(0,0,0, 0.15);
     background-color: white;
-    padding: 3em 2em 2em 2em;
+    padding: 0 2em 2em;
     float: left;
+    margin-right: 2.12766%;
 }
+
+
+
 #main section {
     margin-bottom: 2em;
 }

@@ -6,6 +6,7 @@ class Image {
         preview nullable: true
         altText nullable: true
         link nullable: true, url: true
+        linkType nullable: true
     }
 
     static hasOne = [preview: ImageCached]
@@ -19,5 +20,6 @@ class Image {
     String altText
     String mimeType
     String link
+    String linkType
     int number
 }

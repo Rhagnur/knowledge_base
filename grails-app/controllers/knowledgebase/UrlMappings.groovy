@@ -1,6 +1,3 @@
-/*
- * Edited by didschu
- */
 package knowledgebase
 
 class UrlMappings {
@@ -20,7 +17,6 @@ class UrlMappings {
         "/faq"(controller: 'faq')
         "/tutorial"(controller: 'tutorial')
         "/article"(controller: 'article')
-        "/test"(controller: 'test')
 
 
         "/$controller/$action?/$id?(.$format)?"{
@@ -28,6 +24,7 @@ class UrlMappings {
                 // apply constraints here
             }
         }
+
         "/"(controller: 'knowledgeBase', action: 'index')
         "500"(view:'/error')
         "404"(view:'/notFound')

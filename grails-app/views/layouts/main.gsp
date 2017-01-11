@@ -20,40 +20,42 @@
 </header>
 
 <article id="page">
-    <g:pageProperty name="page.navigation"/>
-    <div id="main">
-        <g:if test="${flash.error}">
-            <div class="alert alert-error" style="display: block">${flash.error}</div><br/><br/>
-        </g:if>
-        <g:if test="${flash.info}">
-            <div class="alert alert-info" style="display: block">${flash.info}</div><br/><br/>
-        </g:if>
-        <g:pageProperty name="page.main"/>
-    </div>
-    <div id="sidebar">
-        <g:pageProperty name="page.side"/>
-        <sec:ifLoggedIn>
-            <div class="sidebox">
-                <p>Sie sind angemeldet als <b>${principal?.fullname}</b>!</p>
-                <form action="/logout">
-                    <div class="logout-button"><g:submitButton name="submit" value="Ausloggen"/></div>
-                </form>
-            </div>
-        </sec:ifLoggedIn>
-        <sec:ifNotLoggedIn>
-            <div class="sidebox">
-                <form action="/login/authenticate" method="POST" autocomplete="off" id="loginForm">
-                    <label for="username">Benutzername</label><br/>
-                    <g:textField name="username"/><br/><br/>
-                    <label for="password">Passwort:</label><br/>
-                    <g:passwordField name="password"/><br/><br/>
-                    <div class="logout-button"><g:submitButton name="submit" value="Einloggen"/></div>
-                </form>
-            </div>
+    <div class="inner">
+        <g:pageProperty name="page.navigation"/>
+        <main id="main" role="main">
+            <g:if test="${flash.error}">
+                <div class="alert alert-error" style="display: block">${flash.error}</div><br/><br/>
+            </g:if>
+            <g:if test="${flash.info}">
+                <div class="alert alert-info" style="display: block">${flash.info}</div><br/><br/>
+            </g:if>
+            <g:pageProperty name="page.main"/>
+        </main>
+        <aside id="sidebar" role="complementary">
+            <g:pageProperty name="page.side"/>
+            <sec:ifLoggedIn>
+                <section class="sidebox">
+                    <p>Sie sind angemeldet als <b>${principal?.fullname}</b>!</p>
+                    <form action="/logout">
+                        <div class="logout-button"><g:submitButton name="submit" value="Ausloggen"/></div>
+                    </form>
+                </section>
+            </sec:ifLoggedIn>
+            <sec:ifNotLoggedIn>
+                <section class="sidebox">
+                    <form action="/login/authenticate" method="POST" autocomplete="off" id="loginForm">
+                        <label for="username">Benutzername</label><br/>
+                        <g:textField name="username"/><br/><br/>
+                        <label for="password">Passwort:</label><br/>
+                        <g:passwordField name="password"/><br/><br/>
+                        <div class="logout-button"><g:submitButton name="submit" value="Einloggen"/></div>
+                    </form>
+                </section>
 
-        </sec:ifNotLoggedIn>
+            </sec:ifNotLoggedIn>
+        </aside>
+        <div class="clear"></div>
     </div>
-    <div class="clear"></div>
 </article>
 
 

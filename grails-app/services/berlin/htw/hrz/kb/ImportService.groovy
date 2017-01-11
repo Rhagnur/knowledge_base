@@ -145,7 +145,7 @@ class ImportService {
         int newHeight = img.height * scale
 
         java.awt.Image resizedImage = img.getScaledInstance(newWidth, newHeight, img.SCALE_SMOOTH)
-        BufferedImage bimage = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_INT_ARGB);
+        BufferedImage bimage = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_INT_RGB)
 
         Graphics2D g = bimage.createGraphics()
         g.drawImage(resizedImage, 0, 0, null)
@@ -233,7 +233,7 @@ class ImportService {
             boolean showNumber = false
             int stepNumber
             byte[] stepMedia = null, previewMedia = null
-            String stepContent ="", stepTitle = "", altText = "", mimeType = "", css = ""
+            String stepContent ="", stepTitle = "", altText = "", mimeType = "", css = "", embLink = "", embLinkType = ""
             List<Image> imgsTemp = []
 
             //println "debug: number"
@@ -254,8 +254,13 @@ class ImportService {
                     altText = it.alt?.text() as String
                 }
 
+                if (it.embLink?.a) {
+                    embLink = it.embLink.a.'@href'.text()
+                    embLinkType = it.embLink.a.'@type'.text()
+                }
+
                 Image img = null
-                URL imgUrl = ("$preUrl${it?.link?.text()}" as String).toURL()
+                URL imgUrl = ("$preUrl${it?.imgLink?.text()}" as String).toURL()
 
 
                 //println 'getMime and imageRaw'
@@ -270,7 +275,7 @@ class ImportService {
 
                     //println "number ${it.number.text()?.toInteger()}"
                     //println "numberInt $imgNumber"
-                    img = new Image(blob: stepMedia, altText: altText, mimeType: mimeType, preview: null, number: imgNumber)
+                    img = new Image(blob: stepMedia, altText: altText, mimeType: mimeType, preview: null, number: imgNumber, link: embLink, linkType: embLinkType)
                 }
 
                 previewMedia = resizeImage(stepMedia, mimeType)
