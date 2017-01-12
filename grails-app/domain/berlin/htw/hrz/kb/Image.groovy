@@ -5,7 +5,7 @@ class Image {
     static constraints = {
         preview nullable: true
         altText nullable: true
-        link nullable: true, url: true
+        link nullable: true
         linkType nullable: true
     }
 

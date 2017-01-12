@@ -348,8 +348,8 @@ class ImportService {
 
             }
 
-            println "\nNumber $stepNumber\nTitel $stepTitle\nContent $stepContent\n" +
-                    "\nMediaType $mimeType\nAltText $altText"
+            //println "\nNumber $stepNumber\nTitel $stepTitle\nContent $stepContent\n" +
+            //       "\nMediaType $mimeType\nAltText $altText"
 
             Step myStep = null
             if (asSidebox) {
@@ -411,11 +411,13 @@ class ImportService {
         boolean noError = true
         println '[INFO] Importierte Faq...'
         xmlDoc.steps.step.each { def faq ->
-            Document temp = new Faq(docTitle: faq.section.title.text(), question: faq.section.title.text(), answer: asString(faq.section.content), tags: getTags(xmlDoc), createDate: getDate(xmlDoc), changeDate: new Date(), locked: false, viewCount: 0, )
-            temp = addSideInfo(xmlDoc, temp, cookie)
-            temp = validateAndSaveDoc(temp)
-            if (!temp) { noError = false }
-            else { linkDocument(xmlDoc, temp) }
+            if (faq.section.title.text()) {
+                Document temp = new Faq(docTitle: faq.section.title.text(), question: faq.section.title.text(), answer: asString(faq.section.content), tags: getTags(xmlDoc), createDate: getDate(xmlDoc), changeDate: new Date(), locked: false, viewCount: 0, )
+                temp = addSideInfo(xmlDoc, temp, cookie)
+                temp = validateAndSaveDoc(temp)
+                if (!temp) { noError = false }
+                else { linkDocument(xmlDoc, temp) }
+            }
         }
         noError
     }
@@ -425,8 +427,6 @@ class ImportService {
             processSteps(xmlDoc.aside, cookie, true).each {
                 doc.addToSideboxes(it)
             }
-        } else {
-            println 'nix'
         }
         doc
     }
