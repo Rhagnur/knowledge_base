@@ -46,11 +46,12 @@
                 <sec:ifNotLoggedIn>
                     <section class="sidebox">
                         <form action="/login/authenticate" method="POST" autocomplete="off" id="loginForm">
-                            <label for="username">Benutzername</label><br/>
-                            <g:textField name="username"/><br/><br/>
-                            <label for="password">Passwort:</label><br/>
-                            <g:passwordField name="password"/><br/><br/>
-                            <div class="logout-button"><g:submitButton name="submit" value="Einloggen"/></div>
+                            <label for="username">Benutzername</label>
+                            <g:textField name="username"/>
+                            <label for="password">Passwort:</label>
+                            <g:passwordField name="password"/>
+                            <br/>
+                            <div class="login-button"><g:submitButton name="submit" value="Anmelden"/></div>
                         </form>
                     </section>
 

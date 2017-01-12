@@ -218,6 +218,7 @@ input[type='submit'], input[type='button'] {
 
 .logout-button input[type='submit'] {
     float: none !important;
+    margin-top: 1em !important;
     margin-left: auto !important;
     margin-right: auto !important;
 }

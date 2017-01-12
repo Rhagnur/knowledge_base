@@ -17,14 +17,15 @@
                 </g:if>
                 ${raw(it.stepText)}
 
-                <g:if test="${it.stepLink}">
-                    <div class="step-media">
-                        <a href="${it.stepLink}"><g:img uri="${it.stepLink}"/></a>
-                    </div>
-                </g:if>
                 <g:each in="${it.images.sort{ it.number }}">
-                    <div class="step-media2">
-                        <a href="/knowledgeBase/showImage/${it.id}"><img src="/knowledgeBase/showImage/${it.preview?.id}" alt="${it.altText}" title="${it.altText}"/></a>
+                    <div class="step-media">
+                        <g:if test="${it.link}">
+                            <a href="${it.link}"><img src="/knowledgeBase/showImage/${it.id}" alt="${it.altText}" title="${it.altText}"/></a>
+                        </g:if>
+                        <g:else>
+                            <img src="/knowledgeBase/showImage/${it.id}" alt="${it.altText}" title="${it.altText}"/>
+                        </g:else>
+
                     </div>
                 </g:each>
                 <div class="clear"></div>
