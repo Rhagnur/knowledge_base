@@ -7,8 +7,8 @@
     <head>
         <title><g:message code="kb.view.index.search.headline"/></title>
     </head>
-    <content tag="navigation" style="width: 60%!important;">
-        <div id="nav-context">
+    <content tag="navigation">
+        <nav id="nav-context" role="navigation">
             <section id="subnav">
                 <p><g:message code="kb.view.index.search.filterText"/></p>
                 <g:form controller="knowledgeBase" action="search">
@@ -22,7 +22,7 @@
                     <g:submitButton name="filter" value="Filtern"/>
                 </g:form>
             </section>
-        </div>
+        </nav>
     </content>
 
     <content tag="main">

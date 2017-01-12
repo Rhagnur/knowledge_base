@@ -10,6 +10,7 @@
     <title><g:layoutTitle default="Knowledge Base"/></title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <asset:stylesheet src="mainKB.css"/>
+    <asset:stylesheet src="style2.css"/>
     <g:layoutHead/>
 </head>
 
@@ -19,42 +20,43 @@
     <section id="menubar-primary">Platzhalter Title, Image and Navigation</section>
 </header>
 
-<article id="page">
+<article id="page" class="l-2">
     <div class="inner">
         <g:pageProperty name="page.navigation"/>
-        <main id="main" role="main">
-            <g:if test="${flash.error}">
-                <div class="alert alert-error" style="display: block">${flash.error}</div><br/><br/>
-            </g:if>
-            <g:if test="${flash.info}">
-                <div class="alert alert-info" style="display: block">${flash.info}</div><br/><br/>
-            </g:if>
-            <g:pageProperty name="page.main"/>
-        </main>
-        <aside id="sidebar" role="complementary">
-            <g:pageProperty name="page.side"/>
-            <sec:ifLoggedIn>
-                <section class="sidebox">
-                    <p>Sie sind angemeldet als <b>${principal?.fullname}</b>!</p>
-                    <form action="/logout">
-                        <div class="logout-button"><g:submitButton name="submit" value="Ausloggen"/></div>
-                    </form>
-                </section>
-            </sec:ifLoggedIn>
-            <sec:ifNotLoggedIn>
-                <section class="sidebox">
-                    <form action="/login/authenticate" method="POST" autocomplete="off" id="loginForm">
-                        <label for="username">Benutzername</label><br/>
-                        <g:textField name="username"/><br/><br/>
-                        <label for="password">Passwort:</label><br/>
-                        <g:passwordField name="password"/><br/><br/>
-                        <div class="logout-button"><g:submitButton name="submit" value="Einloggen"/></div>
-                    </form>
-                </section>
+        <section id="content" class="l-has-aside">
+            <main id="main" role="main">
+                <g:if test="${flash.error}">
+                    <div class="alert alert-error" style="display: block">${flash.error}</div><br/><br/>
+                </g:if>
+                <g:if test="${flash.info}">
+                    <div class="alert alert-info" style="display: block">${flash.info}</div><br/><br/>
+                </g:if>
+                <g:pageProperty name="page.main"/>
+            </main>
+            <aside id="sidebar" role="complementary">
+                <g:pageProperty name="page.side"/>
+                <sec:ifLoggedIn>
+                    <section class="sidebox">
+                        <p>Sie sind angemeldet als <b>${principal?.fullname}</b>!</p>
+                        <form action="/logout">
+                            <div class="logout-button"><g:submitButton name="submit" value="Ausloggen"/></div>
+                        </form>
+                    </section>
+                </sec:ifLoggedIn>
+                <sec:ifNotLoggedIn>
+                    <section class="sidebox">
+                        <form action="/login/authenticate" method="POST" autocomplete="off" id="loginForm">
+                            <label for="username">Benutzername</label><br/>
+                            <g:textField name="username"/><br/><br/>
+                            <label for="password">Passwort:</label><br/>
+                            <g:passwordField name="password"/><br/><br/>
+                            <div class="logout-button"><g:submitButton name="submit" value="Einloggen"/></div>
+                        </form>
+                    </section>
 
-            </sec:ifNotLoggedIn>
-        </aside>
-        <div class="clear"></div>
+                </sec:ifNotLoggedIn>
+            </aside>
+        </section>
     </div>
 </article>
 

@@ -70,7 +70,7 @@
                 </g:if>
 
                 <g:if test="${document.videoLink}">
-                    <div class="video">
+                    <section id="video" class="video">
                         <video controls="true">
                             <source type="video/mp4" src="${document.videoLink}.mp4">
                             <source type="video/m4v" src="${document.videoLink}.m4v">
@@ -78,40 +78,39 @@
                             <source type="video/ogg" src="${document.videoLink}.ogg">
                             Ihr Browser unterstützt das HTML 5 Videoelement leider nicht.
                         </video>
-                    </div>
+                    </section>
                 </g:if>
 
                 <g:if test="${document.intro}">
-                    ${raw(document.intro)}
+                    <section id="intro">
+                        ${raw(document.intro)}
+                    </section>
                 </g:if>
 
                 <g:if test="${document.steps}">
 
                     <g:each in="${document.steps.sort { it.number }}">
                         <g:if test="${!(it instanceof berlin.htw.hrz.kb.Sidebox)}">
-                            <div class="${it.style?:''}">
-                                <div class="step-header">
-                                    <h2>${it.showNumber?"Schritt ${it.number}: ":""}${it.stepTitle}</h2>
-                                </div>
+                            <section id="step_${it.number}" class="${it.style?:''}">
+                                <g:if test="it.stepTitle">
+                                    <div class="csc-header csc-header-n2">
+                                        <h1>${it.showNumber?"Schritt ${it.number}: ":""}${it.stepTitle}</h1>
+                                    </div>
+                                </g:if>
 
-                                <div class="step-content">
-                                    <div class="step-text">
+                                <div class="step-content csc-textpic">
+                                    <div class="step-text csc-textpic-text">
                                         <p>${raw(it.stepText)}</p>
                                     </div>
 
-                                    <g:if test="${it.stepLink}">
-                                        <div class="step-media">
-                                            <a href="${it.stepLink}"><g:img uri="${it.stepLink}"/></a>
-                                        </div>
-                                    </g:if>
                                     <g:each in="${it.images.sort{ it.number }}">
-                                        <div class="step-media2">
+                                        <div class="step-media csc-textpic-imagewrap">
                                             <a href="/knowledgeBase/showImage/${it.id}"><img src="/knowledgeBase/showImage/${it.preview?.id}" alt="${it.altText}" title="${it.altText}"/></a>
                                         </div>
                                     </g:each>
                                     <div class="clear"></div>
                                 </div>
-                            </div>
+                            </section>
                         </g:if>
 
 

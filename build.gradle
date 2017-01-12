@@ -81,4 +81,5 @@ dependencies {
 assets {
     minifyJs = false
     minifyCss = false
+    includes = ["fonts/*"]
 }

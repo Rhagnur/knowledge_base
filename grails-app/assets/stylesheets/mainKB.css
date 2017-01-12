@@ -1,3 +1,4 @@
+
 #header {
     height: 186px;
     background-color: rgb(87,87,87);
@@ -8,11 +9,12 @@
     background-color: rgb(87,87,87);
     color: white;
 }
-#footer, .header, #page {
+#footer, .header {
     max-width: 90em;
     margin-right: auto;
     margin-left: auto;
 }
+/*
 body {
     background-color: rgb(175,175,175);
     padding: 0;
@@ -32,6 +34,14 @@ body {
     margin-top: 0;
     margin-right: 0;
 }
+.l-2 #nav-context + #content {
+    width: 80%;
+}
+.l-2 #nav-context + #content {
+    float: left;
+    margin-left: 0;
+    margin-right: 0;
+}
 #sidebar .sidebox {
     box-sizing: border-box;
     box-shadow: 0 0 5px rgba(0,0,0, 0.15);
@@ -43,6 +53,11 @@ body {
 }
 .inner {
     padding: 1em 4%;
+}
+#nav-context {
+    padding-top: 1.5em;
+    padding-bottom: 1.5em;
+    padding-right: 1em;
 }
 #loginForm input:not([type='submit']) {
     width: 90%;
@@ -66,9 +81,7 @@ body {
     width: 20%;
     float: left;
 }
-#nav-context+#main {
-    width: 60%!important;
-}
+*/
 .catLink {
     text-decoration: none;
     color: black;
@@ -87,6 +100,7 @@ body {
 .clear {
     clear: both;
 }
+
 #menubar-secondary {
     height: 50px;
     background-color: black;
@@ -98,6 +112,7 @@ body {
     color: black;
     border-bottom: 1px solid #e2e2e2;
 }
+/*
 h1 {
     font-size: 1.8em;
 }
@@ -120,6 +135,7 @@ h2 {
     margin-bottom: 1em;
     width: 60%;
 }
+*/
 .docDiv {
     width: 31%;
     border: 1px solid rgba(0,0,0,0.2);
@@ -132,12 +148,25 @@ h2 {
     box-sizing: border-box;
 
 }
+
+main section {
+    margin-top: 1.5em !important;
+}
+#debug h1 {
+    margin-bottom: 1em;
+}
+#debug form input[type='submit'] {
+    width: 300px !important;
+    float: left !important;
+}
+
 #searchBar {
-    width: 75%;
-    height: 40px;
+    width: 75%!important;
+    float: left;
 }
 #searchButton {
-    height: 50px;
+    width: 25% !important;
+    float: left;
 }
 #search form {
     width: 85%;
@@ -169,6 +198,7 @@ h2 {
     margin-bottom: 0.4em;
     float: left;
 }
+/*
 input[type='text'], textarea {
     margin-top: 0.5em;
     width: 300px;
@@ -184,18 +214,22 @@ input[type='submit'], input[type='button'] {
     min-width: 150px;
     height: 35px;
 }
-.logout-button {
-    width: 150px;
-    margin-left: auto;
-    margin-right: auto;
+*/
+
+.logout-button input[type='submit'] {
+    float: none !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
 }
+
 a {
     text-decoration: none;
-    color: #2e6da4;
+    color: #2e6da4 !important;
 }
 a:hover {
-    color: #31b0d5;
+    color: #31b0d5 !important;
 }
+/*
 .docForm, .catForm {
     border: 1px solid rgba(0,0,0,0.2);
     border-radius: 1em;
@@ -239,6 +273,7 @@ a:hover {
     font-weight: 400;
     font-size: 1.8em;
 }
+*/
 .video {
     width: 40em;
 }
