@@ -120,8 +120,9 @@ class CategoryService {
      * @throws IllegalArgumentException
      */
     Map<String, List<Document>> getAdditionalDocs(Document doc) throws IllegalArgumentException {
+        println "getAddDocs"
         def myDocs = [:]
-        def start, stop;
+        def start, stop
 
         start = new Date()
         def temp = getSameAssociatedDocs(doc, ['theme', 'os'] as String[])
@@ -274,7 +275,7 @@ class CategoryService {
      * @return
      */
     List<Document> getNewestDocs() {
-        return Document.findAll(max: NumDocsToShow, sort: 'createDate') as List<Document>
+        return Document.findAll(max: NumDocsToShow, sort: 'createDate', order: 'desc') as List<Document>
     }
 
     /**
@@ -440,6 +441,50 @@ class CategoryService {
      * @return list of found documents
      * @throws IllegalArgumentException
      */
+    List<Document> getSameAssociatedDocs(Document doc, String[]mainCats, Boolean forTutorial=false) throws IllegalArgumentException {
+        String query = ""
+        def result = null
+
+        //First get the parentSubCats from the doc which are associated to the given mainCats
+        query = "MATCH (doc:Document{docTitle:'${doc.docTitle}'})<-[:DOC]-(:Linker)-[:SUBCAT]->(subcats:Subcategory)-[r:PARENTCAT*..3]->(maincat) WHERE "
+        mainCats.eachWithIndex{ String cat, int i ->
+            if (i+1 == mainCats.size()) {
+                query += "maincat.name='$cat' "
+            } else {
+                query += "maincat.name='$cat' or "
+            }
+        }
+        query += "RETURN subcats"
+        result = graphDatabaseService.execute(query)
+
+        //Second get all the documents which are associated to all given/found subCats
+        query = ""
+        List<Subcategory> foundSubs = result.toList(Subcategory)
+        foundSubs.eachWithIndex{ Subcategory entry, int i ->
+            query += "MATCH (subcat$i:Subcategory) WHERE subcat${i}.name = {${i}}\n"
+        }
+        foundSubs.eachWithIndex{ Subcategory entry, int i ->
+            query += "MATCH (subcat$i)<-[:SUBCAT]-(:Linker)-[:DOC]->(docs:Document)\n"
+        }
+
+        if (forTutorial) { query += "WHERE docs.docTitle<>'${doc.docTitle}' AND (docs:Tutorial) \n"}
+        else { query += "WHERE docs.docTitle<>'${doc.docTitle}' AND ((docs:Article) OR (docs:Faq))\n"}
+
+        query += "RETURN distinct docs ORDER BY docs.viewCount DESC LIMIT 10"
+
+        def queryParams = [:]
+        foundSubs.eachWithIndex { Subcategory entry, int i ->
+            queryParams.put(i as String, entry.name as String)
+        }
+
+        println query
+        println queryParams
+        result = graphDatabaseService.execute(query, queryParams)
+        return result.toList(Document)
+    }
+
+    //First idea with a big query getting all the stuff needed. Pro: only one query and one request to database. Con: quite slow, multiple, separates queries are faster
+    /*
     List<Document> getSameAssociatedDocs(Document givenDoc, String[] importantMainCats, Boolean forTutorial=false) throws IllegalArgumentException {
         if (!importantMainCats) { throw new IllegalArgumentException("Argument 'importantMainCats' can not be null") }
         def queryParams = [:]
@@ -458,6 +503,7 @@ class CategoryService {
         Result myResult = graphDatabaseService.execute(query, queryParams)
         myResult.toList(Document)
     }
+    */
 
     /**
      * Gets all subcategories from a array of names

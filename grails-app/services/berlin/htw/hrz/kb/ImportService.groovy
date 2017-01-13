@@ -327,7 +327,7 @@ class ImportService {
                 step.classes.css.each {
                     css += (it.text() == 'Hinweis'?'infobox ':(it.text()=='Graue Box'?'infobox-2 ':''))
                 }
-                println "style $css"
+                //println "style $css"
             }
 
             //println "debug: steps"
