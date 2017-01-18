@@ -229,7 +229,7 @@ class ImportService {
     List processSteps(NodeList rawSteps, String cookie, asSidebox = false) {
         println '[INFO] Verarbeite Schritte...'
         List mySteps = []
-        rawSteps?.step?.eachWithIndex { step, int index ->
+        rawSteps?.step?.findAll{ it.section.content.text() || it.images }?.eachWithIndex { step, int index ->
             boolean showNumber = false
             int stepNumber
             byte[] stepMedia = null, previewMedia = null
@@ -423,7 +423,7 @@ class ImportService {
     }
 
     Document addSideInfo(Node xmlDoc, Document doc, String cookie) {
-        if (xmlDoc.aside && xmlDoc.aside.step.size() > 1 && (xmlDoc.aside.step.content || xmlDoc.aside.step.images)) {
+        if (xmlDoc.aside && (xmlDoc.aside.step.section.content.text() || xmlDoc.aside.step.images)) {
             processSteps(xmlDoc.aside, cookie, true).each {
                 doc.addToSideboxes(it)
             }
