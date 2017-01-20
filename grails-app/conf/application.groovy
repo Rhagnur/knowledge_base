@@ -18,6 +18,7 @@ grails.plugin.springsecurity.controllerAnnotations.staticRules = [
         [pattern: '/**/fonts/**',    access: ['permitAll']],
         [pattern: '/**/js/**',       access: ['permitAll']],
         [pattern: '/**/css/**',      access: ['permitAll']],
+        [pattern: '/**/files/**',    access: ['permitAll']],
         [pattern: '/**/images/**',   access: ['permitAll']],
         [pattern: '/**/favicon.ico', access: ['permitAll']]
         ]
@@ -31,3 +32,10 @@ grails {
         password = "xxx"
     }
 }
+
+kb.fs = System.properties.'file.separator'
+
+kb.preview.image.width = 200
+kb.home.dir = "${System.getProperty('user.dir')}${kb.fs}.kbase"
+kb.temp.dir = "${-> kb.home.dir}${kb.fs}temp"
+kb.file.dir = "${-> kb.home.dir}${kb.fs}file"

@@ -477,8 +477,8 @@ class CategoryService {
             queryParams.put(i as String, entry.name as String)
         }
 
-        println query
-        println queryParams
+        //println query
+        //println queryParams
         result = graphDatabaseService.execute(query, queryParams)
         return result.toList(Document)
     }

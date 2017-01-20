@@ -3,8 +3,10 @@ import berlin.htw.hrz.kb.Category
 import berlin.htw.hrz.kb.Subcategory
 import grails.converters.JSON
 import grails.converters.XML
+import grails.core.GrailsApplication
 
 class BootStrap {
+    GrailsApplication grailsApplication
 
     /*
     * Edited by didschu
@@ -37,8 +39,6 @@ class BootStrap {
 
         }
 
-
-
         XML.registerObjectMarshaller(Document) { doc, xml ->
             xml.build{
                 title(doc.docTitle)
@@ -68,6 +68,49 @@ class BootStrap {
                 }
             }
         }
+
+        println "temp_path: ${grailsApplication.config.get('kb.temp.dir')}"
+
+        println "Checking for kb.home and sub dirs..."
+        File homeDir = new File(grailsApplication.config.getAt('kb.home.dir') as String)
+        File tmpDir = new File(grailsApplication.config.getAt('kb.temp.dir') as String)
+        File fileDir = new File(grailsApplication.config.getAt('kb.file.dir') as String)
+
+        println homeDir.absolutePath
+        println homeDir.exists()
+
+        if (!tmpDir.exists()) {
+            tmpDir.mkdirs()
+            println tmpDir.path
+        }
+        else {
+            if (!tmpDir.directory && !tmpDir.canWrite() && !tmpDir.canRead()) {
+                println "ATTENTION!!!"
+            } else {
+                println "DAS"
+                println tmpDir.absolutePath
+                println tmpDir.exists()
+            }
+        }
+        if (!fileDir.exists()) {
+            fileDir.mkdirs()
+            println fileDir.path
+        }
+        else {
+            if (!fileDir.directory && !fileDir.canWrite() && !fileDir.canRead()) {
+                println "ATTENTION!!!"
+            } else {
+                println "DAS"
+                println fileDir.absolutePath
+                println fileDir.exists()
+            }
+
+        }
+        servletContext['file_mapper'] = new HashMap<String, String>()
+
+
+
+
     }
     def destroy = {
     }

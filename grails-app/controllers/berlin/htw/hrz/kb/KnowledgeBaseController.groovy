@@ -7,9 +7,11 @@ package berlin.htw.hrz.kb
 import grails.converters.XML
 import grails.plugin.springsecurity.SpringSecurityService
 import grails.plugin.springsecurity.annotation.Secured
-import org.springframework.security.core.context.SecurityContextHolder
+import org.springframework.core.io.Resource
 import org.springframework.web.multipart.MultipartFile
-import org.springframework.web.multipart.support.StandardMultipartHttpServletRequest
+
+import java.nio.file.Files
+import java.nio.file.Paths
 
 /**
  * Controller class for handling the requests, redirects and processing data given from the views
@@ -18,6 +20,7 @@ import org.springframework.web.multipart.support.StandardMultipartHttpServletReq
 class KnowledgeBaseController {
 
     //Injection der benötigten Serviceklassen
+    def assetResourceLocator
     DocumentService documentService
     CategoryService categoryService
     ImportService importService
@@ -483,6 +486,60 @@ class KnowledgeBaseController {
     }
 
     /**
+     * Controller method for downloading files
+     */
+    def download() {
+        println params
+        if (params.mirUrl || params.file) {
+            if (!new File("${System.getProperty('user.home')}/.kbase/temp").exists()) {
+                new File("${System.getProperty('user.home')}/.kbase/temp").mkdirs()
+            }
+
+            String file_name = ""
+            if (params.mirUrl) {
+                String temp = params.mirUrl.toString()
+                file_name = temp.substring(temp.lastIndexOf('/') + 1, temp.size())
+            } else {
+                file_name = params.file as String
+            }
+
+            Resource tempRes =  assetResourceLocator.findAssetForURI(file_name)
+            println assetPath(src: "files/$file_name") as String
+            String aPath = "${assetPath(src: "files/$file_name") as String}"
+            println 'as URI: ' + aPath.toURI()
+            println resource(dir: 'files', file: file_name) as String
+
+            println request.getSession().getServletContext().getRealPath("/")
+            println System.properties['base.dir']
+
+            println '0 ContentType: ' + Files.probeContentType(Paths.get(aPath.toURI()))
+
+            if (!tempRes) {
+                flash.error =  message(code: 'kb.error.noSuchDownloadableFileFound') as String
+            } else {
+                //Necessary for getting the content type, not perfect, can be optimized?
+                //Needs to be saved temporary because trying to get the URI from the Resource itself causes an exception
+                File tempi = new File("${System.getProperty('user.home')}/.kbase/temp", file_name)
+                tempi.bytes = tempRes.inputStream.bytes
+
+                println 'URI: ' + tempi.toURI()
+                println 'ContentType: ' + Files.probeContentType(Paths.get(tempi.toURI()))
+
+                response.setHeader("Content-disposition", "attachment;filename=\"${file_name}\"")
+                response.setHeader("Content-Type", Files.probeContentType(Paths.get(tempi.toURI())))
+                response.outputStream << tempRes.inputStream.bytes
+            }
+        }
+        else {
+            flash.error =  message(code: 'kb.error.wrongParameter') as String
+        }
+
+        if (flash.error) {
+            redirect(view: 'index', model: [otherDocs: categoryService.getDocsOfInterest(springSecurityService.principal, request), principal: springSecurityService.principal])
+        }
+    }
+
+    /**
      * Controller method for either exporting a single document or a list of all unlocked documents.
      * Usage: use '/document(.:format)' for getting the list or '/document/:docTitle(.:format)' for getting a single document.
      * If you don't use the format parameter this method will look for the accepted formats in the accept-header if no fitting found xml will be used as a standard.
@@ -557,6 +614,36 @@ class KnowledgeBaseController {
         [principal: springSecurityService.principal]
     }
 
+    @Secured(["hasAuthority('ROLE_GP-STAFF')", "hasAuthority('ROLE_GP-PROF')"])
+    def importFiles() {
+        println params.submit
+        if (!params.username || !params.password || (params.infoFile as MultipartFile).isEmpty()) {
+            flash.error = message(code: 'kb.error.fillOutAllFields') as String
+        } else {
+            /*
+        MultipartFile tempFile = request.getFile('infoFile')
+        println tempFile.getContentType()
+        File myFile = new File(tempFile.getOriginalFilename());
+        myFile.createNewFile();
+        FileOutputStream fos = new FileOutputStream(myFile);
+        fos.write(tempFile.getBytes());
+        fos.close();
+        myFile.readLines().each {
+            println it
+        }
+        */
+            if (importService.importOldFiles(request.getFile('infoFile') as MultipartFile, params.username as String, params.password as String)) {
+                flash.info = message(code: 'kb.info.documentsImported') as String
+                redirect(view: 'index', model: [otherDocs: categoryService.getDocsOfInterest(springSecurityService.principal, request), principal: springSecurityService.principal])
+            } else {
+                flash.error = message(code: 'kb.error.credentialsWrong') as String
+            }
+            //importService.importOldDocs(temp.split('\n').toList())
+        }
+
+    [principal: springSecurityService.principal]
+    }
+
     /**
      * Controller method for the index (main) page
      * @return
@@ -569,6 +656,7 @@ class KnowledgeBaseController {
         }
         println "lookup: $request.remoteAddr"
         println "principal: $springSecurityService.principal"
+        println "file_mapper: ${servletContext['file_mapper']}"
         //println "Import Tutorial\n"
         //importService.importOldDocs(['https://portal.rz.htw-berlin.de/anleitungen/wlan/windows_8.export'] as List)
         //println "\n\nImport Article\n"

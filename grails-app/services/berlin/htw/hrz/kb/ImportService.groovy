@@ -1,9 +1,11 @@
 package berlin.htw.hrz.kb
 
+import grails.core.GrailsApplication
 import grails.transaction.Transactional
 import org.springframework.web.multipart.MultipartFile
 
 import javax.imageio.ImageIO
+import javax.servlet.ServletContext
 import java.awt.Graphics2D
 import java.awt.image.BufferedImage
 import java.awt.AlphaComposite
@@ -11,10 +13,51 @@ import java.awt.RenderingHints
 
 @Transactional
 class ImportService {
-    //todo videos?
-    DocumentService documentService
+    GrailsApplication grailsApplication
+    ServletContext servletContext
+
     String preUrl = 'https://portal.rz.htw-berlin.de'
     String cookieCheckPage = 'https://portal.rz.htw-berlin.de/anleitungen.xml'
+
+    void importOldFiles(List<String> oldDataFiles, String cookie) {
+        URLConnection conn = null
+        oldDataFiles.each { String dataFileLink ->
+            try {
+                conn = dataFileLink.toURL().openConnection()
+                conn.setRequestProperty('Cookie', cookie)
+                conn.connect()
+
+                if (conn.responseCode == 200) {
+                    println "[INFO] Process data-file '$dataFileLink' ..."
+
+                    String file_path = dataFileLink.replace('https://portal.rz.htw-berlin.de', '')
+                    String[] temp = file_path.split(/\/[\w-]+\.[a-z0-9]+/)
+                    String parent_path = temp[0]
+                    String file_name = dataFileLink.substring(dataFileLink.lastIndexOf('/') + 1, dataFileLink.size())
+                    String file_name_hash = "${file_name.encodeAsMD5().toString()}.${file_name.substring(file_name.lastIndexOf('.') + 1, file_name.size())}"
+
+                    println file_name
+                    println file_name_hash
+                    println file_path
+
+                    File parentFolder = new File(grailsApplication.config.'kb.file.dir' as String, parent_path)
+                    if (!parentFolder.exists()) { parentFolder.mkdirs() }
+
+                    File tmpFile = new File(parentFolder, file_name)
+                    tmpFile.bytes = conn.content.bytes
+                    new File(grailsApplication.config.'kb.temp.dir' as String, file_name_hash).bytes = tmpFile.bytes
+
+                    servletContext['file_mapper'].put(file_path, file_name_hash)
+
+                }
+            } catch (Exception e) {
+                //todo was passiert hier? throw new Excepton später rausnehmen
+                throw new Exception(e.message)
+            } finally {
+                conn.disconnect()
+            }
+        }
+    }
 
     void importOldDocs(List<String> oldFiles, String cookie) {
         List<String> errorFiles = []
@@ -130,6 +173,19 @@ class ImportService {
         }
     }
 
+    boolean importOldFiles(MultipartFile linkDataFile, String user, String pass) {
+        String cookie = cookieGetter(user, pass)
+        boolean cookieGood = testingCookie(cookie)
+        if ( cookieGood ) {
+            importOldFiles(linkDataFile.inputStream.readLines().collect {
+                it.toString().replace('.xml', '.export')
+            }, cookie)
+            true
+        } else {
+            false
+        }
+    }
+
     String getMimeType(URLConnection conn) {
         conn.getHeaderField('Content-Type')
     }
@@ -140,8 +196,8 @@ class ImportService {
 
     byte[] resizeImage(byte[] stepMedia, String mimeType) {
         BufferedImage img = ImageIO.read(new ByteArrayInputStream(stepMedia))
-        double scale = 200 / img.width
-        int newWidth = 200
+        double scale = grailsApplication.config.getAt('kb.preview.image.width') / img.width
+        int newWidth = grailsApplication.config.getAt('kb.preview.image.width')
         int newHeight = img.height * scale
 
         java.awt.Image resizedImage = img.getScaledInstance(newWidth, newHeight, img.SCALE_SMOOTH)

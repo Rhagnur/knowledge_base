@@ -67,6 +67,9 @@
                 <g:form controller="KnowledgeBase" action="importDocs" method="POST">
                     <g:submitButton name="importDocs" value="Dokumente importieren"/>
                 </g:form>
+                <g:form controller="KnowledgeBase" action="importFiles" method="POST">
+                    <g:submitButton name="importFiles" value="Datendateien importieren"/>
+                </g:form>
                 <br/><br/>
                 <g:form controller="KnowledgeBase" action="findUnlinkedObjs">
                     <g:submitButton name="find" value="Unverlinkte Elemente finden"/>
