@@ -20,7 +20,6 @@ import java.nio.file.Paths
 class KnowledgeBaseController {
 
     //Injection der benötigten Serviceklassen
-    def assetResourceLocator
     DocumentService documentService
     CategoryService categoryService
     ImportService importService
@@ -516,6 +515,7 @@ class KnowledgeBaseController {
     }
 
     /**
+     *
      * Controller method for either exporting a single document or a list of all unlocked documents.
      * Usage: use '/document(.:format)' for getting the list or '/document/:docTitle(.:format)' for getting a single document.
      * If you don't use the format parameter this method will look for the accepted formats in the accept-header if no fitting found xml will be used as a standard.
@@ -738,5 +738,43 @@ class KnowledgeBaseController {
             docsFound = tempDocs.findAll { tempDocs.count(it) == (temp.size()) }.unique().sort { it.viewCount }
         }
         [searchBar: params.searchBar ,foundDocs: docsFound ,principal: springSecurityService.principal, allCatsByMainCats: categoryService.getAllMaincatsWithSubcats(), filter: filter, hasAside: true]
+    }
+
+    /**
+     * Controller method for uploading a media file
+     * @return
+     */
+    def uploadFile() {
+        println params
+        println "Test"
+        if (params.submit) {
+            List<String> corruptedFiles = []
+
+            if (!params.parentPath || (params.uploadFile as MultipartFile).isEmpty()) {
+                flash.error = message(code: 'kb.error.fillOutAllFields') as String
+            } else if (!(params.parentPath ==~ /\/([a-z0-9]+\/)?([a-z0-9]+\/?)/)) {
+                flash.error = message(code: 'kb.error.wrongParentPathInput') as String
+            } else {
+                String parentPath = params.parentPath as String
+                println parentPath
+
+                request.getMultiFileMap().uploadFile.each { MultipartFile file ->
+                    println file.originalFilename
+
+                    if (!importService.importFile(file, parentPath)) {
+                        corruptedFiles.add(file.originalFilename)
+                    }
+                }
+            }
+
+            if (!flash.error) {
+                flash.info = "${message(code: 'kb.info.fileUploaded')}"
+                if (corruptedFiles) {
+                    flash.error = "${message(code: 'kb.error.uploadFiles')}:${corruptedFiles.collect {" $it"}}"
+                }
+                redirect(view: 'index', model: [otherDocs: categoryService.getDocsOfInterest(springSecurityService.principal, request), principal: springSecurityService.principal])
+            }
+        }
+        [principal: springSecurityService.principal]
     }
 }

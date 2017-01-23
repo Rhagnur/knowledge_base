@@ -166,6 +166,30 @@ class ImportService {
         }
     }
 
+    boolean importFile(MultipartFile newFile, String parentPath) {
+        try {
+            //create subdirs
+            File parentFolders = new File(grailsApplication.config.'kb.file.dir' as String, parentPath)
+            if (!parentFolders.exists()) {
+                parentFolders.mkdirs()
+            }
+            String full_path = "${grailsApplication.config.'kb.file.dir' as String}$parentPath"
+
+            if (!parentFolders.canWrite()) {
+                println "Error not able to write on folder"
+            } else {
+                //create file
+                println newFile.getOriginalFilename()
+                new File(full_path, newFile.getOriginalFilename()).bytes = newFile.inputStream.bytes
+                true
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace()
+            false
+        }
+    }
+
     boolean importOldFiles(MultipartFile linkDataFile, String user, String pass) {
         String cookie = cookieGetter(user, pass)
         boolean cookieGood = testingCookie(cookie)
