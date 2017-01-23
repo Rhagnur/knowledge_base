@@ -490,44 +490,20 @@ class KnowledgeBaseController {
      */
     def download() {
         println params
-        if (params.mirUrl || params.file) {
-            if (!new File("${System.getProperty('user.home')}/.kbase/temp").exists()) {
-                new File("${System.getProperty('user.home')}/.kbase/temp").mkdirs()
-            }
+        if (params.file) {
+            String file_path = params.file as String
+            String file_name = file_path.substring(file_path.lastIndexOf('/') + 1, file_path.size())
+            String parent_path = file_path.split(/\/[\w-]+\.[a-z0-9]+/)[0]
+            File file = new File("${grailsApplication.config.'kb.file.dir' as String}$parent_path", file_name)
 
-            String file_name = ""
-            if (params.mirUrl) {
-                String temp = params.mirUrl.toString()
-                file_name = temp.substring(temp.lastIndexOf('/') + 1, temp.size())
-            } else {
-                file_name = params.file as String
-            }
-
-            Resource tempRes =  assetResourceLocator.findAssetForURI(file_name)
-            println assetPath(src: "files/$file_name") as String
-            String aPath = "${assetPath(src: "files/$file_name") as String}"
-            println 'as URI: ' + aPath.toURI()
-            println resource(dir: 'files', file: file_name) as String
-
-            println request.getSession().getServletContext().getRealPath("/")
-            println System.properties['base.dir']
-
-            println '0 ContentType: ' + Files.probeContentType(Paths.get(aPath.toURI()))
-
-            if (!tempRes) {
+            if (!file.exists()) {
                 flash.error =  message(code: 'kb.error.noSuchDownloadableFileFound') as String
+            } else if(!file.canRead()) {
+                flash.error =  message(code: 'kb.error.noRightsToReadFile') as String
             } else {
-                //Necessary for getting the content type, not perfect, can be optimized?
-                //Needs to be saved temporary because trying to get the URI from the Resource itself causes an exception
-                File tempi = new File("${System.getProperty('user.home')}/.kbase/temp", file_name)
-                tempi.bytes = tempRes.inputStream.bytes
-
-                println 'URI: ' + tempi.toURI()
-                println 'ContentType: ' + Files.probeContentType(Paths.get(tempi.toURI()))
-
                 response.setHeader("Content-disposition", "attachment;filename=\"${file_name}\"")
-                response.setHeader("Content-Type", Files.probeContentType(Paths.get(tempi.toURI())))
-                response.outputStream << tempRes.inputStream.bytes
+                response.setHeader("Content-Type", Files.probeContentType(Paths.get(file.toURI())))
+                response.outputStream << file.bytes
             }
         }
         else {

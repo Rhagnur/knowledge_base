@@ -18,6 +18,8 @@ class MyDebugInterceptor {
     }
 
     boolean before() {
+
+
         start = new Date()
 
         //if (actionName != 'showImage') {

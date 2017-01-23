@@ -31,13 +31,10 @@ class ImportService {
                     println "[INFO] Process data-file '$dataFileLink' ..."
 
                     String file_path = dataFileLink.replace('https://portal.rz.htw-berlin.de', '')
-                    String[] temp = file_path.split(/\/[\w-]+\.[a-z0-9]+/)
-                    String parent_path = temp[0]
+                    String parent_path = file_path.split(/\/[\w-]+\.[a-z0-9]+/)[0]
                     String file_name = dataFileLink.substring(dataFileLink.lastIndexOf('/') + 1, dataFileLink.size())
-                    String file_name_hash = "${file_name.encodeAsMD5().toString()}.${file_name.substring(file_name.lastIndexOf('.') + 1, file_name.size())}"
 
                     println file_name
-                    println file_name_hash
                     println file_path
 
                     File parentFolder = new File(grailsApplication.config.'kb.file.dir' as String, parent_path)
@@ -45,10 +42,6 @@ class ImportService {
 
                     File tmpFile = new File(parentFolder, file_name)
                     tmpFile.bytes = conn.content.bytes
-                    new File(grailsApplication.config.'kb.temp.dir' as String, file_name_hash).bytes = tmpFile.bytes
-
-                    servletContext['file_mapper'].put(file_path, file_name_hash)
-
                 }
             } catch (Exception e) {
                 //todo was passiert hier? throw new Excepton später rausnehmen
