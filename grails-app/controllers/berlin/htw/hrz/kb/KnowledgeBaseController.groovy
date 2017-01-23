@@ -49,7 +49,7 @@ class KnowledgeBaseController {
         //Hänge die eigentliche Exception.message an die Fehlernachricht für mehr Klarheit.
         //Benutzer wird dann mit Fehlernachricht in der Flashvariablen auf Indexseite geschickt und diese ausgegeben
         temp += "\n${ex.message}"
-        flash.error = temp
+        flash.error << temp
         redirect(view: 'index', model: [otherDocs: categoryService.getDocsOfInterest(springSecurityService.principal, request), principal: springSecurityService.principal])
     }
     /**
@@ -82,7 +82,7 @@ class KnowledgeBaseController {
             //Hole Subkategorien, repräsentiert durch Checkboxen und erzeuge eine Liste aus den ausgewählten
             def clickedSubcats = params.list('checkbox') as String[]
             if (!clickedSubcats) {
-                flash.error = message(code: 'kb.error.noSubCatGiven') as String
+                flash.error << message(code: 'kb.error.noSubCatGiven') as String
             } else {
                 //Füge den Autor (eingeloggter User) des Dokuments an
                 docSubs.add(params.authorNew)
@@ -115,11 +115,11 @@ class KnowledgeBaseController {
                         doc = documentService.changeDocParents(doc, categoryService.getSubcategories(docSubs as String[]))
                     }
                 } else {
-                    flash.error = message(code: 'kb.error.fillOutAllFields') as String
+                    flash.error << message(code: 'kb.error.fillOutAllFields') as String
                 }
 
-                if (!flash.error) { flash.info = message(code: 'kb.info.docChanged') as String }
-                else { flash.error = message(code: 'kb.error.somethingWentWrong') as String }
+                if (!flash.error) { flash.info << message(code: 'kb.info.docChanged') as String }
+                else { flash.error << message(code: 'kb.error.somethingWentWrong') as String }
                 redirect(view: 'index', model: [otherDocs: categoryService.getDocsOfInterest(springSecurityService.principal, request), principal: springSecurityService.principal])
             }
         } else {
@@ -135,7 +135,7 @@ class KnowledgeBaseController {
     @Secured(["hasAuthority('ROLE_GP-STAFF')", "hasAuthority('ROLE_GP-PROF')"])
     def changeCat() {
         if (params.submit) {
-            if (!params.catName) { flash.error = message(code: 'kb.error.attrNameCantBeNull') as String }
+            if (!params.catName) { flash.error << message(code: 'kb.error.attrNameCantBeNull') as String }
             else {
                 Category myCat = categoryService.getCategory(params.name)
 
@@ -149,11 +149,11 @@ class KnowledgeBaseController {
                     }
 
                     if (myCat) {
-                        flash.info = message(code: 'kb.info.catChanged') as String
+                        flash.info << message(code: 'kb.info.catChanged') as String
                     }
-                    else { flash.error = message(code: 'kb.error.somethingWentWrong') as String }
+                    else { flash.error << message(code: 'kb.error.somethingWentWrong') as String }
                 }
-                else { flash.error = message(code: 'kb.error.cantDeleteOrChangeMainCat') as String }
+                else { flash.error << message(code: 'kb.error.cantDeleteOrChangeMainCat') as String }
                 redirect(view: 'index', model: [otherDocs: categoryService.getDocsOfInterest(springSecurityService.principal, request), principal: springSecurityService.principal])
             }
         }
@@ -176,7 +176,7 @@ class KnowledgeBaseController {
             //Hole Subkategorien, repräsentiert durch Checkboxen und erzeuge eine Liste aus den ausgewählten
             def clickedSubcats = params.list('checkbox') as String[]
             if (!clickedSubcats) {
-                flash.error = message(code: 'kb.error.noSubCatGiven') as String
+                flash.error << message(code: 'kb.error.noSubCatGiven') as String
             } else {
                 //Füge den Autor (eingeloggter User) des Dokuments an
                 docSubs.add(params.authorNew)
@@ -205,11 +205,11 @@ class KnowledgeBaseController {
                         doc = documentService.changeDocParents(doc, categoryService.getSubcategories(docSubs as String[]))
                     }
                 } else {
-                    flash.error = message(code: 'kb.error.fillOutAllFields') as String
+                    flash.error << message(code: 'kb.error.fillOutAllFields') as String
                 }
 
-                if (!flash.error) { flash.info = message(code: 'kb.info.docChanged') as String }
-                else { flash.error = message(code: 'kb.error.somethingWentWrong') as String }
+                if (!flash.error) { flash.info << message(code: 'kb.info.docChanged') as String }
+                else { flash.error << message(code: 'kb.error.somethingWentWrong') as String }
                 redirect(view: 'index', model: [otherDocs: categoryService.getDocsOfInterest(springSecurityService.principal, request), principal: springSecurityService.principal])
             }
         } else {
@@ -232,7 +232,7 @@ class KnowledgeBaseController {
             //Hole Subkategorien, repräsentiert durch Checkboxen und erzeuge eine Liste aus den ausgewählten
             def clickedSubcats = params.list('checkbox') as String[]
             if (!clickedSubcats) {
-                flash.error = message(code: 'kb.error.noSubCatGiven') as String
+                flash.error << message(code: 'kb.error.noSubCatGiven') as String
             } else {
                 //Füge den Autor (eingeloggter User) des Dokuments an
                 docSubs.add(params.authorNew)
@@ -266,11 +266,11 @@ class KnowledgeBaseController {
                         doc = documentService.changeDocParents(doc, categoryService.getSubcategories(docSubs as String[]))
                     }
                 } else {
-                    flash.error = message(code: 'kb.error.fillOutAllFields') as String
+                    flash.error << message(code: 'kb.error.fillOutAllFields') as String
                 }
 
-                if (!flash.error) { flash.info = message(code: 'kb.info.docChanged') as String }
-                else { flash.error = message(code: 'kb.error.somethingWentWrong') as String }
+                if (!flash.error) { flash.info << message(code: 'kb.info.docChanged') as String }
+                else { flash.error << message(code: 'kb.error.somethingWentWrong') as String }
                 redirect(view: 'index', model: [otherDocs: categoryService.getDocsOfInterest(springSecurityService.principal, request), principal: springSecurityService.principal])
             }
         } else {
@@ -286,16 +286,16 @@ class KnowledgeBaseController {
     def createCat() {
         //Falls createCat Form abgeschickt wurde, bearbeite Daten und erstelle Subkategorie
         if (params.submit) {
-            if (!params.catName) { flash.error = message(code: 'kb.error.attrNameCantBeNull') as String }
+            if (!params.catName) { flash.error << message(code: 'kb.error.attrNameCantBeNull') as String }
             else {
                 //Hole die Elternkategorie
                 Category newParent = categoryService.getCategory(params.parentCat)
 
                 //Erstelle neue Subkategorie
                 if (categoryService.newSubCategory(params.catName as String, newParent)) {
-                    flash.info = message(code: 'kb.info.catCreated') as String
+                    flash.info << message(code: 'kb.info.catCreated') as String
                 }
-                else { flash.error = message(code: 'kb.error.somethingWentWrong') as String }
+                else { flash.error << message(code: 'kb.error.somethingWentWrong') as String }
 
             }
             redirect(view: 'index', model: [otherDocs: categoryService.getDocsOfInterest(springSecurityService.principal, request),principal: springSecurityService.principal])
@@ -320,7 +320,7 @@ class KnowledgeBaseController {
             //Hole Subkategorien, repräsentiert durch Checkboxen und erzeuge eine Liste aus den ausgewählten
             def clickedSubcats = params.list('checkbox') as String[]
             if (!clickedSubcats) {
-                flash.error = message(code: 'kb.error.noSubCatGiven') as String
+                flash.error << message(code: 'kb.error.noSubCatGiven') as String
             } else {
                 //Füge den Autor (eingeloggter User) des Dokuments an
                 docSubs.add(springSecurityService.principal.username)
@@ -335,12 +335,12 @@ class KnowledgeBaseController {
                 if (params.docTitle && !params.docTitle.empty && params.docContent && !params.docContent.empty) {
                     doc = documentService.newArticle(params.docTitle as String, params.docContent as String, docTags)
                 } else {
-                    flash.error = message(code: 'kb.error.fillOutAllFields') as String
+                    flash.error << message(code: 'kb.error.fillOutAllFields') as String
                 }
 
                 if (!flash.error) {
                     if (documentService.changeDocParents(doc, categoryService.getSubcategories(docSubs as String[]))) {
-                        flash.info = message(code: 'kb.info.docCreated') as String
+                        flash.info << message(code: 'kb.info.docCreated') as String
                         redirect(view: 'index', model: [otherDocs: categoryService.getDocsOfInterest(springSecurityService.principal, request), principal: springSecurityService.principal])
                     }
                 }
@@ -366,7 +366,7 @@ class KnowledgeBaseController {
             //Hole Subkategorien, repräsentiert durch Checkboxen und erzeuge eine Liste aus den ausgewählten
             def clickedSubcats = params.list('checkbox') as String[]
             if (!clickedSubcats) {
-                flash.error = message(code: 'kb.error.noSubCatGiven') as String
+                flash.error << message(code: 'kb.error.noSubCatGiven') as String
             } else {
                 //Füge den Autor (eingeloggter User) des Dokuments an
                 docSubs.add(springSecurityService.principal.username)
@@ -381,12 +381,12 @@ class KnowledgeBaseController {
                 if (params.question && !params.question.empty && params.answer && !params.answer.empty) {
                     doc = documentService.newFaq(params.question as String, params.answer as String, docTags)
                 } else {
-                    flash.error = message(code: 'kb.error.fillOutAllFields') as String
+                    flash.error << message(code: 'kb.error.fillOutAllFields') as String
                 }
 
                 if (!flash.error) {
                     if (documentService.changeDocParents(doc, categoryService.getSubcategories(docSubs as String[]))) {
-                        flash.info = message(code: 'kb.info.docCreated') as String
+                        flash.info << message(code: 'kb.info.docCreated') as String
                         redirect(view: 'index', model: [otherDocs: categoryService.getDocsOfInterest(springSecurityService.principal, request), principal: springSecurityService.principal])
                     }
                 }
@@ -413,7 +413,7 @@ class KnowledgeBaseController {
             //Hole Subkategorien, repräsentiert durch Checkboxen und erzeuge eine Liste aus den ausgewählten
             def clickedSubcats = params.list('checkbox') as String[]
             if (!clickedSubcats) {
-                flash.error = message(code: 'kb.error.noSubCatGiven') as String
+                flash.error << message(code: 'kb.error.noSubCatGiven') as String
             } else {
                 //Füge den Autor (eingeloggter User) des Dokuments an
                 docSubs.add(springSecurityService.principal.username)
@@ -431,14 +431,14 @@ class KnowledgeBaseController {
                 steps = documentService.newSteps(stepData as Map)
 
                 if (!steps || !params.docTitle) {
-                    flash.error = message(code: 'kb.error.fillOutAllFields') as String
+                    flash.error << message(code: 'kb.error.fillOutAllFields') as String
                     params.createDoc = 'tutorial'
                 } else {
                     doc = documentService.newTutorial(params.docTitle as String, steps, docTags)
                 }
                 if (!flash.error) {
                     if (documentService.changeDocParents(doc, categoryService.getSubcategories(docSubs as String[]))) {
-                        flash.info = message(code: 'kb.info.docCreated') as String
+                        flash.info << message(code: 'kb.info.docCreated') as String
                         redirect(view: 'index', model: [otherDocs: categoryService.getDocsOfInterest(springSecurityService.principal, request), principal: springSecurityService.principal])
                     }
                 }
@@ -458,11 +458,11 @@ class KnowledgeBaseController {
             Category cat = categoryService.getCategory(params.name)
             if (cat) {
                 categoryService.deleteSubCategory(cat)
-                flash.info = message(code: 'kb.info.catDeleted') as String
+                flash.info << message(code: 'kb.info.catDeleted') as String
             }
-            else { flash.error = message(code: 'kb.error.noSuchCategorie') as String }
+            else { flash.error << message(code: 'kb.error.noSuchCategorie') as String }
         }
-        else { flash.error = message(code: 'kb.error.attrNameNotFound') as String }
+        else { flash.error << message(code: 'kb.error.attrNameNotFound') as String }
         redirect(view: 'index', model: [otherDocs: categoryService.getDocsOfInterest(springSecurityService.principal, request), principal: springSecurityService.principal])
     }
 
@@ -476,11 +476,11 @@ class KnowledgeBaseController {
             Document doc = documentService.getDoc(params.docTitle)
             if (doc) {
                 documentService.deleteDoc(doc)
-                flash.info = "Dokument '${params.docTitle}' wurde gelöscht"
+                flash.info << "Dokument '${params.docTitle}' wurde gelöscht"
             }
-            else { flash.error = message(code: 'kb.error.noSuchDocument') as String }
+            else { flash.error << message(code: 'kb.error.noSuchDocument') as String }
         }
-        else { flash.error = message(code: 'kb.error.attrDocTitleNotFound') as String }
+        else { flash.error << message(code: 'kb.error.attrDocTitleNotFound') as String }
         redirect(view: 'index', model: [otherDocs: categoryService.getDocsOfInterest(springSecurityService.principal, request), principal: springSecurityService.principal])
     }
 
@@ -496,9 +496,9 @@ class KnowledgeBaseController {
             File file = new File("${grailsApplication.config.'kb.file.dir' as String}$parent_path", file_name)
 
             if (!file.exists()) {
-                flash.error =  message(code: 'kb.error.noSuchDownloadableFileFound') as String
+                flash.error <<  message(code: 'kb.error.noSuchDownloadableFileFound') as String
             } else if(!file.canRead()) {
-                flash.error =  message(code: 'kb.error.noRightsToReadFile') as String
+                flash.error <<  message(code: 'kb.error.noRightsToReadFile') as String
             } else {
                 response.setHeader("Content-disposition", "attachment;filename=\"${file_name}\"")
                 response.setHeader("Content-Type", Files.probeContentType(Paths.get(file.toURI())))
@@ -506,7 +506,7 @@ class KnowledgeBaseController {
             }
         }
         else {
-            flash.error =  message(code: 'kb.error.wrongParameter') as String
+            flash.error <<  message(code: 'kb.error.wrongParameter') as String
         }
 
         if (flash.error) {
@@ -563,7 +563,7 @@ class KnowledgeBaseController {
         //println params
         if (params.submit) {
             if (!params.username || !params.password || (params.infoFile as MultipartFile).isEmpty()) {
-                flash.error = message(code: 'kb.error.fillOutAllFields') as String
+                flash.error << message(code: 'kb.error.fillOutAllFields') as String
             } else {
                 /*
             MultipartFile tempFile = request.getFile('infoFile')
@@ -578,10 +578,10 @@ class KnowledgeBaseController {
             }
             */
                 if (importService.importOldDocs(request.getFile('infoFile') as MultipartFile, params.username as String, params.password as String)) {
-                    flash.info = message(code: 'kb.info.documentsImported') as String
+                    flash.info << message(code: 'kb.info.documentsImported') as String
                     redirect(view: 'index', model: [otherDocs: categoryService.getDocsOfInterest(springSecurityService.principal, request), principal: springSecurityService.principal])
                 } else {
-                    flash.error = message(code: 'kb.error.credentialsWrong') as String
+                    flash.error << message(code: 'kb.error.credentialsWrong') as String
                 }
                 //importService.importOldDocs(temp.split('\n').toList())
             }
@@ -594,7 +594,7 @@ class KnowledgeBaseController {
     def importFiles() {
         println params.submit
         if (!params.username || !params.password || (params.infoFile as MultipartFile).isEmpty()) {
-            flash.error = message(code: 'kb.error.fillOutAllFields') as String
+            flash.error << message(code: 'kb.error.fillOutAllFields') as String
         } else {
             /*
         MultipartFile tempFile = request.getFile('infoFile')
@@ -609,10 +609,10 @@ class KnowledgeBaseController {
         }
         */
             if (importService.importOldFiles(request.getFile('infoFile') as MultipartFile, params.username as String, params.password as String)) {
-                flash.info = message(code: 'kb.info.documentsImported') as String
+                flash.info << message(code: 'kb.info.documentsImported') as String
                 redirect(view: 'index', model: [otherDocs: categoryService.getDocsOfInterest(springSecurityService.principal, request), principal: springSecurityService.principal])
             } else {
-                flash.error = message(code: 'kb.error.credentialsWrong') as String
+                flash.error << message(code: 'kb.error.credentialsWrong') as String
             }
             //importService.importOldDocs(temp.split('\n').toList())
         }
@@ -628,15 +628,11 @@ class KnowledgeBaseController {
         //Falls keine Hauptkategorie angelegt ist, lege Struktur mit Testdokumente an
         if (Category.findAll().empty) {
             initService.initTestModell()
-            flash.info = message(code: 'kb.info.testStructureAndDataCreated') as String
+            flash.info << message(code: 'kb.info.testStructureAndDataCreated') as String
         }
+
         println "lookup: $request.remoteAddr"
         println "principal: $springSecurityService.principal"
-        println "file_mapper: ${servletContext['file_mapper']}"
-        //println "Import Tutorial\n"
-        //importService.importOldDocs(['https://portal.rz.htw-berlin.de/anleitungen/wlan/windows_8.export'] as List)
-        //println "\n\nImport Article\n"
-        //importService.importOldDocs(['https://portal.rz.htw-berlin.de/anleitungen/speicherplatz/unix.export'] as List)
         [otherDocs: categoryService.getDocsOfInterest(springSecurityService.principal, request), principal: springSecurityService.principal];
     }
 
@@ -674,9 +670,9 @@ class KnowledgeBaseController {
                     otherDocs = categoryService.getAdditionalDocs(myDoc)
                 }
             }
-            else { flash.error = message(code: 'kb.error.noSuchDocument') as String }
+            else { flash.error << message(code: 'kb.error.noSuchDocument') as String }
         }
-        else { flash.error = message(code: 'kb.error.attrDocTitleNotFound') as String }
+        else { flash.error << message(code: 'kb.error.attrDocTitleNotFound') as String }
 
         if (flash.error) {
             redirect(view: 'index', model: [otherDocs: categoryService.getDocsOfInterest(springSecurityService.principal, request), principal: springSecurityService.principal])
@@ -706,7 +702,7 @@ class KnowledgeBaseController {
         def filter = []
 
         if (params.searchBar && params.searchBar.length() < 3) {
-            flash.error = message(code: 'kb.error.searchTermTooShort') as String
+            flash.error << message(code: 'kb.error.searchTermTooShort') as String
             redirect(view: 'index', model: [otherDocs: categoryService.getDocsOfInterest(springSecurityService.principal, request), principal: springSecurityService.principal])
         }
         else if (params.searchBar && params.searchBar.length() >= 3) {
@@ -751,9 +747,9 @@ class KnowledgeBaseController {
             List<String> corruptedFiles = []
 
             if (!params.parentPath || (params.uploadFile as MultipartFile).isEmpty()) {
-                flash.error = message(code: 'kb.error.fillOutAllFields') as String
+                flash.error << message(code: 'kb.error.fillOutAllFields') as String
             } else if (!(params.parentPath ==~ /\/([a-z0-9]+\/)?([a-z0-9]+\/?)/)) {
-                flash.error = message(code: 'kb.error.wrongParentPathInput') as String
+                flash.error << message(code: 'kb.error.wrongParentPathInput') as String
             } else {
                 String parentPath = params.parentPath as String
                 println parentPath
@@ -768,9 +764,9 @@ class KnowledgeBaseController {
             }
 
             if (!flash.error) {
-                flash.info = "${message(code: 'kb.info.fileUploaded')}"
+                flash.info << "${message(code: 'kb.info.fileUploaded')}"
                 if (corruptedFiles) {
-                    flash.error = "${message(code: 'kb.error.uploadFiles')}:${corruptedFiles.collect {" $it"}}"
+                    flash.error << "${message(code: 'kb.error.uploadFiles')}:${corruptedFiles.collect {" $it"}}"
                 }
                 redirect(view: 'index', model: [otherDocs: categoryService.getDocsOfInterest(springSecurityService.principal, request), principal: springSecurityService.principal])
             }

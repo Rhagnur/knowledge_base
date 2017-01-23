@@ -26,10 +26,18 @@
         <section id="content" class="l-has-aside">
             <main id="main" role="main">
                 <g:if test="${flash.error}">
-                    <div class="alert alert-error" style="display: block">${flash.error}</div><br/><br/>
+                    <div class="alert alert-error" style="display: block">
+                        <g:each in="${flash.error}">
+                            <p>${it}</p>
+                        </g:each>
+                    </div><br/><br/>
                 </g:if>
                 <g:if test="${flash.info}">
-                    <div class="alert alert-info" style="display: block">${flash.info}</div><br/><br/>
+                    <div class="alert alert-info" style="display: block">
+                        <g:each in="${flash.info}">
+                            <p>${it}</p>
+                        </g:each>
+                    </div><br/><br/>
                 </g:if>
                 <g:pageProperty name="page.main"/>
             </main>

@@ -72,11 +72,12 @@ class BootStrap {
         println "temp_path: ${grailsApplication.config.get('kb.temp.dir')}"
 
         println "Checking for kb.home and sub dirs..."
-        File homeDir = new File(grailsApplication.config.getAt('kb.home.dir') as String)
         File tmpDir = new File(grailsApplication.config.getAt('kb.temp.dir') as String)
         File fileDir = new File(grailsApplication.config.getAt('kb.file.dir') as String)
+        File logDir = new File(grailsApplication.config.getAt('kb.log.dir') as String)
 
         if (!tmpDir.exists()) {
+            println "Creating tmp dir..."
             tmpDir.mkdirs()
         }
         else {
@@ -84,7 +85,9 @@ class BootStrap {
                 println "ATTENTION!!!"
             }
         }
+
         if (!fileDir.exists()) {
+            println "Creating file dir..."
             fileDir.mkdirs()
         }
         else {
@@ -93,6 +96,15 @@ class BootStrap {
             }
         }
 
+        if (!logDir.exists()) {
+            println "Creating log dir..."
+            logDir.mkdirs()
+        }
+        else {
+            if (!logDir.directory && !logDir.canWrite() && !logDir.canRead()) {
+                println "ATTENTION!!!"
+            }
+        }
 
     }
     def destroy = {

@@ -37,5 +37,6 @@ kb.fs = System.properties.'file.separator'
 
 kb.preview.image.width = 200
 kb.home.dir = "${System.getProperty('user.dir')}${kb.fs}.kbase"
-kb.temp.dir = "${-> kb.home.dir}${kb.fs}temp"
-kb.file.dir = "${-> kb.home.dir}${kb.fs}file"
+kb.temp.dir = "${kb.home.dir}${kb.fs}temp"
+kb.file.dir = "${kb.home.dir}${kb.fs}file"
+kb.log.dir = "${kb.home.dir}${kb.fs}log"
