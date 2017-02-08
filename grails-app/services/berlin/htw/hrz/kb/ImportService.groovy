@@ -102,10 +102,8 @@ class ImportService {
         String temp = ""
         if (xmlDoc.intro && xmlDoc.intro.text()) {
             xmlDoc.intro.section.each {
-                temp += "<section>"
                 if (it.title.text()) { temp += "<h2>${it.title.text()}</h2>" }
                 if (it.text.text()) { temp += asString(it.text as NodeList) }
-                temp += "</section>"
             }
         }
         temp
@@ -410,13 +408,13 @@ class ImportService {
 
                 if (section.'@number' && (section.'@number' as int) > 1) {
                     String title = section.title?.text()
-                    stepContent += "<section><h2>$title</h2>$content</section>\n" as String
+                    stepContent += "<h2>$title</h2>$content\n" as String
                 } else {
                     if (content.startsWith(/[0-9]+. /)) {
                         //println "Lösche content prefix"
                         content = content.replaceFirst(/[0-9]+. /, '')
                     }
-                    stepContent += "<section>$content</section>\n" as String
+                    stepContent += "$content\n" as String
                 }
 
             }
@@ -424,7 +422,7 @@ class ImportService {
             //println "\nNumber $stepNumber\nTitel $stepTitle\nContent $stepContent\n" +
             //       "\nMediaType $mimeType\nAltText $altText"
 
-            Step myStep = null
+            StepDummy myStep = null
             if (asSidebox) {
                 myStep = new Sidebox(number: stepNumber, stepTitle: stepTitle, stepText: stepContent, showNumber: showNumber, style: css)
             } else {

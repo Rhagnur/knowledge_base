@@ -1,7 +1,9 @@
 package berlin.htw.hrz.kb
 
-class Sidebox extends Step{
+class Sidebox extends StepDummy{
 
     static constraints = {
+        number unique: false
     }
+    int number
 }

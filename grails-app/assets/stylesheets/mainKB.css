@@ -281,3 +281,35 @@ a:hover {
 .video video {
     width: 100%;
 }
+.step-holder-edit {
+    border: 1px solid rgba(0,0,0,0.2);
+    border-radius: 1em;
+    padding: 1em;
+    margin-bottom: 2em;
+}
+.step-holder-edit input, textarea {
+    margin-bottom: 1em;
+}
+.step-holder-edit label, .sidebox-holder-edit label {
+    font-weight: bold;
+}
+
+.sidebox-holder-edit input[type="text"], textarea {
+    border: 1px solid #AFAFAF;
+    display: block;
+    width: 100%;
+    line-height: 1.5em;
+    font-size: 1em;
+    padding: 0.5em 0.65em;
+}
+.button-newstep-edit {
+    margin-bottom: 2em;
+}
+.toolbar-button {
+    border: 1px solid rgba(0,0,0,0.3);
+    min-width: 1.6em;
+    min-height: 1.6em;
+    display: inline-block;
+    vertical-align: middle;
+    text-align: center;
+}

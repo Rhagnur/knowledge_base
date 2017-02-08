@@ -12,6 +12,7 @@ class Document {
 
     static mapping = {
         docTitle index: true
+        tablePerHierachy: false
     }
 
     static constraints = {

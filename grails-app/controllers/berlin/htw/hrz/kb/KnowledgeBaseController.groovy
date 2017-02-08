@@ -218,6 +218,7 @@ class KnowledgeBaseController {
     }
 
     def changeTutorial() {
+        println "params: $params"
         if (params.submit) {
             def docSubs = []
             String[] docTags = null
@@ -736,10 +737,39 @@ class KnowledgeBaseController {
         [searchBar: params.searchBar ,foundDocs: docsFound ,principal: springSecurityService.principal, allCatsByMainCats: categoryService.getAllMaincatsWithSubcats(), filter: filter, hasAside: true]
     }
 
+    @Secured(["hasAuthority('ROLE_GP-STAFF')", "hasAuthority('ROLE_GP-PROF')"])
+    def stepDown() {
+        println params
+        Document doc = documentService.changeStepOrder(Tutorial.findByDocTitle(params.docTitle as String), params.stepNumber as int, true)
+        if (doc) {
+            println "NO ERROR"
+            redirect(action: 'changeTutorial', params: [docTitle: doc.docTitle])
+        } else {
+            println "ERROR"
+            flash.error << message(code: 'kb.error.somethingWentWrong')
+            redirect(view: 'index', model: [otherDocs: categoryService.getDocsOfInterest(springSecurityService.principal, request), principal: springSecurityService.principal])
+        }
+    }
+
+    @Secured(["hasAuthority('ROLE_GP-STAFF')", "hasAuthority('ROLE_GP-PROF')"])
+    def stepUp() {
+        println params
+        Document doc = documentService.changeStepOrder(Tutorial.findByDocTitle(params.docTitle as String), params.stepNumber as int)
+        if (doc) {
+            println "NO ERROR"
+            redirect(action: 'changeTutorial', params: [docTitle: doc.docTitle])
+        } else {
+            println "ERROR"
+            flash.error << message(code: 'kb.error.somethingWentWrong')
+            redirect(view: 'index', model: [otherDocs: categoryService.getDocsOfInterest(springSecurityService.principal, request), principal: springSecurityService.principal])
+        }
+    }
+
     /**
      * Controller method for uploading a media file
      * @return
      */
+    @Secured(["hasAuthority('ROLE_GP-STAFF')", "hasAuthority('ROLE_GP-PROF')"])
     def uploadFile() {
         println params
         println "Test"

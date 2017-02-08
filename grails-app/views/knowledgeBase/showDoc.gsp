@@ -90,31 +90,27 @@
 
                 <g:if test="${document.steps}">
 
-                    <g:each in="${document.steps.sort { it.number }}">
-                        <g:if test="${!(it instanceof berlin.htw.hrz.kb.Sidebox)}">
-                            <section id="step_${it.number}" class="${it.style?:''}">
-                                <g:if test="it.stepTitle">
-                                    <div class="csc-header csc-header-n2">
-                                        <h1>${it.showNumber?"Schritt ${it.number}: ":""}${it.stepTitle}</h1>
-                                    </div>
-                                </g:if>
-
-                                <div class="step-content csc-textpic">
-                                    <div class="step-text csc-textpic-text">
-                                        <p>${raw(it.stepText)}</p>
-                                    </div>
-
-                                    <g:each in="${it.images.sort{ it.number }}">
-                                        <div class="step-media csc-textpic-imagewrap">
-                                            <a href="/knowledgeBase/showImage/${it.id}"><img src="/knowledgeBase/showImage/${it.preview?.id}" alt="${it.altText}" title="${it.altText}"/></a>
-                                        </div>
-                                    </g:each>
-                                    <div class="clear"></div>
+                    <g:each in="${document.steps.sort{ it.number }}">
+                        <section id="step_${it.number}" class="${it.style?:''}">
+                            <g:if test="it.stepTitle">
+                                <div class="csc-header csc-header-n2">
+                                    <h1>${it.showNumber?"${message(code: 'kb.view.showDoc.labelStep')} ${it.number}: ":""}${it.stepTitle}</h1>
                                 </div>
-                            </section>
-                        </g:if>
+                            </g:if>
 
+                            <div class="step-content csc-textpic">
+                                <div class="step-text csc-textpic-text">
+                                    <p>${raw(it.stepText)}</p>
+                                </div>
 
+                                <g:each in="${it.images.sort{ it.number }}">
+                                    <div class="step-media csc-textpic-imagewrap">
+                                        <a href="/knowledgeBase/showImage/${it.id}"><img src="/knowledgeBase/showImage/${it.preview?.id}" alt="${it.altText}" title="${it.altText}"/></a>
+                                    </div>
+                                </g:each>
+                                <div class="clear"></div>
+                            </div>
+                        </section>
                     </g:each>
                 </g:if>
                 <g:elseif test="${document.question && document.answer}">
