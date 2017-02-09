@@ -161,6 +161,7 @@ class DocumentService {
         doc.save(flush:true)
     }
 
+    @Transactional
     /**
      * Changes the hierarchy of chosen step
      * @param doc
@@ -185,43 +186,22 @@ class DocumentService {
         if (!s2) {
             throw new NoSuchObjectFoundException("No such step with number '$stepNumber' found in doc '${doc.docTitle}'")
         }
-        println 'Before'
-        println 's1 number: '+s1.number + ' ' + s1.stepTitle
-        println 's2 number: '+s2.number + ' ' + s2.stepTitle
-        doc.steps.sort{ it.number }.each {
-            println 'number ' + it.number
-            println 'titel ' + it.stepTitle
-        }
 
-        /*
-
-        int numberS1=0, numberS2=0
-        String titleS1="", titleS2=""
-        numberS1 = s1.number as int
-        numberS2 = s2.number as int
-        titleS1 = s1.stepTitle
-        titleS2 = s2.stepTitle
-
-        doc.steps.find{ it.stepTitle == titleS1 }.number = numberS2
-        doc.steps.find{ it.stepTitle == titleS2 }.number = numberS1
-        */
         int temp = s1.number
         s1.number = s2.number
+        s2.number = Integer.MAX_VALUE
+        s1.save(flush:true)
+        s2.save(flush:true)
+
         s2.number = temp
+        s2.save()
 
-        println 'After'
-        println 's1 number: '+s1.number + ' ' + s1.stepTitle
-        println 's2 number: '+s2.number + ' ' + s2.stepTitle
-        doc.steps.sort{ it.number }.each {
-            println 'number ' + it.number
-            println 'titel ' + it.stepTitle
+
+        if (!doc.validate()) {
+            println "Doc-Errors:\n${doc.errors}\n"
+            //throw new ValidationErrorException("Something went wrong while validate the document and both steps.")
         }
-
-        //if (!doc.validate()) {
-        //    println "Doc-Errors:\n${doc.errors}\n"
-        //    throw new ValidationErrorException("Something went wrong while validate the document and both steps.")
-        //}
-        doc
+        doc.save(flush:false)
     }
 
     /**
