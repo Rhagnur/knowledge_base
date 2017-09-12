@@ -1,0 +1,23 @@
+.canvas_obj {
+    border: 1px solid #AFAFAF;
+    float: left;
+    margin: 0 0.5em 0.5em 0;
+    padding: 0 0.2em 0 0.2em;
+}
+
+#person_card {
+    min-width: 70%;
+    margin-bottom: 1em;
+    margin-left: 1em;
+    margin-right: 1em;
+    border: 1px dotted darkgray;
+    padding: 1em;
+}
+
+#intern_canvas {
+    margin-bottom: 1.5em;
+}
+
+.usedCat {
+    text-decoration: line-through;
+}
